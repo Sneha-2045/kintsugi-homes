@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 export function PartnersSection() {
   const [index, setIndex] = useState(0);
-  const partner = partners[index];
+  const partner = partners[index] ?? partners[0]!;
 
   return (
     <section className="bg-background py-16 md:py-24" aria-labelledby="partners-title">
