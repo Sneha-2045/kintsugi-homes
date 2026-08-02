@@ -1,24 +1,63 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { HeroSearch } from "@/components/home/HeroSearch";
+import { FreshListings } from "@/components/home/FreshListings";
+import { MemberPromo } from "@/components/home/MemberPromo";
+import { PricingSection } from "@/components/home/PricingSection";
+import { PartnersSection } from "@/components/home/PartnersSection";
+import { MembershipComparison } from "@/components/home/MembershipComparison";
+import { AudioArticles } from "@/components/home/AudioArticles";
+import { AkiyaInfo } from "@/components/home/AkiyaInfo";
+import { FAQSection } from "@/components/home/FAQSection";
+import { PropertyTypes } from "@/components/home/PropertyTypes";
+import { RegionGrid } from "@/components/home/RegionGrid";
+import { PrefectureGrid } from "@/components/home/PrefectureGrid";
+import { faqs } from "@/data/faq";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
+const title = "Yadori Estate — Japanese Houses, Akiya & Land in English";
+const description =
+  "Search 1,536,000+ Japanese properties from 2,690 sources — houses, akiya, land and apartments, every listing in English. Free to browse, updated daily.";
+
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title },
+      { name: "description", content: description },
+      { property: "og:title", content: title },
+      { property: "og:description", content: description },
+    ],
+  }),
+  component: Home,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+const faqLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.question,
+    acceptedAnswer: { "@type": "Answer", text: f.answer },
+  })),
+};
+
+function Home() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
-    </div>
+      <HeroSearch />
+      <FreshListings />
+      <MemberPromo />
+      <PricingSection />
+      <PartnersSection />
+      <MembershipComparison />
+      <AudioArticles />
+      <AkiyaInfo />
+      <FAQSection />
+      <PropertyTypes />
+      <RegionGrid />
+      <PrefectureGrid />
+    </>
   );
 }
