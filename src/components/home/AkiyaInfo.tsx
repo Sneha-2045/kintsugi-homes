@@ -37,13 +37,13 @@ const steps = [
   },
 ];
 
-const quickLinks = [
-  { label: "Houses for Sale", to: "/category/house" as const },
-  { label: "Cheap Houses", to: "/search" as const },
-  { label: "Abandoned Houses", to: "/category/akiya-bank" as const },
-  { label: "Akiya Bank Listings", to: "/category/akiya-bank" as const },
-  { label: "What is an Akiya?", to: "/articles" as const },
-  { label: "Compare Japan RE Websites", to: "/articles" as const },
+const quickLinks: { label: string; href: string }[] = [
+  { label: "Houses for Sale", href: "/category/house" },
+  { label: "Cheap Houses", href: "/search" },
+  { label: "Abandoned Houses", href: "/category/akiya-bank" },
+  { label: "Akiya Bank Listings", href: "/category/akiya-bank" },
+  { label: "What is an Akiya?", href: "/articles" },
+  { label: "Compare Japan RE Websites", href: "/articles" },
 ];
 
 export function AkiyaInfo() {
