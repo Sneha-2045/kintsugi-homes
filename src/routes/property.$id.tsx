@@ -51,7 +51,7 @@ function PropertyDetails() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
       <PageShell title={property.location} description={property.title}>
         <ul className="grid gap-4 md:grid-cols-2">
-          {property.images.map((src, i) => (
+          {property.images.map((src: string, i: number) => (
             <li
               key={src}
               className={i === 0 ? "md:col-span-2" : undefined}
@@ -69,7 +69,7 @@ function PropertyDetails() {
         <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
           <div>
             <ul className="flex flex-wrap gap-2">
-              {property.tags.map((t) => (
+              {property.tags.map((t: string) => (
                 <li key={t}>
                   <Badge variant="neutral" size="sm">
                     {t}

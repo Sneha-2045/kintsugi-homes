@@ -17,6 +17,10 @@ import { Route as MapRouteImport } from './routes/map'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as PrefectureSlugRouteImport } from './routes/prefecture.$slug'
+import { Route as PropertyIdRouteImport } from './routes/property.$id'
+import { Route as RegionSlugRouteImport } from './routes/region.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -58,6 +62,26 @@ const SearchRoute = SearchRouteImport.update({
   path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CategorySlugRoute = CategorySlugRouteImport.update({
+  id: '/category/$slug',
+  path: '/category/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrefectureSlugRoute = PrefectureSlugRouteImport.update({
+  id: '/prefecture/$slug',
+  path: '/prefecture/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PropertyIdRoute = PropertyIdRouteImport.update({
+  id: '/property/$id',
+  path: '/property/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegionSlugRoute = RegionSlugRouteImport.update({
+  id: '/region/$slug',
+  path: '/region/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,6 +92,10 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
+  '/category/$slug': typeof CategorySlugRoute
+  '/prefecture/$slug': typeof PrefectureSlugRoute
+  '/property/$id': typeof PropertyIdRoute
+  '/region/$slug': typeof RegionSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +106,10 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
+  '/category/$slug': typeof CategorySlugRoute
+  '/prefecture/$slug': typeof PrefectureSlugRoute
+  '/property/$id': typeof PropertyIdRoute
+  '/region/$slug': typeof RegionSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +121,10 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
+  '/category/$slug': typeof CategorySlugRoute
+  '/prefecture/$slug': typeof PrefectureSlugRoute
+  '/property/$id': typeof PropertyIdRoute
+  '/region/$slug': typeof RegionSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +137,10 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/saved'
     | '/search'
+    | '/category/$slug'
+    | '/prefecture/$slug'
+    | '/property/$id'
+    | '/region/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +151,10 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/saved'
     | '/search'
+    | '/category/$slug'
+    | '/prefecture/$slug'
+    | '/property/$id'
+    | '/region/$slug'
   id:
     | '__root__'
     | '/'
@@ -121,6 +165,10 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/saved'
     | '/search'
+    | '/category/$slug'
+    | '/prefecture/$slug'
+    | '/property/$id'
+    | '/region/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,6 +180,10 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   SavedRoute: typeof SavedRoute
   SearchRoute: typeof SearchRoute
+  CategorySlugRoute: typeof CategorySlugRoute
+  PrefectureSlugRoute: typeof PrefectureSlugRoute
+  PropertyIdRoute: typeof PropertyIdRoute
+  RegionSlugRoute: typeof RegionSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -192,6 +244,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/category/$slug': {
+      id: '/category/$slug'
+      path: '/category/$slug'
+      fullPath: '/category/$slug'
+      preLoaderRoute: typeof CategorySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prefecture/$slug': {
+      id: '/prefecture/$slug'
+      path: '/prefecture/$slug'
+      fullPath: '/prefecture/$slug'
+      preLoaderRoute: typeof PrefectureSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/property/$id': {
+      id: '/property/$id'
+      path: '/property/$id'
+      fullPath: '/property/$id'
+      preLoaderRoute: typeof PropertyIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/region/$slug': {
+      id: '/region/$slug'
+      path: '/region/$slug'
+      fullPath: '/region/$slug'
+      preLoaderRoute: typeof RegionSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -204,6 +284,10 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   SavedRoute: SavedRoute,
   SearchRoute: SearchRoute,
+  CategorySlugRoute: CategorySlugRoute,
+  PrefectureSlugRoute: PrefectureSlugRoute,
+  PropertyIdRoute: PropertyIdRoute,
+  RegionSlugRoute: RegionSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
