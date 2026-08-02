@@ -95,13 +95,13 @@ export function AkiyaInfo() {
         <ul className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
           {quickLinks.map((l) => (
             <li key={l.label}>
-              <Link
-                to={l.to}
+              <a
+                href={l.href}
                 className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-light hover:text-primary"
               >
                 {l.label}
                 <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
+              </a>
             </li>
           ))}
         </ul>
