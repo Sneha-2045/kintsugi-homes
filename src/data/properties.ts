@@ -1,4 +1,5 @@
 import type { Property, PropertyCategory } from "@/types/property";
+import { moreProperties } from "./more-properties";
 
 const img = (id: string, w = 1200) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=70`;
@@ -24,7 +25,7 @@ export const IMAGES = {
   street: img("photo-1480796927426-f609979314bd"),
 };
 
-export const properties: Property[] = [
+const baseProperties: Property[] = [
   {
     id: "tsu-mie-3ldk",
     title: "Alpine-style house with workshop",
@@ -448,6 +449,8 @@ export const properties: Property[] = [
   },
 ];
 
+
+export const properties: Property[] = [...baseProperties, ...moreProperties];
 
 export const lockedListings = [
   { id: "l1", priceJpy: 250000000, location: "Atami, Shizuoka", image: IMAGES.coast },
