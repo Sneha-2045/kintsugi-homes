@@ -51,6 +51,8 @@ function Home() {
       <FreshListings />
       <MemberPromo />
       <PricingSection />
+      <PaymentPlan />
+
       <PartnersSection />
       <MembershipComparison />
       <AudioArticles />
