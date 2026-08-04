@@ -3,6 +3,7 @@ import { HeroSearch } from "@/components/home/HeroSearch";
 import { FreshListings } from "@/components/home/FreshListings";
 import { MemberPromo } from "@/components/home/MemberPromo";
 import { PricingSection } from "@/components/home/PricingSection";
+import { PaymentPlan } from "@/components/home/PaymentPlan";
 import { PartnersSection } from "@/components/home/PartnersSection";
 import { MembershipComparison } from "@/components/home/MembershipComparison";
 import { AudioArticles } from "@/components/home/AudioArticles";
@@ -50,6 +51,8 @@ function Home() {
       <FreshListings />
       <MemberPromo />
       <PricingSection />
+      <PaymentPlan />
+
       <PartnersSection />
       <MembershipComparison />
       <AudioArticles />
