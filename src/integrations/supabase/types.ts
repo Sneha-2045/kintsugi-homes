@@ -14,16 +14,170 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      properties: {
+        Row: {
+          address: string | null
+          bathrooms: number | null
+          bedrooms: number | null
+          building_area: number | null
+          city: string | null
+          country: string
+          cover_image_url: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          features: string[]
+          id: string
+          land_area: number | null
+          latitude: number | null
+          listing_type: string
+          longitude: number | null
+          nearby_places: string[]
+          prefecture: string | null
+          price: number | null
+          property_type: string | null
+          source_listing_id: string
+          source_url: string | null
+          status: string
+          title: string
+          updated_at: string
+          year_built: number | null
+        }
+        Insert: {
+          address?: string | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          building_area?: number | null
+          city?: string | null
+          country?: string
+          cover_image_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          features?: string[]
+          id?: string
+          land_area?: number | null
+          latitude?: number | null
+          listing_type?: string
+          longitude?: number | null
+          nearby_places?: string[]
+          prefecture?: string | null
+          price?: number | null
+          property_type?: string | null
+          source_listing_id: string
+          source_url?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          year_built?: number | null
+        }
+        Update: {
+          address?: string | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          building_area?: number | null
+          city?: string | null
+          country?: string
+          cover_image_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          features?: string[]
+          id?: string
+          land_area?: number | null
+          latitude?: number | null
+          listing_type?: string
+          longitude?: number | null
+          nearby_places?: string[]
+          prefecture?: string | null
+          price?: number | null
+          property_type?: string | null
+          source_listing_id?: string
+          source_url?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          year_built?: number | null
+        }
+        Relationships: []
+      }
+      property_images: {
+        Row: {
+          alt_text: string | null
+          created_at: string
+          id: string
+          property_id: string
+          sort_order: number
+          storage_path: string | null
+          url: string
+        }
+        Insert: {
+          alt_text?: string | null
+          created_at?: string
+          id?: string
+          property_id: string
+          sort_order?: number
+          storage_path?: string | null
+          url: string
+        }
+        Update: {
+          alt_text?: string | null
+          created_at?: string
+          id?: string
+          property_id?: string
+          sort_order?: number
+          storage_path?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_images_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +304,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
