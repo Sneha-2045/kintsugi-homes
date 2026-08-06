@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as ArticlesRouteImport } from './routes/articles'
 import { Route as ConsultRouteImport } from './routes/consult'
 import { Route as LoginRouteImport } from './routes/login'
@@ -21,10 +22,15 @@ import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as PrefectureSlugRouteImport } from './routes/prefecture.$slug'
 import { Route as PropertyIdRouteImport } from './routes/property.$id'
 import { Route as RegionSlugRouteImport } from './routes/region.$slug'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ArticlesRoute = ArticlesRouteImport.update({
@@ -82,6 +88,11 @@ const RegionSlugRoute = RegionSlugRouteImport.update({
   path: '/region/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -96,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/prefecture/$slug': typeof PrefectureSlugRoute
   '/property/$id': typeof PropertyIdRoute
   '/region/$slug': typeof RegionSlugRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -110,10 +122,12 @@ export interface FileRoutesByTo {
   '/prefecture/$slug': typeof PrefectureSlugRoute
   '/property/$id': typeof PropertyIdRoute
   '/region/$slug': typeof RegionSlugRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/articles': typeof ArticlesRoute
   '/consult': typeof ConsultRoute
   '/login': typeof LoginRoute
@@ -125,6 +139,7 @@ export interface FileRoutesById {
   '/prefecture/$slug': typeof PrefectureSlugRoute
   '/property/$id': typeof PropertyIdRoute
   '/region/$slug': typeof RegionSlugRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -141,6 +156,7 @@ export interface FileRouteTypes {
     | '/prefecture/$slug'
     | '/property/$id'
     | '/region/$slug'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -155,9 +171,11 @@ export interface FileRouteTypes {
     | '/prefecture/$slug'
     | '/property/$id'
     | '/region/$slug'
+    | '/admin'
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
     | '/articles'
     | '/consult'
     | '/login'
@@ -169,10 +187,12 @@ export interface FileRouteTypes {
     | '/prefecture/$slug'
     | '/property/$id'
     | '/region/$slug'
+    | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   ArticlesRoute: typeof ArticlesRoute
   ConsultRoute: typeof ConsultRoute
   LoginRoute: typeof LoginRoute
@@ -193,6 +213,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/articles': {
@@ -272,11 +299,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegionSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   ArticlesRoute: ArticlesRoute,
   ConsultRoute: ConsultRoute,
   LoginRoute: LoginRoute,
@@ -292,13 +338,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
