@@ -23,6 +23,7 @@ import { Route as PrefectureSlugRouteImport } from './routes/prefecture.$slug'
 import { Route as PropertyIdRouteImport } from './routes/property.$id'
 import { Route as RegionSlugRouteImport } from './routes/region.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedAdminIdRouteImport } from './routes/_authenticated/admin/$id'
 import { Route as AuthenticatedAdminNewRouteImport } from './routes/_authenticated/admin/new'
 
 const IndexRoute = IndexRouteImport.update({
@@ -94,6 +95,11 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminIdRoute = AuthenticatedAdminIdRouteImport.update({
+  id: '/admin/$id',
+  path: '/admin/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminNewRoute = AuthenticatedAdminNewRouteImport.update({
   id: '/admin/new',
   path: '/admin/new',
@@ -113,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/prefecture/$slug': typeof PrefectureSlugRoute
   '/property/$id': typeof PropertyIdRoute
   '/region/$slug': typeof RegionSlugRoute
+  '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/new': typeof AuthenticatedAdminNewRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
@@ -129,6 +136,7 @@ export interface FileRoutesByTo {
   '/prefecture/$slug': typeof PrefectureSlugRoute
   '/property/$id': typeof PropertyIdRoute
   '/region/$slug': typeof RegionSlugRoute
+  '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/new': typeof AuthenticatedAdminNewRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
@@ -147,6 +155,7 @@ export interface FileRoutesById {
   '/prefecture/$slug': typeof PrefectureSlugRoute
   '/property/$id': typeof PropertyIdRoute
   '/region/$slug': typeof RegionSlugRoute
+  '/_authenticated/admin/$id': typeof AuthenticatedAdminIdRoute
   '/_authenticated/admin/new': typeof AuthenticatedAdminNewRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
     | '/prefecture/$slug'
     | '/property/$id'
     | '/region/$slug'
+    | '/admin/$id'
     | '/admin/new'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/prefecture/$slug'
     | '/property/$id'
     | '/region/$slug'
+    | '/admin/$id'
     | '/admin/new'
     | '/admin'
   id:
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/prefecture/$slug'
     | '/property/$id'
     | '/region/$slug'
+    | '/_authenticated/admin/$id'
     | '/_authenticated/admin/new'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
@@ -318,6 +330,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/$id': {
+      id: '/_authenticated/admin/$id'
+      path: '/admin/$id'
+      fullPath: '/admin/$id'
+      preLoaderRoute: typeof AuthenticatedAdminIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/new': {
       id: '/_authenticated/admin/new'
       path: '/admin/new'
@@ -329,11 +348,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminIdRoute: typeof AuthenticatedAdminIdRoute
   AuthenticatedAdminNewRoute: typeof AuthenticatedAdminNewRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminIdRoute: AuthenticatedAdminIdRoute,
   AuthenticatedAdminNewRoute: AuthenticatedAdminNewRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
