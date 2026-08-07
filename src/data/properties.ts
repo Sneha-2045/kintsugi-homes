@@ -1,31 +1,181 @@
 import type { Property, PropertyCategory } from "@/types/property";
+import { bulkListings } from "./bulk-listings";
+import { IMAGES } from "./images";
 import { moreProperties } from "./more-properties";
 
-const img = (id: string, w = 1200) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=70`;
+export { IMAGES };
 
-export const IMAGES = {
-  hero: img("photo-1528360983277-13d401cdc186", 1920),
-  machiya: img("photo-1493976040374-85c8e12f0c0e"),
-  village: img("photo-1478436127897-769e1b3f0f36"),
-  kyoto: img("photo-1554797589-7241bb691973"),
-  interiorShoji: img("photo-1503899036084-c55cdd92da26"),
-  fusuma: img("photo-1580216643062-cf460548a66a"),
-  farmhouse: img("photo-1570459027562-4a916cc6113f"),
-  tokyo: img("photo-1540959733332-eab4deabeeaf"),
-  fuji: img("photo-1522547902298-51566e4fb383"),
-  hokkaido: img("photo-1548189482-6f43e8ca7c4a"),
-  okinawa: img("photo-1533050487297-09b450131914"),
-  mountains: img("photo-1517701550927-30cf4ba1dba5"),
-  garden: img("photo-1524413840807-0c3cb6fa808d"),
-  coast: img("photo-1519098901909-b1553a1190af"),
-  temple: img("photo-1536098561742-ca998e48cbcc"),
-  roof: img("photo-1545569341-9eb8b30979d9"),
-  interior: img("photo-1502672260266-1c1ef2d93688"),
-  street: img("photo-1480796927426-f609979314bd"),
+/** Public listing photos (referenced, not rehosted). */
+const LISTING_PHOTOS = {
+  hadano: [
+    "https://akiyajapan.sgp1.cdn.digitaloceanspaces.com/storage/property/hm/hm_b8eb8254-7f5a-11f1-a659-a6ae20f6eefe_96412ce3f7dff.jpg",
+    "https://akiyajapan.sgp1.cdn.digitaloceanspaces.com/storage/property/hm/hm_b8eb8254-7f5a-11f1-a659-a6ae20f6eefe_ea195114edcbf.jpg",
+    "https://akiyajapan.sgp1.cdn.digitaloceanspaces.com/storage/property/hm/hm_b8eb8254-7f5a-11f1-a659-a6ae20f6eefe_dee7c58dfff53.jpg",
+    "https://akiyajapan.sgp1.cdn.digitaloceanspaces.com/storage/property/hm/hm_b8eb8254-7f5a-11f1-a659-a6ae20f6eefe_c591839511fc1.jpg",
+  ],
+  kashiwazakiAthome:
+    "https://www.athome.co.jp/image_files/path/RQ2hTydzBm-RMxQ5Y6irJA==.jpeg",
 };
 
-const baseProperties: Property[] = [
+const featuredProperties: Property[] = [
+  {
+    id: "miyako-fukuoka-7ldk",
+    title: "7LDK farmhouse with garden and fruit trees",
+    location: "Miyako Town, Fukuoka Prefecture",
+    prefecture: "Fukuoka",
+    regionSlug: "kyushu",
+    prefectureSlug: "fukuoka",
+    categorySlug: "farmhouse",
+    priceUsd: 36667,
+    priceJpy: 5500000,
+    addedDaysAgo: 2,
+    images: [IMAGES.roof, IMAGES.garden, IMAGES.interiorShoji, IMAGES.fusuma],
+    tags: ["Buy", "Farmhouse", "7LDK", "Freehold"],
+    extraTags: 5,
+    bedrooms: 7,
+    floorArea: 127,
+    landArea: 779,
+    yearBuilt: 1928,
+    amenity: "Parking for 6 cars",
+    description:
+      "Two-storey wooden farmhouse in Miyako Town with seven rooms, a large garden, vegetable patch, and fig and persimmon trees. Freehold land — suited as a second home or quiet rural base.",
+  },
+  {
+    id: "kashiwazaki-niigata-5k",
+    title: "Vacant 5K house near Kashiwazaki Station",
+    location: "Kashiwazaki, Niigata Prefecture",
+    prefecture: "Niigata",
+    regionSlug: "hokuriku",
+    prefectureSlug: "niigata",
+    categorySlug: "house",
+    priceUsd: 16667,
+    priceJpy: 2500000,
+    addedDaysAgo: 3,
+    images: [
+      LISTING_PHOTOS.kashiwazakiAthome,
+      IMAGES.interiorShoji,
+      IMAGES.interior,
+      IMAGES.roof,
+    ],
+    tags: ["Buy", "House", "5K", "Freehold"],
+    extraTags: 4,
+    bedrooms: 5,
+    floorArea: 96,
+    landArea: 166,
+    yearBuilt: 1980,
+    amenity: "Kashiwazaki Station — 17 min walk",
+    description:
+      "Two-storey wooden house in Wakaba-cho with a mix of tatami and Western rooms. Utilities connected, parking on site, and flat Category 1 residential land with western road frontage.",
+  },
+  {
+    id: "shimabara-nagasaki-6dk",
+    title: "Spacious 6DK family home in Midorimachi",
+    location: "Shimabara, Nagasaki Prefecture",
+    prefecture: "Nagasaki",
+    regionSlug: "kyushu",
+    prefectureSlug: "nagasaki",
+    categorySlug: "house",
+    priceUsd: 66667,
+    priceJpy: 10000000,
+    addedDaysAgo: 4,
+    images: [IMAGES.roof, IMAGES.interiorShoji, IMAGES.garden, IMAGES.fusuma],
+    tags: ["Buy", "House", "6DK", "Family Home"],
+    extraTags: 4,
+    bedrooms: 6,
+    floorArea: 150,
+    landArea: 362,
+    yearBuilt: 1970,
+    amenity: "Quiet residential street",
+    description:
+      "Generously sized two-storey home on a 362 m² Midorimachi plot. Six rooms plus kitchen give room for a large household or a live-in renovation project with outdoor space.",
+  },
+  {
+    id: "hadano-kanagawa-4ldk",
+    title: "Newly built 4LDK house in Honcho",
+    location: "Hadano, Kanagawa Prefecture",
+    prefecture: "Kanagawa",
+    regionSlug: "kanto",
+    prefectureSlug: "kanagawa",
+    categorySlug: "house",
+    priceUsd: 293267,
+    priceJpy: 43990000,
+    addedDaysAgo: 5,
+    images: LISTING_PHOTOS.hadano,
+    tags: ["Buy", "House", "4LDK", "New Build"],
+    extraTags: 4,
+    bedrooms: 4,
+    floorArea: 105,
+    landArea: 168,
+    yearBuilt: 2026,
+    amenity: "Quiet residential street",
+    description:
+      "Newly built two-storey wooden 4LDK in Honcho 2-chome, Hadano. About 105 m² on a 168 m² freehold plot — a turnkey suburban home with a full photo gallery from the listing.",
+  },
+  {
+    id: "miyoshi-tokushima-kominka",
+    title: "Single-storey kominka near Kaminyo Station",
+    location: "Miyoshi, Tokushima Prefecture",
+    prefecture: "Tokushima",
+    regionSlug: "shikoku",
+    prefectureSlug: "tokushima",
+    categorySlug: "akiya-bank",
+    priceUsd: 10000,
+    priceJpy: 1500000,
+    addedDaysAgo: 6,
+    images: [IMAGES.roof, IMAGES.garden, IMAGES.interiorShoji, IMAGES.fusuma],
+    tags: ["Buy", "Kominka", "Akiya Bank", "4DK"],
+    extraTags: 5,
+    bedrooms: 4,
+    floorArea: 110,
+    yearBuilt: 1955,
+    amenity: "Kaminyo Station — walking distance",
+    description:
+      "Municipal akiya-bank kominka with field, garden, and storage shed. Connected rooms around a corridor, Western flush toilet, and public water — listed as move-in ready without major repairs.",
+  },
+  {
+    id: "ayabe-kyoto-kominka",
+    title: "Kominka with rice fields and forest land",
+    location: "Ayabe, Kyoto Prefecture",
+    prefecture: "Kyoto",
+    regionSlug: "kansai",
+    prefectureSlug: "kyoto",
+    categorySlug: "farmhouse",
+    priceUsd: 5867,
+    priceJpy: 880000,
+    addedDaysAgo: 5,
+    images: [IMAGES.roof, IMAGES.garden, IMAGES.fusuma, IMAGES.interiorShoji],
+    tags: ["Buy", "Kominka", "Akiya Bank", "Farmland"],
+    extraTags: 6,
+    bedrooms: 5,
+    floorArea: 98,
+    landArea: 204,
+    yearBuilt: 1960,
+    amenity: "Neighborhood association required",
+    description:
+      "Single-storey wooden kominka via Ayabe’s akiya bank. Residential plot plus attached rice field, farmland, and forest parcels, with warehouse, shed, and garage buildings. Needs renovation.",
+  },
+  {
+    id: "togakushi-nagano-4k",
+    title: "4K traditional house with farmland in Togakushi",
+    location: "Nagano, Nagano Prefecture",
+    prefecture: "Nagano",
+    regionSlug: "chubu",
+    prefectureSlug: "nagano",
+    categorySlug: "akiya-bank",
+    priceUsd: 14667,
+    priceJpy: 2200000,
+    addedDaysAgo: 5,
+    images: [IMAGES.interiorShoji, IMAGES.roof, IMAGES.garden, IMAGES.fusuma],
+    tags: ["Buy", "Akiya Bank", "4K", "Farmhouse"],
+    extraTags: 5,
+    bedrooms: 4,
+    floorArea: 83,
+    landArea: 1041,
+    yearBuilt: 1970,
+    amenity: "Near Togakushi / ski country",
+    description:
+      "One-storey wooden house on over 1,000 m² including residential land and farmland. Akiya-bank listing for buyers open to rural living; farmland transfer needs Agricultural Committee approval.",
+  },
   {
     id: "tsu-mie-3ldk",
     title: "Alpine-style house with workshop",
@@ -449,8 +599,11 @@ const baseProperties: Property[] = [
   },
 ];
 
-
-export const properties: Property[] = [...baseProperties, ...moreProperties];
+export const properties: Property[] = [
+  ...featuredProperties,
+  ...moreProperties,
+  ...bulkListings,
+];
 
 export const lockedListings = [
   { id: "l1", priceJpy: 250000000, location: "Atami, Shizuoka", image: IMAGES.coast },
@@ -459,12 +612,12 @@ export const lockedListings = [
 ];
 
 export const propertyCategories: PropertyCategory[] = [
-  { slug: "house", title: "House", description: "Houses for sale nationwide", count: 97981 },
-  { slug: "apartment", title: "Apartment", description: "Mansions & apartment units", count: 42221 },
-  { slug: "land", title: "Land", description: "Plots, fields & forest", count: 45419 },
-  { slug: "akiya-bank", title: "Akiya Bank", description: "Municipal vacant-house programs", count: 10980 },
-  { slug: "traditional-house", title: "Traditional House", description: "Kominka & machiya", count: 3568 },
-  { slug: "farmhouse", title: "Farmhouse", description: "Rural homes with land", count: 1204 },
+  { slug: "house", title: "House", description: "Houses for sale nationwide", count: 97 },
+  { slug: "apartment", title: "Apartment", description: "Mansions & apartment units", count: 21 },
+  { slug: "land", title: "Land", description: "Plots, fields & forest", count: 15 },
+  { slug: "akiya-bank", title: "Akiya Bank", description: "Municipal vacant-house programs", count: 30 },
+  { slug: "traditional-house", title: "Traditional House", description: "Kominka & machiya", count: 21 },
+  { slug: "farmhouse", title: "Farmhouse", description: "Rural homes with land", count: 31 },
 ];
 
 export const formatUsd = (n: number) =>
