@@ -7,7 +7,7 @@ export interface Property {
   prefectureSlug: string;
   categorySlug: string;
   priceUsd: number;
-  priceJpy: number;
+  priceJpy?: number;
   addedDaysAgo: number;
   images: string[];
   tags: string[];
@@ -16,9 +16,10 @@ export interface Property {
   floorArea?: number;
   landArea?: number;
   yearBuilt?: number;
+    auctionDate?: string;
+propertyType?: string;
   amenity: string;
-  description: string;
-}
+  description: string;}
 
 export interface Region {
   slug: string;

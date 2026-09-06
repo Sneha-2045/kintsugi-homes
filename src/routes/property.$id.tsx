@@ -83,12 +83,42 @@ function PropertyDetails() {
             <h3 className="mt-8 text-lg font-semibold text-foreground">Key facts</h3>
             <dl className="mt-4 grid gap-4 sm:grid-cols-2">
               {[
-                ["Prefecture", property.prefecture],
-                ["Bedrooms", property.bedrooms ? String(property.bedrooms) : "—"],
-                ["Floor area", property.floorArea ? `${property.floorArea} m²` : "—"],
-                ["Land area", property.landArea ? `${property.landArea} m²` : "—"],
-                ["Year built", property.yearBuilt ? String(property.yearBuilt) : "—"],
-                ["Nearby", property.amenity],
+                [
+  "Property type",
+  property.propertyType ?? "—",
+],
+[
+  "Auction date",
+  property.auctionDate ?? "—",
+],
+[
+  "Location",
+  property.prefecture,
+],
+[
+  "Bedrooms",
+  property.bedrooms ? String(property.bedrooms) : "—",
+],
+[
+  "Floor area",
+  property.floorArea
+    ? `${property.floorArea} ${property.prefecture === "Florida" ? "sq ft" : "m²"}`
+    : "—",
+],
+[
+  "Land area",
+  property.landArea
+    ? `${property.landArea} ${property.prefecture === "Florida" ? "acres" : "m²"}`
+    : "—",
+],
+[
+  "Year built",
+  property.yearBuilt ? String(property.yearBuilt) : "—",
+],
+[
+  "Nearby",
+  property.amenity,
+],
               ].map(([k, v]) => (
                 <div key={k} className="rounded-xl border border-border bg-card p-4">
                   <dt className="text-xs uppercase tracking-wide text-subtle">{k}</dt>
@@ -100,7 +130,11 @@ function PropertyDetails() {
 
           <aside className="h-fit rounded-2xl border border-border bg-card p-6">
             <p className="text-3xl font-bold text-foreground">{formatUsd(property.priceUsd)}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{formatJpy(property.priceJpy)}</p>
+            {property.priceJpy && (
+  <p className="mt-1 text-sm text-muted-foreground">
+    {formatJpy(property.priceJpy)}
+  </p>
+)}
             <Button asChild className="mt-6 w-full" size="lg">
               <Link to="/consult">Enquire via partner</Link>
             </Button>

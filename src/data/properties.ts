@@ -2,6 +2,7 @@ import type { Property, PropertyCategory } from "@/types/property";
 import { bulkListings } from "./bulk-listings";
 import { IMAGES } from "./images";
 import { moreProperties } from "./more-properties";
+import { usListings } from "./us-listings";
 
 export { IMAGES };
 
@@ -599,10 +600,27 @@ const featuredProperties: Property[] = [
   },
 ];
 
+const activeUSListings = usListings.filter((property) => {
+  if (!property.auctionDate) return true;
+
+  const auctionDate = new Date(property.auctionDate);
+  const today = new Date();
+
+  auctionDate.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+
+  const daysUntilAuction =
+    (auctionDate.getTime() - today.getTime()) /
+    (1000 * 60 * 60 * 24);
+
+  return daysUntilAuction >= 10;
+});
+
 export const properties: Property[] = [
   ...featuredProperties,
   ...moreProperties,
   ...bulkListings,
+  ...activeUSListings,
 ];
 
 export const lockedListings = [
