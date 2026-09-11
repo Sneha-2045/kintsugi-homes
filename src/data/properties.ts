@@ -2,7 +2,6 @@ import type { Property, PropertyCategory } from "@/types/property";
 import { bulkListings } from "./bulk-listings";
 import { IMAGES } from "./images";
 import { moreProperties } from "./more-properties";
-import { usListings } from "./us-listings";
 
 export { IMAGES };
 
@@ -600,42 +599,70 @@ const featuredProperties: Property[] = [
   },
 ];
 
-const activeUSListings = usListings.filter((property) => {
-  if (!property.auctionDate) return true;
-
-  const auctionDate = new Date(property.auctionDate);
-  const today = new Date();
-
-  auctionDate.setHours(0, 0, 0, 0);
-  today.setHours(0, 0, 0, 0);
-
-  const daysUntilAuction =
-    (auctionDate.getTime() - today.getTime()) /
-    (1000 * 60 * 60 * 24);
-
-  return daysUntilAuction >= 10;
-});
-
 export const properties: Property[] = [
   ...featuredProperties,
   ...moreProperties,
   ...bulkListings,
-  ...activeUSListings,
 ];
 
 export const lockedListings = [
-  { id: "l1", priceJpy: 250000000, location: "Atami, Shizuoka", image: IMAGES.coast },
-  { id: "l2", priceJpy: 9800000, location: "Atami, Shizuoka", image: IMAGES.village },
-  { id: "l3", priceJpy: 4500000, location: "Miyawaka, Fukuoka", image: IMAGES.farmhouse },
+  {
+    id: "l1",
+    priceJpy: 250000000,
+    location: "Atami, Shizuoka",
+    image: IMAGES.coast,
+  },
+  {
+    id: "l2",
+    priceJpy: 9800000,
+    location: "Atami, Shizuoka",
+    image: IMAGES.village,
+  },
+  {
+    id: "l3",
+    priceJpy: 4500000,
+    location: "Miyawaka, Fukuoka",
+    image: IMAGES.farmhouse,
+  },
 ];
 
 export const propertyCategories: PropertyCategory[] = [
-  { slug: "house", title: "House", description: "Houses for sale nationwide", count: 97 },
-  { slug: "apartment", title: "Apartment", description: "Mansions & apartment units", count: 21 },
-  { slug: "land", title: "Land", description: "Plots, fields & forest", count: 15 },
-  { slug: "akiya-bank", title: "Akiya Bank", description: "Municipal vacant-house programs", count: 30 },
-  { slug: "traditional-house", title: "Traditional House", description: "Kominka & machiya", count: 21 },
-  { slug: "farmhouse", title: "Farmhouse", description: "Rural homes with land", count: 31 },
+  {
+    slug: "house",
+    title: "House",
+    description: "Houses for sale nationwide",
+    count: 97,
+  },
+  {
+    slug: "apartment",
+    title: "Apartment",
+    description: "Mansions & apartment units",
+    count: 21,
+  },
+  {
+    slug: "land",
+    title: "Land",
+    description: "Plots, fields & forest",
+    count: 15,
+  },
+  {
+    slug: "akiya-bank",
+    title: "Akiya Bank",
+    description: "Municipal vacant-house programs",
+    count: 30,
+  },
+  {
+    slug: "traditional-house",
+    title: "Traditional House",
+    description: "Kominka & machiya",
+    count: 21,
+  },
+  {
+    slug: "farmhouse",
+    title: "Farmhouse",
+    description: "Rural homes with land",
+    count: 31,
+  },
 ];
 
 export const formatUsd = (n: number) =>

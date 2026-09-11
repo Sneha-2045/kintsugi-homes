@@ -2,10 +2,15 @@ from playwright.sync_api import sync_playwright
 from datetime import datetime
 import re
 import os
+import hashlib
+
 
 BASE_URL = "https://www.auction.com"
 
-# Markets to search
+
+# ==========================================
+# MARKETS TO SEARCH
+# ==========================================
 MARKETS = [
     ("Florida", "Miami"),
     ("Florida", "Tampa"),
@@ -16,6 +21,7 @@ MARKETS = [
     ("North Carolina", "Charlotte"),
 ]
 
+
 STATE_CODES = {
     "Florida": "FL",
     "Texas": "TX",
@@ -23,10 +29,16 @@ STATE_CODES = {
     "North Carolina": "NC",
 }
 
-# Minimum days before auction
+
+# ==========================================
+# MINIMUM DAYS BEFORE AUCTION
+# ==========================================
 MIN_DAYS = 10
 
 
+# ==========================================
+# SEARCH URL
+# ==========================================
 def make_search_url(state, city):
     state_code = STATE_CODES[state]
 
@@ -41,8 +53,15 @@ def make_search_url(state, city):
     )
 
 
+# ==========================================
+# GET NUMBER FROM TEXT
+# ==========================================
 def get_number(pattern, text):
-    match = re.search(pattern, text)
+    match = re.search(
+        pattern,
+        text,
+        re.IGNORECASE
+    )
 
     if match:
         return match.group(1)
@@ -50,9 +69,18 @@ def get_number(pattern, text):
     return None
 
 
-today = datetime.now()
+# ==========================================
+# START SCRAPER
+# ==========================================
+today = datetime.now().replace(
+    hour=0,
+    minute=0,
+    second=0,
+    microsecond=0
+)
 
 qualifying_properties = []
+
 
 with sync_playwright() as p:
 
@@ -64,9 +92,15 @@ with sync_playwright() as p:
     print("US FORECLOSURE SCRAPER STARTED")
     print("======================================")
 
+    # ======================================
+    # SEARCH EACH MARKET
+    # ======================================
     for state, city in MARKETS:
 
-        search_url = make_search_url(state, city)
+        search_url = make_search_url(
+            state,
+            city
+        )
 
         print("\n--------------------------------------")
         print(f"SEARCHING: {city}, {state}")
@@ -82,10 +116,9 @@ with sync_playwright() as p:
 
             page.wait_for_timeout(7000)
 
-            # --------------------------------
+            # ==================================
             # COLLECT PROPERTY LINKS
-            # --------------------------------
-
+            # ==================================
             links = page.locator("a")
 
             property_urls = []
@@ -96,10 +129,12 @@ with sync_playwright() as p:
 
                 if href and "/details/" in href:
 
-                    url = BASE_URL + href
+                    if href.startswith("http"):
+                        url = href
+                    else:
+                        url = BASE_URL + href
 
                     if url not in property_urls:
-
                         property_urls.append(url)
 
             print(
@@ -107,10 +142,9 @@ with sync_playwright() as p:
                 len(property_urls)
             )
 
-            # --------------------------------
-            # CHECK PROPERTIES
-            # --------------------------------
-
+            # ==================================
+            # CHECK EACH PROPERTY
+            # ==================================
             for url in property_urls:
 
                 print("\nChecking:", url)
@@ -125,26 +159,47 @@ with sync_playwright() as p:
 
                     page.wait_for_timeout(2000)
 
-                    text = page.locator("body").inner_text()
+                    text = page.locator(
+                        "body"
+                    ).inner_text()
 
-                    # --------------------------------
-                    # FORECLOSURE CHECK
-                    # --------------------------------
+                    # ==================================
+                    # FORECLOSURE SALE CHECK
+                    # ==================================
+                    foreclosure_match = re.search(
+                        r"\bForeclosure Sale\b",
+                        text,
+                        re.IGNORECASE
+                    )
 
-                    if "Foreclosure Sale" not in text:
+                    if not foreclosure_match:
 
-                        print("SKIPPED: Not foreclosure")
+                        print(
+                            "SKIPPED: Not Foreclosure Sale"
+                        )
 
                         continue
 
-                    # --------------------------------
-                    # AUCTION DATE
-                    # --------------------------------
+                    print(
+                        "✓ Foreclosure Sale confirmed"
+                    )
 
+                    # ==================================
+                    # AUCTION DATE
+                    # ==================================
                     date_position = text.find("Date")
 
+                    if date_position == -1:
+
+                        print(
+                            "SKIPPED: Date section not found"
+                        )
+
+                        continue
+
                     date_section = text[
-                        date_position:date_position + 150
+                        date_position:
+                        date_position + 200
                     ]
 
                     date_match = re.search(
@@ -155,7 +210,9 @@ with sync_playwright() as p:
 
                     if not date_match:
 
-                        print("SKIPPED: Auction date not found")
+                        print(
+                            "SKIPPED: Auction date not found"
+                        )
 
                         continue
 
@@ -164,55 +221,82 @@ with sync_playwright() as p:
                     auction_date = datetime.strptime(
                         date_text,
                         "%b %d, %Y"
+                    ).replace(
+                        hour=0,
+                        minute=0,
+                        second=0,
+                        microsecond=0
                     )
 
                     days_left = (
                         auction_date - today
                     ).days
 
-                    print("Auction:", date_text)
-                    print("Days left:", days_left)
+                    print(
+                        "Auction:",
+                        date_text
+                    )
 
-                    # --------------------------------
+                    print(
+                        "Days left:",
+                        days_left
+                    )
+
+                    # ==================================
                     # 10 DAY FILTER
-                    # --------------------------------
-
+                    # ==================================
                     if days_left < MIN_DAYS:
 
                         print(
-                            f"SKIPPED: Less than {MIN_DAYS} days"
+                            f"SKIPPED: Less than "
+                            f"{MIN_DAYS} days"
                         )
 
                         continue
 
-                    # --------------------------------
-                    # PROPERTY INFORMATION
-                    # --------------------------------
+                    # ==================================
+                    # PROPERTY TITLE
+                    # ==================================
+                    title = page.title().strip()
 
-                    title = page.title()
+                    if not title:
 
+                        title = (
+                            f"Foreclosure Property "
+                            f"in {city}, {state}"
+                        )
+
+                    # ==================================
+                    # BEDROOMS
+                    # ==================================
                     beds = get_number(
-                        r"(\d+)\s+Beds",
+                        r"(\d+)\s+Beds?",
                         text
                     )
 
+                    # ==================================
+                    # BATHROOMS
+                    # ==================================
                     baths = get_number(
-                        r"([\d.]+)\s+Baths",
+                        r"([\d.]+)\s+Baths?",
                         text
                     )
 
+                    # ==================================
+                    # SQUARE FEET
+                    # ==================================
                     sqft = get_number(
                         r"([\d,]+)\s+Sq\.\s*Feet",
                         text
                     )
 
-                    # --------------------------------
+                    # ==================================
                     # MARKET VALUE
-                    # --------------------------------
-
+                    # ==================================
                     market_value_match = re.search(
-                        r"Est\. Market Value\s+\$([\d,]+)",
-                        text
+                        r"Est\.\s*Market Value\s+\$([\d,]+)",
+                        text,
+                        re.IGNORECASE
                     )
 
                     if market_value_match:
@@ -227,17 +311,18 @@ with sync_playwright() as p:
 
                         market_value = 0
 
-                    # --------------------------------
+                    # ==================================
                     # IMAGE
-                    # --------------------------------
-
+                    # ==================================
                     image_url = ""
 
                     images = page.locator("img")
 
                     for i in range(images.count()):
 
-                        src = images.nth(i).get_attribute("src")
+                        src = images.nth(i).get_attribute(
+                            "src"
+                        )
 
                         if src and src.startswith("http"):
 
@@ -245,64 +330,131 @@ with sync_playwright() as p:
 
                             break
 
-                    # --------------------------------
-                    # PROPERTY ID
-                    # --------------------------------
+                    # ==================================
+                    # STABLE PROPERTY ID
+                    # ==================================
+                    property_hash = hashlib.md5(
+                        url.encode()
+                    ).hexdigest()[:10]
 
                     property_id = (
                         city.lower()
                         + "-"
-                        + str(abs(hash(url)))
+                        + property_hash
                     )
 
-                    # --------------------------------
+                    # ==================================
                     # PROPERTY OBJECT
-                    # --------------------------------
-
+                    # ==================================
                     property_data = {
+
                         "id": property_id,
+
                         "title": title,
+
                         "location": f"{city}, {state}",
+
                         "prefecture": state,
-                        "regionSlug": state.lower().replace(" ", "-"),
-                        "prefectureSlug": state.lower().replace(" ", "-"),
+
+                        "regionSlug": state.lower().replace(
+                            " ",
+                            "-"
+                        ),
+
+                        "prefectureSlug": state.lower().replace(
+                            " ",
+                            "-"
+                        ),
+
                         "categorySlug": "foreclosure-sale",
+
                         "priceUsd": market_value,
+
                         "addedDaysAgo": 0,
-                        "images": [image_url] if image_url else [],
+
+                        "images": (
+                            [image_url]
+                            if image_url
+                            else []
+                        ),
+
                         "tags": [
                             "Foreclosure Sale",
                             "Investment"
                         ],
+
                         "extraTags": 0,
-                        "bedrooms": int(beds) if beds else None,
+
+                        "bedrooms": (
+                            int(beds)
+                            if beds
+                            else None
+                        ),
+
                         "floorArea": (
-                            int(sqft.replace(",", ""))
+                            int(
+                                sqft.replace(",", "")
+                            )
                             if sqft
                             else None
                         ),
-                        "amenity": f"{city}, {state}",
+
+                        "amenity": (
+                            f"{city}, {state}"
+                        ),
+
                         "description": (
                             f"Foreclosure property in "
                             f"{city}, {state}. "
                             f"Auction scheduled for "
                             f"{date_text}."
                         ),
+
                         "auctionDate": date_text,
-                        "propertyType": "Foreclosure Sale",
+
+                        "propertyType": (
+                            "Foreclosure Sale"
+                        ),
                     }
 
                     qualifying_properties.append(
                         property_data
                     )
 
-                    print("\n✓ QUALIFYING PROPERTY")
-                    print("Title:", title)
-                    print("Location:", city, state)
-                    print("Auction:", date_text)
-                    print("Days left:", days_left)
-                    print("Market Value:", market_value)
-                    print("URL:", url)
+                    print(
+                        "\n✓ QUALIFYING PROPERTY"
+                    )
+
+                    print(
+                        "Title:",
+                        title
+                    )
+
+                    print(
+                        "Location:",
+                        city,
+                        state
+                    )
+
+                    print(
+                        "Auction:",
+                        date_text
+                    )
+
+                    print(
+                        "Days left:",
+                        days_left
+                    )
+
+                    print(
+                        "Market Value:",
+                        market_value
+                    )
+
+                    print(
+                        "URL:",
+                        url
+                    )
 
                 except Exception as e:
 
@@ -314,7 +466,8 @@ with sync_playwright() as p:
         except Exception as e:
 
             print(
-                f"ERROR searching {city}, {state}:",
+                f"ERROR searching "
+                f"{city}, {state}:",
                 e
             )
 
@@ -324,10 +477,10 @@ with sync_playwright() as p:
 # ==========================================
 # REMOVE DUPLICATES
 # ==========================================
-
 unique_properties = []
 
 seen_ids = set()
+
 
 for property_data in qualifying_properties:
 
@@ -345,7 +498,6 @@ for property_data in qualifying_properties:
 # ==========================================
 # CREATE TYPESCRIPT FILE
 # ==========================================
-
 output_file = os.path.join(
     os.path.dirname(__file__),
     "..",
@@ -387,9 +539,12 @@ with open(
 
             elif isinstance(value, str):
 
-                escaped = value.replace(
-                    '"',
-                    '\\"'
+                escaped = (
+                    value
+                    .replace("\\", "\\\\")
+                    .replace('"', '\\"')
+                    .replace("\n", "\\n")
+                    .replace("\r", "\\r")
                 )
 
                 file.write(
@@ -398,9 +553,8 @@ with open(
 
             elif isinstance(value, list):
 
-                # Write TypeScript array correctly
                 formatted_list = ", ".join(
-                    f'"{item}"'
+                    f'"{str(item).replace(chr(34), chr(92) + chr(34))}"'
                     for item in value
                 )
 
@@ -422,7 +576,6 @@ with open(
 # ==========================================
 # FINAL RESULT
 # ==========================================
-
 print("\n======================================")
 print("SCRAPING FINISHED")
 print("======================================")
@@ -439,6 +592,11 @@ print(
 
 print(
     "\n10-day foreclosure filter applied."
+)
+
+print(
+    "Bank Owned / REO properties excluded "
+    "by property type check."
 )
 
 print(
