@@ -1,6 +1,7 @@
+import { withCoordinates } from "@/lib/property-coords";
 import type { Property } from "@/types/property";
 
-export const usListings: Property[] = [
+const usListingsRaw: Property[] = [
   {
     id: "miami-f4a7126539",
     title: "11113 Biscayne Blvd, Miami, FL 33181, Miami-Dade County | Auction.com",
@@ -702,3 +703,5 @@ export const usListings: Property[] = [
     propertyType: "Foreclosure Sale",
   },
 ];
+
+export const usListings: Property[] = usListingsRaw.map(withCoordinates);

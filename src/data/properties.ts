@@ -1,21 +1,11 @@
 import type { Property, PropertyCategory } from "@/types/property";
+import { withCoordinates } from "@/lib/property-coords";
 import { bulkListings } from "./bulk-listings";
 import { IMAGES } from "./images";
+import { AKIYA_PHOTOS, withListingPhotos } from "./listing-photos";
 import { moreProperties } from "./more-properties";
 
 export { IMAGES };
-
-/** Public listing photos (referenced, not rehosted). */
-const LISTING_PHOTOS = {
-  hadano: [
-    "https://akiyajapan.sgp1.cdn.digitaloceanspaces.com/storage/property/hm/hm_b8eb8254-7f5a-11f1-a659-a6ae20f6eefe_96412ce3f7dff.jpg",
-    "https://akiyajapan.sgp1.cdn.digitaloceanspaces.com/storage/property/hm/hm_b8eb8254-7f5a-11f1-a659-a6ae20f6eefe_ea195114edcbf.jpg",
-    "https://akiyajapan.sgp1.cdn.digitaloceanspaces.com/storage/property/hm/hm_b8eb8254-7f5a-11f1-a659-a6ae20f6eefe_dee7c58dfff53.jpg",
-    "https://akiyajapan.sgp1.cdn.digitaloceanspaces.com/storage/property/hm/hm_b8eb8254-7f5a-11f1-a659-a6ae20f6eefe_c591839511fc1.jpg",
-  ],
-  kashiwazakiAthome:
-    "https://www.athome.co.jp/image_files/path/RQ2hTydzBm-RMxQ5Y6irJA==.jpeg",
-};
 
 const featuredProperties: Property[] = [
   {
@@ -52,7 +42,7 @@ const featuredProperties: Property[] = [
     priceJpy: 2500000,
     addedDaysAgo: 3,
     images: [
-      LISTING_PHOTOS.kashiwazakiAthome,
+      AKIYA_PHOTOS.kashiwazakiAthome,
       IMAGES.interiorShoji,
       IMAGES.interior,
       IMAGES.roof,
@@ -100,7 +90,12 @@ const featuredProperties: Property[] = [
     priceUsd: 293267,
     priceJpy: 43990000,
     addedDaysAgo: 5,
-    images: LISTING_PHOTOS.hadano,
+    images: [
+      AKIYA_PHOTOS.hadanoExterior,
+      AKIYA_PHOTOS.hadanoKitchen,
+      AKIYA_PHOTOS.newHouseWhite,
+      AKIYA_PHOTOS.hadanoFloorplan,
+    ],
     tags: ["Buy", "House", "4LDK", "New Build"],
     extraTags: 4,
     bedrooms: 4,
@@ -603,7 +598,9 @@ export const properties: Property[] = [
   ...featuredProperties,
   ...moreProperties,
   ...bulkListings,
-];
+]
+  .map(withListingPhotos)
+  .map(withCoordinates);
 
 export const lockedListings = [
   {

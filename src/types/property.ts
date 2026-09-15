@@ -19,7 +19,10 @@ export interface Property {
     auctionDate?: string;
 propertyType?: string;
   amenity: string;
-  description: string;}
+  description: string;
+  latitude?: number;
+  longitude?: number;
+}
 
 export interface Region {
   slug: string;

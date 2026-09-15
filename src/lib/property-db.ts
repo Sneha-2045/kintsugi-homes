@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { withCoordinates } from "@/lib/property-coords";
 import type { Property } from "@/types/property";
 
 export type ListingStatus = "draft" | "published";
@@ -71,7 +72,7 @@ export function toProperty(row: PropertyWithImages): Property {
   const location = [row.city, row.prefecture].filter(Boolean).join(", ") || row.country;
   const tags = row.features.slice(0, 4);
 
-  return {
+  return withCoordinates({
     id: row.id,
     title: row.title,
     location,
@@ -91,7 +92,10 @@ export function toProperty(row: PropertyWithImages): Property {
     ...(row.year_built != null ? { yearBuilt: row.year_built } : {}),
     amenity: row.nearby_places[0] ?? row.address ?? row.country,
     description: row.description ?? "",
-  };
+    ...(row.latitude != null && row.longitude != null
+      ? { latitude: Number(row.latitude), longitude: Number(row.longitude) }
+      : {}),
+  });
 }
 
 const SELECT = "*, property_images(id,url,storage_path,alt_text,sort_order)";
