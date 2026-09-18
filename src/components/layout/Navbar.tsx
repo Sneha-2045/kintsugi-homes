@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/common/Button";
 
 const navItems = [
+  { label: "Japan Properties", to: "/japan-properties" },
+  { label: "US Properties", to: "/us-properties" },
   { label: "Search", to: "/search" },
   { label: "Map", to: "/map" },
   { label: "Articles", to: "/articles" },
