@@ -1,5 +1,6 @@
 from playwright.sync_api import sync_playwright
 from datetime import datetime
+import json
 import re
 import os
 import hashlib
@@ -34,6 +35,12 @@ STATE_CODES = {
 # MINIMUM DAYS BEFORE AUCTION
 # ==========================================
 MIN_DAYS = 10
+
+
+HISTORY_FILE = os.path.join(
+    os.path.dirname(__file__),
+    "us-listing-history.json"
+)
 
 
 # ==========================================
@@ -78,6 +85,22 @@ today = datetime.now().replace(
     second=0,
     microsecond=0
 )
+
+today_string = today.strftime("%Y-%m-%d")
+
+if os.path.exists(HISTORY_FILE):
+
+    with open(
+        HISTORY_FILE,
+        "r",
+        encoding="utf-8"
+    ) as file:
+
+        listing_history = json.load(file)
+
+else:
+
+    listing_history = {}
 
 qualifying_properties = []
 
@@ -343,6 +366,19 @@ with sync_playwright() as p:
                         + property_hash
                     )
 
+                    if property_id not in listing_history:
+
+                        listing_history[property_id] = today_string
+
+                    first_seen_date = datetime.strptime(
+                        listing_history[property_id],
+                        "%Y-%m-%d"
+                    )
+
+                    added_days_ago = (
+                        today - first_seen_date
+                    ).days
+
                     # ==================================
                     # PROPERTY OBJECT
                     # ==================================
@@ -370,7 +406,7 @@ with sync_playwright() as p:
 
                         "priceUsd": market_value,
 
-                        "addedDaysAgo": 0,
+                        "addedDaysAgo": added_days_ago,
 
                         "images": (
                             [image_url]
@@ -571,6 +607,38 @@ with open(
         file.write("  },\n")
 
     file.write("];\n")
+
+# ==========================================
+# SAFETY CHECK
+# ==========================================
+# Do not overwrite existing listings if the
+# scraper unexpectedly returns zero results.
+
+if len(unique_properties) == 0:
+
+    print("\n======================================")
+    print("WARNING: 0 qualifying properties found")
+    print("Existing US listings file will NOT be overwritten.")
+    print("======================================")
+
+    # Do not save empty results.
+    # Exit before writing us-listings.ts.
+    raise SystemExit(1)
+
+with open(
+    HISTORY_FILE,
+    "w",
+    encoding="utf-8"
+) as file:
+
+    json.dump(
+        listing_history,
+        file,
+        indent=2,
+        sort_keys=True
+    )
+
+    file.write("\n")
 
 
 # ==========================================

@@ -40,7 +40,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add src/data/us-listings.ts
+          git add src/data/us-listings.ts automation/us-listing-history.json
 
           if git diff --cached --quiet; then
             echo "No listing changes to commit."

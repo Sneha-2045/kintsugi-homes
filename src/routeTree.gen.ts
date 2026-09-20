@@ -13,11 +13,13 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as ArticlesRouteImport } from './routes/articles'
 import { Route as ConsultRouteImport } from './routes/consult'
+import { Route as JapanPropertiesRouteImport } from './routes/japan-properties'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as UsPropertiesRouteImport } from './routes/us-properties'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as PrefectureSlugRouteImport } from './routes/prefecture.$slug'
 import { Route as PropertyIdRouteImport } from './routes/property.$id'
@@ -45,6 +47,11 @@ const ConsultRoute = ConsultRouteImport.update({
   path: '/consult',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JapanPropertiesRoute = JapanPropertiesRouteImport.update({
+  id: '/japan-properties',
+  path: '/japan-properties',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -68,6 +75,11 @@ const SavedRoute = SavedRouteImport.update({
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UsPropertiesRoute = UsPropertiesRouteImport.update({
+  id: '/us-properties',
+  path: '/us-properties',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CategorySlugRoute = CategorySlugRouteImport.update({
@@ -110,11 +122,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/articles': typeof ArticlesRoute
   '/consult': typeof ConsultRoute
+  '/japan-properties': typeof JapanPropertiesRoute
   '/login': typeof LoginRoute
   '/map': typeof MapRoute
   '/pricing': typeof PricingRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
+  '/us-properties': typeof UsPropertiesRoute
   '/category/$slug': typeof CategorySlugRoute
   '/prefecture/$slug': typeof PrefectureSlugRoute
   '/property/$id': typeof PropertyIdRoute
@@ -127,11 +141,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/articles': typeof ArticlesRoute
   '/consult': typeof ConsultRoute
+  '/japan-properties': typeof JapanPropertiesRoute
   '/login': typeof LoginRoute
   '/map': typeof MapRoute
   '/pricing': typeof PricingRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
+  '/us-properties': typeof UsPropertiesRoute
   '/category/$slug': typeof CategorySlugRoute
   '/prefecture/$slug': typeof PrefectureSlugRoute
   '/property/$id': typeof PropertyIdRoute
@@ -146,11 +162,13 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/articles': typeof ArticlesRoute
   '/consult': typeof ConsultRoute
+  '/japan-properties': typeof JapanPropertiesRoute
   '/login': typeof LoginRoute
   '/map': typeof MapRoute
   '/pricing': typeof PricingRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
+  '/us-properties': typeof UsPropertiesRoute
   '/category/$slug': typeof CategorySlugRoute
   '/prefecture/$slug': typeof PrefectureSlugRoute
   '/property/$id': typeof PropertyIdRoute
@@ -165,11 +183,13 @@ export interface FileRouteTypes {
     | '/'
     | '/articles'
     | '/consult'
+    | '/japan-properties'
     | '/login'
     | '/map'
     | '/pricing'
     | '/saved'
     | '/search'
+    | '/us-properties'
     | '/category/$slug'
     | '/prefecture/$slug'
     | '/property/$id'
@@ -182,11 +202,13 @@ export interface FileRouteTypes {
     | '/'
     | '/articles'
     | '/consult'
+    | '/japan-properties'
     | '/login'
     | '/map'
     | '/pricing'
     | '/saved'
     | '/search'
+    | '/us-properties'
     | '/category/$slug'
     | '/prefecture/$slug'
     | '/property/$id'
@@ -200,11 +222,13 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/articles'
     | '/consult'
+    | '/japan-properties'
     | '/login'
     | '/map'
     | '/pricing'
     | '/saved'
     | '/search'
+    | '/us-properties'
     | '/category/$slug'
     | '/prefecture/$slug'
     | '/property/$id'
@@ -219,11 +243,13 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   ArticlesRoute: typeof ArticlesRoute
   ConsultRoute: typeof ConsultRoute
+  JapanPropertiesRoute: typeof JapanPropertiesRoute
   LoginRoute: typeof LoginRoute
   MapRoute: typeof MapRoute
   PricingRoute: typeof PricingRoute
   SavedRoute: typeof SavedRoute
   SearchRoute: typeof SearchRoute
+  UsPropertiesRoute: typeof UsPropertiesRoute
   CategorySlugRoute: typeof CategorySlugRoute
   PrefectureSlugRoute: typeof PrefectureSlugRoute
   PropertyIdRoute: typeof PropertyIdRoute
@@ -260,6 +286,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsultRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/japan-properties': {
+      id: '/japan-properties'
+      path: '/japan-properties'
+      fullPath: '/japan-properties'
+      preLoaderRoute: typeof JapanPropertiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -293,6 +326,13 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/us-properties': {
+      id: '/us-properties'
+      path: '/us-properties'
+      fullPath: '/us-properties'
+      preLoaderRoute: typeof UsPropertiesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/category/$slug': {
@@ -367,11 +407,13 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   ArticlesRoute: ArticlesRoute,
   ConsultRoute: ConsultRoute,
+  JapanPropertiesRoute: JapanPropertiesRoute,
   LoginRoute: LoginRoute,
   MapRoute: MapRoute,
   PricingRoute: PricingRoute,
   SavedRoute: SavedRoute,
   SearchRoute: SearchRoute,
+  UsPropertiesRoute: UsPropertiesRoute,
   CategorySlugRoute: CategorySlugRoute,
   PrefectureSlugRoute: PrefectureSlugRoute,
   PropertyIdRoute: PropertyIdRoute,
