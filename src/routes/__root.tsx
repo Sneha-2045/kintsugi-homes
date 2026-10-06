@@ -80,11 +80,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Yadori Estate — Japanese Property Search in English" },
+      { title: "Rylestate — Japanese Property Search in English" },
       {
         name: "description",
         content:
-          "Search 1.5 million Japanese houses, akiya, land and apartments in English. Free to browse, updated daily.",
+          "Search Japanese houses, akiya, land and apartments in English. Review original listing sources and check dates when recorded, and confirm availability with the publisher.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -125,18 +125,18 @@ const organizationLd = {
   "@graph": [
     {
       "@type": "Organization",
-      name: "Yadori Estate",
-      url: "https://yadori.example.com",
+      name: "Rylestate",
+      url: "https://rylestate.com",
       description:
         "English-language search platform for Japanese houses, akiya, land and apartments.",
     },
     {
       "@type": "WebSite",
-      name: "Yadori Estate",
-      url: "https://yadori.example.com",
+      name: "Rylestate",
+      url: "https://rylestate.com",
       potentialAction: {
         "@type": "SearchAction",
-        target: "https://yadori.example.com/search?q={search_term_string}",
+        target: "https://rylestate.com/search?q={search_term_string}",
         "query-input": "required name=search_term_string",
       },
     },

@@ -6,12 +6,12 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Log in — Yadori Estate" },
-      { name: "description", content: "Sign in to your Yadori Estate account to manage property listings." },
-      { property: "og:title", content: "Log in — Yadori Estate" },
+      { title: "Log in — Rylestate" },
+      { name: "description", content: "Sign in to your Rylestate account to manage property listings." },
+      { property: "og:title", content: "Log in — Rylestate" },
       {
         property: "og:description",
-        content: "Sign in to your Yadori Estate account to manage property listings.",
+        content: "Sign in to your Rylestate account to manage property listings.",
       },
     ],
   }),

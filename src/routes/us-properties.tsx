@@ -4,7 +4,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { usListings } from "@/data/us-listings";
 
-const title = "US Properties | Yadori Estate";
+const title = "US Properties | Rylestate";
 const description = "US foreclosure properties with upcoming auction dates.";
 
 export const Route = createFileRoute("/us-properties")({

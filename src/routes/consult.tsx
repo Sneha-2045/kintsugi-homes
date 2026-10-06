@@ -7,13 +7,13 @@ import { partners } from "@/data/partners";
 export const Route = createFileRoute("/consult")({
   head: () => ({
     meta: [
-      { title: "Consult an Expert — Yadori Estate" },
+      { title: "Consult an Expert — Rylestate" },
       {
         name: "description",
         content:
           "Book a consultation with a licensed Japanese brokerage, surveyor or relocation specialist.",
       },
-      { property: "og:title", content: "Consult an Expert — Yadori Estate" },
+      { property: "og:title", content: "Consult an Expert — Rylestate" },
       {
         property: "og:description",
         content:

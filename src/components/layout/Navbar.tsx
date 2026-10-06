@@ -16,11 +16,11 @@ const navItems = [
 
 function Brand() {
   return (
-    <Link to="/" className="flex shrink-0 flex-col leading-none" aria-label="Yadori Estate — home">
+    <Link to="/" className="flex shrink-0 flex-col leading-none" aria-label="Rylestate — home">
       <span className="font-display text-xl font-bold tracking-tight text-foreground md:text-[22px]">
-        Yadori<span className="text-primary-light"> Estate</span>
+        Rylestate
       </span>
-      <span className="mt-1 text-[10px] tracking-[0.28em] text-subtle">ヤドリ・日本の空き家</span>
+      <span className="mt-1 text-[10px] tracking-[0.28em] text-subtle">日本の空き家と不動産</span>
     </Link>
   );
 }

@@ -63,18 +63,19 @@ export function Footer() {
       <div className="container-page grid gap-10 py-14 md:grid-cols-2 lg:grid-cols-5 lg:gap-8 lg:py-20">
         <div className="lg:pr-6">
           <span className="font-display text-xl font-bold text-foreground">
-            Yadori<span className="text-primary-light"> Estate</span>
+            Rylestate
           </span>
-          <p className="mt-1 text-[10px] tracking-[0.28em] text-subtle">ヤドリ・日本の空き家</p>
+            <p className="mt-1 text-[10px] tracking-[0.28em] text-subtle">日本の空き家と不動産</p>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
-            A Japan-focused, English-language property search platform. Independent, ad-free and
-            built for people buying from abroad.
+            Rylestate is an independent, Japan-focused property search platform. We are not the
+            seller or a real-estate broker; purchases are handled by the original listing source
+            or a licensed local professional.
           </p>
           <a
             href="https://instagram.com"
             target="_blank"
             rel="noreferrer noopener"
-            aria-label="Yadori Estate on Instagram"
+            aria-label="Rylestate on Instagram"
             className="mt-5 inline-grid h-10 w-10 place-items-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary-light"
           >
             <Instagram className="h-5 w-5" />
@@ -151,8 +152,12 @@ export function Footer() {
 
       <div className="border-t border-border">
         <div className="container-page flex flex-col gap-2 py-6 text-xs text-subtle md:flex-row md:items-center md:justify-between">
-          <p>© {new Date().getFullYear()} Yadori Estate. Demo project — all listings are fictional.</p>
-          <p>Prices shown are indicative and exclude acquisition costs.</p>
+          <p>
+            © {new Date().getFullYear()} Rylestate. Demo inventory is illustrative, not live offers.
+            Listing sources and last-checked dates are shown when recorded; missing details are
+            unverified. Confirm availability and terms with the original publisher.
+          </p>
+          <p>Prices are indicative, may change, and exclude acquisition costs.</p>
         </div>
       </div>
     </footer>

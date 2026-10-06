@@ -15,6 +15,7 @@ export interface PropertyImageRow {
 export interface PropertyRow {
   id: string;
   source_url: string | null;
+  last_checked_at: string | null;
   source_listing_id: string;
   title: string;
   price: number | null;
@@ -66,7 +67,7 @@ export function toProperty(row: PropertyWithImages): Property {
 
   const isJpy = (row.currency ?? "JPY").toUpperCase() === "JPY";
   const price = row.price ?? 0;
-  const priceJpy = isJpy ? price : Math.round(price * JPY_PER_USD);
+  const priceJpy = isJpy ? price : undefined;
   const priceUsd = isJpy ? Math.round(price / JPY_PER_USD) : price;
 
   const location = [row.city, row.prefecture].filter(Boolean).join(", ") || row.country;
@@ -81,7 +82,9 @@ export function toProperty(row: PropertyWithImages): Property {
     prefectureSlug: slug(row.prefecture ?? row.country),
     categorySlug: slug(row.property_type ?? "house"),
     priceUsd,
-    priceJpy,
+    ...(priceJpy != null ? { priceJpy } : {}),
+    ...(row.source_url ? { sourceUrl: row.source_url } : {}),
+    ...(row.last_checked_at ? { lastCheckedAt: row.last_checked_at } : {}),
     addedDaysAgo: daysAgo(row.created_at),
     images: ordered.length > 0 ? ordered : ["/placeholder.svg"],
     tags,

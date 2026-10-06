@@ -6,9 +6,9 @@ import { AdminGate } from "./index";
 export const Route = createFileRoute("/_authenticated/admin/new")({
   head: () => ({
     meta: [
-      { title: "Add property — Yadori Estate admin" },
+      { title: "Add property — Rylestate admin" },
       { name: "description", content: "Manually add an authorized property listing with images." },
-      { property: "og:title", content: "Add property — Yadori Estate admin" },
+      { property: "og:title", content: "Add property — Rylestate admin" },
       {
         property: "og:description",
         content: "Manually add an authorized property listing with images.",

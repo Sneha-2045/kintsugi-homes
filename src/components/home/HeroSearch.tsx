@@ -9,11 +9,9 @@ const tabs = ["Buy", "Rent", "Sold", "Akiya bank", "Map"] as const;
 const views = ["List", "Grid", "Map"] as const;
 
 const stats = [
-  { value: "1,536,000+", label: "properties" },
-  { value: "2,690", label: "Japanese sources" },
-  { value: null, label: "every listing in English" },
-  { value: null, label: "free to browse" },
-  { value: null, label: "updated daily" },
+  { value: null, label: "Japan-focused listings" },
+  { value: null, label: "Original JPY shown where recorded" },
+  { value: null, label: "Independent search platform" },
 ];
 
 export function HeroSearch() {

@@ -8,6 +8,8 @@ export interface Property {
   categorySlug: string;
   priceUsd: number;
   priceJpy?: number;
+  sourceUrl?: string;
+  lastCheckedAt?: string;
   addedDaysAgo: number;
   images: string[];
   tags: string[];

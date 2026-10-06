@@ -14,10 +14,10 @@ const stats = [
     body: "Japan places no restrictions on foreign property ownership. Buy land and buildings outright, remotely, with a licensed agent.",
   },
   {
-    value: "2,690+ Sources",
-    label: "Akiya Banks & Agencies",
-    color: "text-violet",
-    body: "Yadori Estate aggregates municipal akiya banks and agency listings into one English-language search — 1,536,000+ properties across all 47 prefectures.",
+    value: "Source details",
+    label: "Shown when recorded",
+    color: "text-primary-light",
+    body: "Original listing links and last-checked dates appear when available. Missing metadata means freshness has not been verified.",
   },
 ];
 

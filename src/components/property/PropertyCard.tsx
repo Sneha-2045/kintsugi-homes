@@ -12,7 +12,7 @@ import {
 import { useState } from "react";
 import { Badge } from "@/components/common/Badge";
 import { Button } from "@/components/common/Button";
-import { formatUsd } from "@/data/properties";
+import { formatJpy, formatUsd } from "@/data/properties";
 import { cn } from "@/lib/utils";
 import type { Property } from "@/types/property";
 
@@ -20,6 +20,10 @@ export function PropertyCard({ property }: { property: Property }) {
   const [index, setIndex] = useState(0);
   const [saved, setSaved] = useState(false);
   const total = property.images.length;
+  const tags = property.tags.filter(
+    (tag, index, values) =>
+      values.findIndex((value) => value.trim().toLowerCase() === tag.trim().toLowerCase()) === index,
+  );
 
   const step = (dir: 1 | -1) => setIndex((i) => (i + dir + total) % total);
 
@@ -36,7 +40,9 @@ export function PropertyCard({ property }: { property: Property }) {
 
         <div className="absolute left-3 top-3">
           <Badge variant="solidBlue" size="sm">
-            Added {property.addedDaysAgo} day{property.addedDaysAgo === 1 ? "" : "s"} ago
+            {property.lastCheckedAt
+              ? `Checked ${new Date(`${property.lastCheckedAt}T00:00:00`).toLocaleDateString()}`
+              : "Freshness unverified"}
           </Badge>
         </div>
 
@@ -85,9 +91,15 @@ export function PropertyCard({ property }: { property: Property }) {
           </>
         ) : null}
 
-        <p className="absolute bottom-3 left-3 rounded-md bg-background/85 px-3 py-1.5 text-lg font-bold text-foreground">
-          {formatUsd(property.priceUsd)}
-        </p>
+        <div className="absolute bottom-3 left-3 rounded-md bg-background/90 px-3 py-1.5 text-foreground">
+          <p className="text-lg font-bold">
+            {property.priceJpy != null ? "Approx. " : ""}
+            {formatUsd(property.priceUsd)}
+          </p>
+          {property.priceJpy != null ? (
+            <p className="text-xs text-muted-foreground">Original {formatJpy(property.priceJpy)}</p>
+          ) : null}
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col p-5">
@@ -102,7 +114,7 @@ export function PropertyCard({ property }: { property: Property }) {
         </h3>
 
         <ul className="mt-3 flex flex-wrap gap-1.5">
-          {property.tags.map((tag, i) => (
+          {tags.map((tag, i) => (
             <li key={tag}>
               <Badge variant={i === 0 || i === 3 ? "blue" : "neutral"} size="xs">
                 {tag}

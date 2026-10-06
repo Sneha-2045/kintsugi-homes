@@ -17,24 +17,20 @@ export function FreshListings() {
         <SectionHeader
           eyebrow={
             <Badge variant="blue" size="md">
-              New this week
+              Japan inventory
             </Badge>
           }
-          title="Fresh this week"
+          title="Browse Japan listings"
           subtitle={
-            <>
-              <span className="font-semibold text-primary-light">11,339</span>{" "}
-              listed in the last seven days. These are open to browse now. The
-              first 24 hours are members-only.
-            </>
+            "A small selection to start your search. Sources and checked dates may be unavailable; confirm current price and availability with the publisher."
           }
           action={
             <Link
               to="/search"
-              search={{ q: "new this week" }}
+              search={{ q: "Japan" }}
               className="inline-flex items-center gap-2 text-sm font-semibold text-primary-light hover:text-primary"
             >
-              Browse the week
+              Search all listings
               <ArrowRight className="h-4 w-4" />
             </Link>
           }
@@ -42,7 +38,7 @@ export function FreshListings() {
         />
 
         <h2 id="fresh-title" className="sr-only">
-          Fresh listings this week
+          Japan property listings
         </h2>
 
         <div className="mb-16">
@@ -57,7 +53,7 @@ export function FreshListings() {
           </div>
 
           <PropertyCarousel
-            properties={properties}
+            properties={properties.slice(0, 6)}
             label="Japan listings"
           />
         </div>

@@ -14,9 +14,9 @@ import { RegionGrid } from "@/components/home/RegionGrid";
 import { PrefectureGrid } from "@/components/home/PrefectureGrid";
 import { faqs } from "@/data/faq";
 
-const title = "Yadori Estate — Japanese Houses, Akiya & Land in English";
+const title = "Rylestate — Japanese Houses, Akiya & Land in English";
 const description =
-  "Search 1,536,000+ Japanese properties from 2,690 sources — houses, akiya, land and apartments, every listing in English. Free to browse, updated daily.";
+  "Search Japanese houses, akiya, land and apartments in English. Review original asking prices and listing sources where provided, and confirm availability with the publisher.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -48,6 +48,7 @@ function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
       <HeroSearch />
+      <PropertyTypes />
       <FreshListings />
       <MemberPromo />
       <PricingSection />
@@ -58,7 +59,6 @@ function Home() {
       <AudioArticles />
       <AkiyaInfo />
       <FAQSection />
-      <PropertyTypes />
       <RegionGrid />
       <PrefectureGrid />
     </>

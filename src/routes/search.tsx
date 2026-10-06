@@ -12,12 +12,12 @@ export const Route = createFileRoute("/search")({
   }),
   head: () => ({
     meta: [
-      { title: "Search Japanese Property — Yadori Estate" },
+      { title: "Search Japanese Property — Rylestate" },
       {
         name: "description",
         content: "Search houses, akiya, land and apartments across all 47 Japanese prefectures.",
       },
-      { property: "og:title", content: "Search Japanese Property — Yadori Estate" },
+      { property: "og:title", content: "Search Japanese Property — Rylestate" },
       {
         property: "og:description",
         content: "Search houses, akiya, land and apartments across all 47 Japanese prefectures.",

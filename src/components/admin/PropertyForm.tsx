@@ -37,6 +37,7 @@ function Field({
 
 interface FormState {
   source_url: string;
+  last_checked_at: string;
   source_listing_id: string;
   title: string;
   price: string;
@@ -61,6 +62,7 @@ interface FormState {
 
 const emptyState: FormState = {
   source_url: "",
+  last_checked_at: "",
   source_listing_id: "",
   title: "",
   price: "",
@@ -85,6 +87,7 @@ const emptyState: FormState = {
 
 const fromRow = (row: PropertyWithImages): FormState => ({
   source_url: row.source_url ?? "",
+  last_checked_at: row.last_checked_at ?? "",
   source_listing_id: row.source_listing_id,
   title: row.title,
   price: row.price != null ? String(row.price) : "",
@@ -136,9 +139,13 @@ export function PropertyForm({ initial }: { initial?: PropertyWithImages | null 
 
   const set = (key: keyof FormState) => (value: string) => setForm((f) => ({ ...f, [key]: value }));
 
-  const validate = () => {
+  const validate = (status: "draft" | "published") => {
     const e: Record<string, string> = {};
     if (!form.source_listing_id.trim()) e["source_listing_id"] = "Source listing ID is required.";
+    if (status === "published" && !form.source_url.trim())
+      e["source_url"] = "A source URL is required before publishing.";
+    if (status === "published" && !form.last_checked_at.trim())
+      e["last_checked_at"] = "A check date is required before publishing.";
     if (!form.title.trim()) e["title"] = "Title is required.";
     if (!form.country.trim()) e["country"] = "Country is required.";
     if (!form.currency.trim()) e["currency"] = "Currency is required.";
@@ -155,7 +162,7 @@ export function PropertyForm({ initial }: { initial?: PropertyWithImages | null 
 
   const save = async (status: "draft" | "published") => {
     setMessage(null);
-    if (!validate()) return;
+    if (!validate(status)) return;
     if (status === "published" && images.length === 0) {
       setMessage("Add at least one image before publishing.");
       return;
@@ -165,6 +172,7 @@ export function PropertyForm({ initial }: { initial?: PropertyWithImages | null 
       const { data: userData } = await supabase.auth.getUser();
       const payload = {
         source_url: form.source_url.trim() || null,
+        last_checked_at: form.last_checked_at.trim() || null,
         source_listing_id: form.source_listing_id.trim(),
         title: form.title.trim(),
         price: num(form.price),
@@ -290,6 +298,19 @@ export function PropertyForm({ initial }: { initial?: PropertyWithImages | null 
               placeholder="ABC-12345"
             />
             {err("source_listing_id")}
+          </Field>
+          <Field
+            label="Last checked"
+            htmlFor="last_checked_at"
+            hint="Enter only after verifying the original listing source."
+          >
+            <input
+              id="last_checked_at"
+              type="date"
+              className={inputClass}
+              value={form.last_checked_at}
+              onChange={(e) => set("last_checked_at")(e.target.value)}
+            />
           </Field>
         </div>
       </section>

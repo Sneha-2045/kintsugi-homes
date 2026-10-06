@@ -6,13 +6,13 @@ import { articles } from "@/data/articles";
 export const Route = createFileRoute("/articles")({
   head: () => ({
     meta: [
-      { title: "Guides & Audio Articles — Yadori Estate" },
+      { title: "Guides & Audio Articles — Rylestate" },
       {
         name: "description",
         content:
           "Guides on Japanese architecture, akiya renovation and buying property in Japan — read or listen.",
       },
-      { property: "og:title", content: "Guides & Audio Articles — Yadori Estate" },
+      { property: "og:title", content: "Guides & Audio Articles — Rylestate" },
       {
         property: "og:description",
         content:

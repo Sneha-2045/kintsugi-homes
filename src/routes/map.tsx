@@ -12,12 +12,12 @@ export const Route = createFileRoute("/map")({
   }),
   head: () => ({
     meta: [
-      { title: "Map Search — Yadori Estate" },
+      { title: "Map Search — Rylestate" },
       {
         name: "description",
         content: "Explore Japanese property listings on an interactive OpenStreetMap view.",
       },
-      { property: "og:title", content: "Map Search — Yadori Estate" },
+      { property: "og:title", content: "Map Search — Rylestate" },
       {
         property: "og:description",
         content: "Explore Japanese property listings on an interactive OpenStreetMap view.",

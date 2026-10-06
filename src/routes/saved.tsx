@@ -6,9 +6,9 @@ import { PageShell } from "@/components/layout/PageShell";
 export const Route = createFileRoute("/saved")({
   head: () => ({
     meta: [
-      { title: "Saved Properties — Yadori Estate" },
+      { title: "Saved Properties — Rylestate" },
       { name: "description", content: "Your saved Japanese property listings and search alerts." },
-      { property: "og:title", content: "Saved Properties — Yadori Estate" },
+      { property: "og:title", content: "Saved Properties — Rylestate" },
       {
         property: "og:description",
         content: "Your saved Japanese property listings and search alerts.",

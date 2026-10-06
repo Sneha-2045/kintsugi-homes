@@ -13,8 +13,8 @@ export const Route = createFileRoute("/region/$slug")({
     return { region };
   },
   head: ({ loaderData }) => {
-    if (!loaderData) return { meta: [{ title: "Region unavailable — Yadori Estate" }] };
-    const t = `Property for sale in ${loaderData.region.name}, Japan | Yadori Estate`;
+    if (!loaderData) return { meta: [{ title: "Region unavailable — Rylestate" }] };
+    const t = `Property for sale in ${loaderData.region.name}, Japan | Rylestate`;
     return {
       meta: [
         { title: t },

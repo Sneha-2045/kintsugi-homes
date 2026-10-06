@@ -30,6 +30,7 @@ export type Database = {
           features: string[]
           id: string
           land_area: number | null
+          last_checked_at: string | null
           latitude: number | null
           listing_type: string
           longitude: number | null
@@ -59,6 +60,7 @@ export type Database = {
           features?: string[]
           id?: string
           land_area?: number | null
+          last_checked_at?: string | null
           latitude?: number | null
           listing_type?: string
           longitude?: number | null
@@ -88,6 +90,7 @@ export type Database = {
           features?: string[]
           id?: string
           land_area?: number | null
+          last_checked_at?: string | null
           latitude?: number | null
           listing_type?: string
           longitude?: number | null
@@ -101,6 +104,33 @@ export type Database = {
           title?: string
           updated_at?: string
           year_built?: number | null
+        }
+        Relationships: []
+      }
+      listing_issue_reports: {
+        Row: {
+          contact_email: string | null
+          created_at: string
+          description: string
+          id: string
+          issue_type: string
+          listing_id: string
+        }
+        Insert: {
+          contact_email?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          issue_type: string
+          listing_id: string
+        }
+        Update: {
+          contact_email?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          issue_type?: string
+          listing_id?: string
         }
         Relationships: []
       }

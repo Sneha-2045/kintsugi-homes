@@ -12,8 +12,8 @@ export const Route = createFileRoute("/prefecture/$slug")({
     return { prefecture };
   },
   head: ({ loaderData }) => {
-    if (!loaderData) return { meta: [{ title: "Prefecture unavailable — Yadori Estate" }] };
-    const t = `${loaderData.prefecture.name} property for sale | Yadori Estate`;
+    if (!loaderData) return { meta: [{ title: "Prefecture unavailable — Rylestate" }] };
+    const t = `${loaderData.prefecture.name} property for sale | Rylestate`;
     const d = `Browse ${loaderData.prefecture.count.toLocaleString("en-US")} houses, akiya, land and apartments listed in ${loaderData.prefecture.name} Prefecture.`;
     return {
       meta: [

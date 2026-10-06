@@ -9,13 +9,13 @@ import { PageShell } from "@/components/layout/PageShell";
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
-      { title: "Pricing — Yadori Estate Membership" },
+      { title: "Pricing — Rylestate Membership" },
       {
         name: "description",
         content:
           "Browsing is free forever. Membership costs $5/month or $50/year and unlocks new listings 24 hours early.",
       },
-      { property: "og:title", content: "Pricing — Yadori Estate Membership" },
+      { property: "og:title", content: "Pricing — Rylestate Membership" },
       {
         property: "og:description",
         content:

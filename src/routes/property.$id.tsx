@@ -3,6 +3,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Badge } from "@/components/common/Badge";
 import { Button } from "@/components/common/Button";
 import { PageShell } from "@/components/layout/PageShell";
+import { ReportListingIssue } from "@/components/property/ReportListingIssue";
 
 import { formatJpy, formatUsd, properties } from "@/data/properties";
 import { usListings } from "@/data/us-listings";
@@ -30,7 +31,7 @@ export const Route = createFileRoute("/property/$id")({
       return {
         meta: [
           {
-            title: "Listing unavailable — Yadori Estate",
+            title: "Listing unavailable — Rylestate",
           },
         ],
       };
@@ -38,7 +39,7 @@ export const Route = createFileRoute("/property/$id")({
 
     const t = `${loaderData.property.location} — ${formatUsd(
       loaderData.property.priceUsd
-    )} | Yadori Estate`;
+    )} | Rylestate`;
 
     return {
       meta: [
@@ -79,12 +80,16 @@ export const Route = createFileRoute("/property/$id")({
 
 function PropertyDetails() {
   const { property } = Route.useLoaderData();
+  const tags = property.tags.filter(
+    (tag, index, values) =>
+      values.findIndex((value) => value.trim().toLowerCase() === tag.trim().toLowerCase()) === index,
+  );
 
   const ld = {
     "@context": "https://schema.org",
     "@type": "RealEstateListing",
     name: property.title,
-    url: `https://yadori.example.com/property/${property.id}`,
+    url: `https://rylestate.com/property/${property.id}`,
     description: property.description,
     image: property.images,
     offers: {
@@ -126,7 +131,7 @@ function PropertyDetails() {
         <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
           <div>
             <ul className="flex flex-wrap gap-2">
-              {property.tags.map((t: string) => (
+              {tags.map((t: string) => (
                 <li key={t}>
                   <Badge variant="neutral" size="sm">
                     {t}
@@ -142,6 +147,41 @@ function PropertyDetails() {
             <p className="mt-3 leading-relaxed text-muted-foreground">
               {property.description}
             </p>
+
+            <section className="mt-8 border-t border-border pt-6" aria-labelledby="source-title">
+              <h3 id="source-title" className="text-lg font-semibold text-foreground">
+                Listing source &amp; freshness
+              </h3>
+              <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
+                <div>
+                  <dt className="text-muted-foreground">Original listing</dt>
+                  <dd className="mt-1 font-medium text-foreground">
+                    {property.sourceUrl ? (
+                      <a
+                        href={property.sourceUrl}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="text-primary-light underline underline-offset-4"
+                      >
+                        View source listing
+                      </a>
+                    ) : (
+                      "Not provided"
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Last checked by Rylestate</dt>
+                  <dd className="mt-1 font-medium text-foreground">
+                    {property.lastCheckedAt
+                      ? new Date(`${property.lastCheckedAt}T00:00:00`).toLocaleDateString()
+                      : "Not recorded; freshness unverified"}
+                  </dd>
+                </div>
+              </dl>
+            </section>
+
+            <ReportListingIssue listingId={property.id} />
 
             <h3 className="mt-8 text-lg font-semibold text-foreground">
               Key facts
@@ -216,12 +256,12 @@ function PropertyDetails() {
 
           <aside className="h-fit rounded-2xl border border-border bg-card p-6">
             <p className="text-3xl font-bold text-foreground">
-              {formatUsd(property.priceUsd)}
+              Approx. {formatUsd(property.priceUsd)}
             </p>
 
-            {property.priceJpy && (
+            {property.priceJpy != null && (
               <p className="mt-1 text-sm text-muted-foreground">
-                {formatJpy(property.priceJpy)}
+                Original asking price: {formatJpy(property.priceJpy)}
               </p>
             )}
 

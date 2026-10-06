@@ -9,9 +9,9 @@ import { fetchAdminProperties, isCurrentUserAdmin } from "@/lib/property-db";
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
     meta: [
-      { title: "Property admin — Yadori Estate" },
+      { title: "Property admin — Rylestate" },
       { name: "description", content: "Manage manually entered property listings." },
-      { property: "og:title", content: "Property admin — Yadori Estate" },
+      { property: "og:title", content: "Property admin — Rylestate" },
       { property: "og:description", content: "Manage manually entered property listings." },
     ],
   }),
