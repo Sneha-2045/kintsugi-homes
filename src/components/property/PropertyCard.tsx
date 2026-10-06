@@ -96,7 +96,7 @@ export function PropertyCard({ property }: { property: Property }) {
         <div className="absolute bottom-3 left-3 rounded-md bg-background/90 px-3 py-1.5 text-foreground">
           <p className="text-lg font-bold">
             {property.priceJpy != null ? "Approx. " : ""}
-            {formatUsd(property.priceUsd)}
+            {property.priceUsd > 0 ? formatUsd(property.priceUsd) : "Price unavailable"}
           </p>
           {property.priceJpy != null ? (
             <p className="text-xs text-muted-foreground">Original {formatJpy(property.priceJpy)}</p>

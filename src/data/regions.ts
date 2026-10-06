@@ -1,12 +1,11 @@
 import type { Region } from "@/types/property";
-import { IMAGES } from "./properties";
+import { IMAGES, properties } from "./properties";
 
-export const regions: Region[] = [
+const regionDefinitions: Omit<Region, "count">[] = [
   {
     slug: "kanto",
     name: "Kanto",
     nameJa: "関東",
-    count: 78820,
     image: IMAGES.tokyo,
     blurb: "Tokyo and the surrounding prefectures — the densest market in Japan.",
   },
@@ -14,7 +13,6 @@ export const regions: Region[] = [
     slug: "kyushu",
     name: "Kyushu",
     nameJa: "九州",
-    count: 44848,
     image: IMAGES.village,
     blurb: "Warm winters, active volcanoes and some of the cheapest rural stock.",
   },
@@ -22,7 +20,6 @@ export const regions: Region[] = [
     slug: "kansai",
     name: "Kansai",
     nameJa: "関西",
-    count: 30028,
     image: IMAGES.kyoto,
     blurb: "Kyoto machiya, Osaka apartments and the Nara countryside.",
   },
@@ -30,7 +27,6 @@ export const regions: Region[] = [
     slug: "hokkaido",
     name: "Hokkaido",
     nameJa: "北海道",
-    count: 22175,
     image: IMAGES.hokkaido,
     blurb: "Powder-snow towns, wide plots and a long, well-established resale market.",
   },
@@ -38,7 +34,6 @@ export const regions: Region[] = [
     slug: "chubu",
     name: "Chubu",
     nameJa: "中部",
-    count: 21058,
     image: IMAGES.mountains,
     blurb: "The Japanese Alps, Nagano ski country and the Pacific industrial belt.",
   },
@@ -46,7 +41,6 @@ export const regions: Region[] = [
     slug: "okinawa",
     name: "Okinawa",
     nameJa: "沖縄",
-    count: 16128,
     image: IMAGES.okinawa,
     blurb: "Subtropical islands with strong rental demand and limited supply.",
   },
@@ -54,7 +48,6 @@ export const regions: Region[] = [
     slug: "tohoku",
     name: "Tohoku",
     nameJa: "東北",
-    count: 15467,
     image: IMAGES.farmhouse,
     blurb: "Deep snow, hot springs and the lowest prices per square metre in Honshu.",
   },
@@ -62,7 +55,6 @@ export const regions: Region[] = [
     slug: "chugoku",
     name: "Chugoku",
     nameJa: "中国",
-    count: 11787,
     image: IMAGES.temple,
     blurb: "Inland Sea towns, Hiroshima and quiet farmhouse valleys.",
   },
@@ -70,7 +62,6 @@ export const regions: Region[] = [
     slug: "shikoku",
     name: "Shikoku",
     nameJa: "四国",
-    count: 7956,
     image: IMAGES.coast,
     blurb: "The pilgrimage island — mild climate, generous municipal grants.",
   },
@@ -78,8 +69,12 @@ export const regions: Region[] = [
     slug: "hokuriku",
     name: "Hokuriku",
     nameJa: "北陸",
-    count: 1113,
     image: IMAGES.roof,
     blurb: "Sea-of-Japan coast with heavy-snow architecture and craft towns.",
   },
 ];
+
+export const regions: Region[] = regionDefinitions.map((region) => ({
+  ...region,
+  count: properties.filter((property) => property.regionSlug === region.slug).length,
+}));

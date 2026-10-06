@@ -118,7 +118,6 @@ const imageKeys = [
   "kyoto",
 ];
 
-const layouts = ["2K", "2DK", "2LDK", "3K", "3DK", "3LDK", "4K", "4DK", "4LDK", "5K", "5DK", "6DK", "7DK", "8DK"];
 const amenities = [
   "Convenience store — 5 min walk",
   "Convenience store — 8 min drive",
@@ -260,13 +259,13 @@ function roomsFor(cat, i) {
     const beds = 1 + (i % 3);
     return {
       bedrooms: beds,
-      floorArea: 35 + (i % 45),
+      floorArea: 42 + beds * 15 + (i % 14),
       yearBuilt: 1985 + (i % 35),
     };
   }
-  const beds = 2 + (i % 7);
-  const floor = 55 + (i % 140);
-  const land = cat === "farmhouse" || cat === "akiya-bank" ? 200 + (i % 1200) : 80 + (i % 400);
+  const beds = 2 + (i % 5);
+  const floor = Math.max(70 + (i % 90), beds * 12 + 20);
+  const land = cat === "farmhouse" || cat === "akiya-bank" ? 300 + (i % 1200) : 120 + (i % 500);
   return {
     bedrooms: beds,
     floorArea: floor,
@@ -276,13 +275,20 @@ function roomsFor(cat, i) {
 }
 
 function tagsFor(cat, layout, i) {
-  const tags = ["Buy"];
-  if (cat === "house") tags.push("House", layout, i % 2 ? "Freehold" : "Renovation Project");
-  else if (cat === "apartment") tags.push("Apartment", layout, i % 2 ? "Renovated" : "Near Station");
-  else if (cat === "land") tags.push("Land", "Residential Zone", i % 2 ? "Utilities Ready" : "Buildable");
-  else if (cat === "akiya-bank") tags.push("Akiya Bank", layout, "Needs Renovation");
-  else if (cat === "traditional-house") tags.push("Traditional House", layout, i % 2 ? "Machiya" : "Kominka");
-  else tags.push("Farmhouse", layout, i % 2 ? "Farmland" : "Rural");
+  const tags = [];
+  if (cat === "house") {
+    tags.push("House", layout, i % 2 ? "Freehold" : "Renovation Project");
+  } else if (cat === "apartment") {
+    tags.push("Apartment", layout, i % 2 ? "Renovated" : "Near Station");
+  } else if (cat === "land") {
+    tags.push("Land", "Residential Zone", i % 2 ? "Utilities Ready" : "Buildable");
+  } else if (cat === "akiya-bank") {
+    tags.push("Akiya Bank", layout, "Needs Renovation");
+  } else if (cat === "traditional-house") {
+    tags.push("Traditional House", layout, i % 2 ? "Machiya" : "Kominka");
+  } else {
+    tags.push("Farmhouse", layout, i % 2 ? "Farmland" : "Rural");
+  }
   return tags;
 }
 
@@ -292,9 +298,11 @@ const listings = [];
 for (let i = 0; i < TARGET; i++) {
   const loc = pick(locations, i * 3 + 7);
   const cat = categoryFor(i);
-  const layout = pick(layouts, i * 5);
   const { priceJpy, priceUsd } = priceFor(cat, i);
   const rooms = roomsFor(cat, i);
+  const layout = rooms.bedrooms
+    ? `${rooms.bedrooms}${cat === "apartment" ? "LDK" : pick(["K", "DK", "LDK"], i)}`
+    : undefined;
   const title = pick(titleParts[cat], i);
   const imgs = [
     pick(imageKeys, i),
@@ -318,13 +326,14 @@ for (let i = 0; i < TARGET; i++) {
     prefecture: loc.prefecture,
     regionSlug: loc.regionSlug,
     prefectureSlug: loc.prefectureSlug,
-    categorySlug: cat,
+    // Akiya bank is a listing program; classify its inventory by property type.
+    categorySlug: cat === "akiya-bank" ? "house" : cat,
     priceUsd,
     priceJpy,
     addedDaysAgo: 1 + (i % 14),
     images: imgs,
     tags,
-    extraTags: 2 + (i % 6),
+    extraTags: 0,
     ...rooms,
     amenity: pick(amenities, i * 2),
     description: pick(descriptions[cat], i),

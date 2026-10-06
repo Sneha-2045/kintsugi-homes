@@ -37,9 +37,11 @@ export const Route = createFileRoute("/property/$id")({
       };
     }
 
-    const t = `${loaderData.property.location} — ${formatUsd(
-      loaderData.property.priceUsd
-    )} | Real Estate`;
+    const priceLabel =
+      loaderData.property.priceUsd > 0
+        ? formatUsd(loaderData.property.priceUsd)
+        : "Price unavailable";
+    const t = `${loaderData.property.location} — ${priceLabel} | Real Estate`;
 
     return {
       meta: [
@@ -92,11 +94,14 @@ function PropertyDetails() {
     url: `https://rylestate.com/property/${property.id}`,
     description: property.description,
     image: property.images,
-    offers: {
-      "@type": "Offer",
-      price: property.priceUsd,
-      priceCurrency: "USD",
-    },
+    offers:
+      property.priceUsd > 0
+        ? {
+            "@type": "Offer",
+            price: property.priceUsd,
+            priceCurrency: "USD",
+          }
+        : undefined,
   };
 
   return (
@@ -256,7 +261,7 @@ function PropertyDetails() {
 
           <aside className="h-fit rounded-2xl border border-border bg-card p-6">
             <p className="text-3xl font-bold text-foreground">
-              Approx. {formatUsd(property.priceUsd)}
+              {property.priceUsd > 0 ? formatUsd(property.priceUsd) : "Price unavailable"}
             </p>
 
             {property.priceJpy != null && (

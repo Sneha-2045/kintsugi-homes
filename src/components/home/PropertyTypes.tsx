@@ -10,7 +10,7 @@ export function PropertyTypes() {
         <SectionHeader
           align="center"
           title="Property Types Available"
-          subtitle="Live counts, updated as listings land."
+          subtitle="Counts reflect the listings currently in our Japan index."
           className="mb-12"
         />
         <h2 id="types-title" className="sr-only">

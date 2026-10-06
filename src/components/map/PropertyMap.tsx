@@ -26,7 +26,7 @@ function popupHtml(property: Property) {
     <div class="property-map-popup">
       <p class="property-map-popup-title">${escapeHtml(property.title)}</p>
       <p class="property-map-popup-location">${escapeHtml(property.location)}</p>
-      <p class="property-map-popup-price">${escapeHtml(formatUsd(property.priceUsd))}</p>
+      <p class="property-map-popup-price">${escapeHtml(property.priceUsd > 0 ? formatUsd(property.priceUsd) : "Price unavailable")}</p>
       <a class="property-map-popup-link" href="/property/${encodeURIComponent(property.id)}">View Listing</a>
     </div>
   `;

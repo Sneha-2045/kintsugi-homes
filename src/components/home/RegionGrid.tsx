@@ -18,7 +18,7 @@ export function RegionGrid() {
         </h2>
 
         <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
-          {regions.map((r) => (
+          {regions.filter((region) => region.count > 0).map((r) => (
             <li key={r.slug}>
               <Link
                 to="/region/$slug"

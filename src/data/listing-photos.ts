@@ -146,7 +146,7 @@ function pick(pool: string[], start: number, count: number): string[] {
   return unique;
 }
 
-export function listingGalleryFor(property: Pick<Property, "id" | "categorySlug">): string[] {
+export function listingGalleryFor(property: Pick<Property, "id" | "categorySlug" | "tags">): string[] {
   const pinned = FEATURED_GALLERIES[property.id];
   if (pinned) return pinned;
 
@@ -160,9 +160,9 @@ export function listingGalleryFor(property: Pick<Property, "id" | "categorySlug"
     return pick(APARTMENTS, seed, 4);
   }
 
-  const rural = ["farmhouse", "akiya-bank", "traditional-house"].includes(
-    property.categorySlug,
-  );
+  const rural =
+    ["farmhouse", "traditional-house"].includes(property.categorySlug) ||
+    property.tags.some((tag) => tag.toLowerCase() === "akiya bank");
 
   const exteriors = rural
     ? [

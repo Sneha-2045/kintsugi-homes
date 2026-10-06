@@ -79,7 +79,7 @@ function MapPage() {
       <div className={`grid gap-6 ${isUs ? "" : "lg:grid-cols-[320px_minmax(0,1fr)]"}`}>
         {!isUs ? (
           <ul className="space-y-2">
-            {regions.map((r) => (
+            {regions.filter((region) => region.count > 0).map((r) => (
               <li key={r.slug}>
                 <Link
                   to="/region/$slug"

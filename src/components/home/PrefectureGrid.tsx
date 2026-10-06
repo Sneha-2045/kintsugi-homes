@@ -3,7 +3,10 @@ import { ArrowRight } from "lucide-react";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import { prefectures } from "@/data/prefectures";
 
-const miniLinks = ["Houses", "Apts", "Land", "Rent"];
+const popularPrefectures = prefectures
+  .filter((prefecture) => prefecture.count > 0)
+  .sort((a, b) => b.count - a.count)
+  .slice(0, 12);
 
 export function PrefectureGrid() {
   return (
@@ -12,7 +15,7 @@ export function PrefectureGrid() {
         <SectionHeader
           align="center"
           title="Popular Prefectures"
-          subtitle="Browse property for sale across Japan's 47 prefectures"
+          subtitle="Browse prefectures with listings in our current index"
           className="mb-12"
         />
         <h2 id="prefectures-title" className="sr-only">
@@ -20,7 +23,7 @@ export function PrefectureGrid() {
         </h2>
 
         <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-          {prefectures.slice(0, 12).map((p) => (
+          {popularPrefectures.map((p) => (
             <li
               key={p.slug}
               className="rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/50 hover:bg-elevated"
@@ -37,20 +40,6 @@ export function PrefectureGrid() {
                 </span>{" "}
                 listings
               </p>
-              <ul className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-1 border-t border-border pt-3 text-[11px] text-subtle">
-                {miniLinks.map((m, i) => (
-                  <li key={m} className="flex items-center gap-1.5">
-                    {i > 0 ? <span aria-hidden="true">·</span> : null}
-                    <Link
-                      to="/prefecture/$slug"
-                      params={{ slug: p.slug }}
-                      className="hover:text-primary-light"
-                    >
-                      {m}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
             </li>
           ))}
         </ul>
@@ -60,7 +49,7 @@ export function PrefectureGrid() {
             to="/search"
             className="inline-flex items-center gap-2 text-sm font-semibold text-primary-light hover:text-primary"
           >
-            View All 47 Prefectures
+            Search Japan listings
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
