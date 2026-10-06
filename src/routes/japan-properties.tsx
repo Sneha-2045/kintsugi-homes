@@ -4,7 +4,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { properties } from "@/data/properties";
 
-const title = "Japan Properties | Rylestate";
+const title = "Japan Properties | Real Estate";
 const description =
   "Browse Japanese houses, akiya, land and apartments across Japan.";
 

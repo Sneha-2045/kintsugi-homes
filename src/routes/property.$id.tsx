@@ -31,7 +31,7 @@ export const Route = createFileRoute("/property/$id")({
       return {
         meta: [
           {
-            title: "Listing unavailable — Rylestate",
+            title: "Listing unavailable — Real Estate",
           },
         ],
       };
@@ -39,7 +39,7 @@ export const Route = createFileRoute("/property/$id")({
 
     const t = `${loaderData.property.location} — ${formatUsd(
       loaderData.property.priceUsd
-    )} | Rylestate`;
+    )} | Real Estate`;
 
     return {
       meta: [
@@ -171,7 +171,7 @@ function PropertyDetails() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-muted-foreground">Last checked by Rylestate</dt>
+                  <dt className="text-muted-foreground">Last checked by Real Estate</dt>
                   <dd className="mt-1 font-medium text-foreground">
                     {property.lastCheckedAt
                       ? new Date(`${property.lastCheckedAt}T00:00:00`).toLocaleDateString()

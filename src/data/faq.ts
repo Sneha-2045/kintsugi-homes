@@ -9,7 +9,7 @@ export const faqs: FaqItem[] = [
   {
     question: "What is this platform?",
     answer:
-      "Rylestate is an independent, English-language search layer over the Japanese property market. We aggregate listings published by municipal akiya banks, regional agencies and national portals into one searchable index, translate the key fields, and add context — hazard maps, running costs and comparable sales — that Japanese listings usually leave out.",
+      "Real Estate is an independent, English-language search layer over the Japanese property market. We aggregate listings published by municipal akiya banks, regional agencies and national portals into one searchable index, translate the key fields, and add context — hazard maps, running costs and comparable sales — that Japanese listings usually leave out.",
   },
   {
     question: "Can foreigners buy property in Japan?",

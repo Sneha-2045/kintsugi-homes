@@ -16,7 +16,7 @@ export function PartnersSection() {
         <SectionHeader
           align="center"
           title="Our partners"
-          subtitle="Rylestate is the search engine. Licensed partners handle the purchase."
+          subtitle="Real Estate is the search engine. Licensed partners handle the purchase."
           className="mb-12"
         />
         <h2 id="partners-title" className="sr-only">

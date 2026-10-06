@@ -167,7 +167,14 @@ export function PropertyCard({ property }: { property: Property }) {
         </p>
 
         <Button variant="outline" size="sm" className="relative z-10 mt-3 self-start" asChild>
-          <Link to="/map" search={{ id: property.id }} onClick={(e) => e.stopPropagation()}>
+          <Link
+            to="/map"
+            search={{
+              id: property.id,
+              market: property.categorySlug === "foreclosure-sale" ? "us" : "japan",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <MapPin className="h-4 w-4 text-primary-light" aria-hidden="true" />
             Show on Map
           </Link>

@@ -6,6 +6,7 @@ import { SectionHeader } from "@/components/common/SectionHeader";
 import { PropertyCarousel } from "@/components/property/PropertyCarousel";
 
 import { properties } from "@/data/properties";
+import { usListings } from "@/data/us-listings";
 
 export function FreshListings() {
   return (
@@ -38,7 +39,7 @@ export function FreshListings() {
         />
 
         <h2 id="fresh-title" className="sr-only">
-          Japan property listings
+          Property listings by country
         </h2>
 
         <div className="mb-16">
@@ -56,6 +57,32 @@ export function FreshListings() {
             properties={properties.slice(0, 6)}
             label="Japan listings"
           />
+        </div>
+
+        <div>
+          <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h3 className="text-2xl font-semibold text-foreground">US Listings</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                US foreclosure properties with upcoming auction dates
+              </p>
+            </div>
+            <Link
+              to="/us-properties"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-primary-light hover:text-primary"
+            >
+              Browse all US listings
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+
+          {usListings.length > 0 ? (
+            <PropertyCarousel properties={usListings.slice(0, 6)} label="US listings" />
+          ) : (
+            <p className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
+              No US listings are available right now.
+            </p>
+          )}
         </div>
       </div>
     </section>

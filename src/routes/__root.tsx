@@ -80,7 +80,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Rylestate — Japanese Property Search in English" },
+      { title: "Real Estate — Japanese Property Search in English" },
       {
         name: "description",
         content:
@@ -125,14 +125,14 @@ const organizationLd = {
   "@graph": [
     {
       "@type": "Organization",
-      name: "Rylestate",
+      name: "Real Estate",
       url: "https://rylestate.com",
       description:
         "English-language search platform for Japanese houses, akiya, land and apartments.",
     },
     {
       "@type": "WebSite",
-      name: "Rylestate",
+      name: "Real Estate",
       url: "https://rylestate.com",
       potentialAction: {
         "@type": "SearchAction",

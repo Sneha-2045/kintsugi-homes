@@ -63,11 +63,11 @@ export function Footer() {
       <div className="container-page grid gap-10 py-14 md:grid-cols-2 lg:grid-cols-5 lg:gap-8 lg:py-20">
         <div className="lg:pr-6">
           <span className="font-display text-xl font-bold text-foreground">
-            Rylestate
+            Real Estate
           </span>
             <p className="mt-1 text-[10px] tracking-[0.28em] text-subtle">日本の空き家と不動産</p>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
-            Rylestate is an independent, Japan-focused property search platform. We are not the
+            Real Estate is an independent, Japan-focused property search platform. We are not the
             seller or a real-estate broker; purchases are handled by the original listing source
             or a licensed local professional.
           </p>
@@ -75,7 +75,7 @@ export function Footer() {
             href="https://instagram.com"
             target="_blank"
             rel="noreferrer noopener"
-            aria-label="Rylestate on Instagram"
+            aria-label="Real Estate on Instagram"
             className="mt-5 inline-grid h-10 w-10 place-items-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary-light"
           >
             <Instagram className="h-5 w-5" />
@@ -153,7 +153,7 @@ export function Footer() {
       <div className="border-t border-border">
         <div className="container-page flex flex-col gap-2 py-6 text-xs text-subtle md:flex-row md:items-center md:justify-between">
           <p>
-            © {new Date().getFullYear()} Rylestate. Demo inventory is illustrative, not live offers.
+            © {new Date().getFullYear()} Real Estate. Demo inventory is illustrative, not live offers.
             Listing sources and last-checked dates are shown when recorded; missing details are
             unverified. Confirm availability and terms with the original publisher.
           </p>

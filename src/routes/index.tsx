@@ -14,7 +14,7 @@ import { RegionGrid } from "@/components/home/RegionGrid";
 import { PrefectureGrid } from "@/components/home/PrefectureGrid";
 import { faqs } from "@/data/faq";
 
-const title = "Rylestate — Japanese Houses, Akiya & Land in English";
+const title = "Real Estate — Japanese Houses, Akiya & Land in English";
 const description =
   "Search Japanese houses, akiya, land and apartments in English. Review original asking prices and listing sources where provided, and confirm availability with the publisher.";
 

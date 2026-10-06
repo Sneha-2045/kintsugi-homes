@@ -11,8 +11,8 @@ export const Route = createFileRoute("/category/$slug")({
     return { category };
   },
   head: ({ loaderData }) => {
-    if (!loaderData) return { meta: [{ title: "Category unavailable — Rylestate" }] };
-    const t = `${loaderData.category.title} for sale in Japan | Rylestate`;
+    if (!loaderData) return { meta: [{ title: "Category unavailable — Real Estate" }] };
+    const t = `${loaderData.category.title} for sale in Japan | Real Estate`;
     const d = `${loaderData.category.description} — ${loaderData.category.count.toLocaleString("en-US")} listings indexed in English.`;
     return {
       meta: [

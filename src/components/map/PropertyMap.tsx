@@ -11,6 +11,7 @@ import type { Property } from "@/types/property";
 
 const FOCUS_ZOOM = 14;
 const OVERVIEW_ZOOM = 5;
+const US_CENTER = { latitude: 39.5, longitude: -98.35 };
 
 function escapeHtml(value: string) {
   return value
@@ -34,10 +35,12 @@ function popupHtml(property: Property) {
 export function PropertyMap({
   properties,
   focusId,
+  market = "japan",
   className,
 }: {
   properties: Property[];
   focusId?: string | undefined;
+  market?: "japan" | "us";
   className?: string | undefined;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -85,7 +88,12 @@ export function PropertyMap({
         zoomControl: true,
         scrollWheelZoom: true,
         attributionControl: true,
-      }).setView([JAPAN_CENTER.latitude, JAPAN_CENTER.longitude], OVERVIEW_ZOOM);
+      }).setView(
+        market === "us"
+          ? [US_CENTER.latitude, US_CENTER.longitude]
+          : [JAPAN_CENTER.latitude, JAPAN_CENTER.longitude],
+        OVERVIEW_ZOOM,
+      );
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
@@ -162,7 +170,7 @@ export function PropertyMap({
       map?.remove();
       map = null;
     };
-  }, []);
+  }, [market, properties]);
 
   useEffect(() => {
     if (!focusId || !mapRef.current) return;
