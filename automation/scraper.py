@@ -4,6 +4,7 @@ import json
 import re
 import os
 import hashlib
+from zoneinfo import ZoneInfo
 
 
 BASE_URL = "https://www.auction.com"
@@ -79,11 +80,12 @@ def get_number(pattern, text):
 # ==========================================
 # START SCRAPER
 # ==========================================
-today = datetime.now().replace(
+today = datetime.now(ZoneInfo("Asia/Kolkata")).replace(
     hour=0,
     minute=0,
     second=0,
-    microsecond=0
+    microsecond=0,
+    tzinfo=None,
 )
 
 today_string = today.strftime("%Y-%m-%d")
@@ -385,6 +387,10 @@ with sync_playwright() as p:
                     property_data = {
 
                         "id": property_id,
+
+                        "sourceUrl": url,
+
+                        "lastCheckedAt": today_string,
 
                         "title": title,
 

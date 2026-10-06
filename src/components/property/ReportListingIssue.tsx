@@ -8,7 +8,13 @@ type IssueType = "price" | "availability" | "details" | "source" | "other";
 const fieldClass =
   "h-11 w-full rounded-lg border border-border bg-card px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary";
 
-export function ReportListingIssue({ listingId }: { listingId: string }) {
+export function ReportListingIssue({
+  listingId,
+  compact = false,
+}: {
+  listingId: string;
+  compact?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [issueType, setIssueType] = useState<IssueType>("availability");
   const [description, setDescription] = useState("");
@@ -38,7 +44,11 @@ export function ReportListingIssue({ listingId }: { listingId: string }) {
   };
 
   return (
-    <section className="mt-8 border-t border-border pt-6">
+    <section
+      className={
+        compact ? "relative z-10 mt-4 border-t border-border pt-4" : "mt-8 border-t border-border pt-6"
+      }
+    >
       <Button
         type="button"
         variant="outline"

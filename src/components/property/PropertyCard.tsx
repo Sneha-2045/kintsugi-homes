@@ -4,6 +4,7 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  ExternalLink,
   Heart,
   MapPin,
   Maximize2,
@@ -13,6 +14,7 @@ import { useState } from "react";
 import { Badge } from "@/components/common/Badge";
 import { Button } from "@/components/common/Button";
 import { formatJpy, formatUsd } from "@/data/properties";
+import { ReportListingIssue } from "@/components/property/ReportListingIssue";
 import { cn } from "@/lib/utils";
 import type { Property } from "@/types/property";
 
@@ -165,6 +167,44 @@ export function PropertyCard({ property }: { property: Property }) {
           <Store className="h-4 w-4 text-success" aria-hidden="true" />
           {property.amenity}
         </p>
+
+        <section
+          className="relative z-10 mt-4 border-t border-border pt-4"
+          aria-label="Listing source and freshness"
+        >
+          <dl className="grid gap-3 text-sm sm:grid-cols-2">
+            <div>
+              <dt className="text-xs text-muted-foreground">Listing source</dt>
+              <dd className="mt-1 font-medium text-foreground">
+                {property.sourceUrl ? (
+                  <a
+                    href={property.sourceUrl}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="inline-flex items-center gap-1 text-primary-light underline underline-offset-4"
+                  >
+                    View source <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                  </a>
+                ) : (
+                  "Not provided"
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">Last checked</dt>
+              <dd className="mt-1 font-medium text-foreground">
+                {property.lastCheckedAt
+                  ? new Date(`${property.lastCheckedAt}T00:00:00`).toLocaleDateString(undefined, {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })
+                  : "Not recorded"}
+              </dd>
+            </div>
+          </dl>
+          <ReportListingIssue listingId={property.id} compact />
+        </section>
 
         <Button variant="outline" size="sm" className="relative z-10 mt-3 self-start" asChild>
           <Link
