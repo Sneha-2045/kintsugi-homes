@@ -151,13 +151,42 @@ export function Footer() {
       </div>
 
       <div className="border-t border-border">
-        <div className="container-page flex flex-col gap-2 py-6 text-xs text-subtle md:flex-row md:items-center md:justify-between">
+        <div className="container-page grid gap-6 py-6 sm:grid-cols-2">
+          <div>
+            <ColumnTitle>Company Details</ColumnTitle>
+            <p className="text-sm text-muted-foreground">Menmint LLC</p>
+          </div>
+          <div>
+            <ColumnTitle>Contact Details</ColumnTitle>
+            <div className="flex flex-col items-start gap-2 text-sm sm:flex-row sm:gap-5">
+              <a href="mailto:support@rylestate.com" className={linkClass}>
+                support@rylestate.com
+              </a>
+              <a href="tel:+18886933908" className={linkClass}>
+                +1 888 693 3908
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t border-border">
+        <div className="container-page grid gap-3 py-6 text-xs text-subtle lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-center">
           <p>
             © {new Date().getFullYear()} Real Estate. Demo inventory is illustrative, not live offers.
             Listing sources and last-checked dates are shown when recorded; missing details are
             unverified. Confirm availability and terms with the original publisher.
           </p>
           <p>Prices are indicative, may change, and exclude acquisition costs.</p>
+          <p className="flex flex-wrap gap-x-3 gap-y-1">
+            <span>Menmint LLC</span>
+            <a href="mailto:support@rylestate.com" className={linkClass}>
+              support@rylestate.com
+            </a>
+            <a href="tel:+18886933908" className={linkClass}>
+              +1 888 693 3908
+            </a>
+          </p>
         </div>
       </div>
     </footer>
