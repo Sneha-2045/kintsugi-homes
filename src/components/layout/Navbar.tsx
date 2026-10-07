@@ -2,10 +2,11 @@ import { Link } from "@tanstack/react-router";
 import { Menu, Settings, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/common/Button";
+import { BrandMark } from "@/components/common/BrandMark";
 
 const navItems = [
-  { label: "Japan Properties", to: "/japan-properties", icon: "🇯🇵" },
   { label: "US Properties", to: "/us-properties", icon: "🇺🇸" },
+  { label: "Japan Properties", to: "/japan-properties", icon: "🇯🇵" },
   { label: "Search", to: "/search" },
   { label: "Map", to: "/map" },
   { label: "Articles", to: "/articles" },
@@ -16,11 +17,14 @@ const navItems = [
 
 function Brand() {
   return (
-    <Link to="/" className="flex shrink-0 flex-col leading-none" aria-label="Real Estate — home">
-      <span className="font-display text-xl font-bold tracking-tight text-foreground md:text-[22px]">
-        Real Estate
+    <Link to="/" className="flex shrink-0 items-center gap-3 leading-none" aria-label="Real Estate — home">
+      <BrandMark className="h-10 w-10" />
+      <span className="flex flex-col">
+        <span className="font-display text-xl font-bold tracking-tight text-foreground md:text-[22px]">
+          Real Estate
+        </span>
+        <span className="mt-1 text-[10px] tracking-[0.12em] text-subtle">Homes in Japan &amp; the US</span>
       </span>
-      <span className="mt-1 text-[10px] tracking-[0.28em] text-subtle">日本の空き家と不動産</span>
     </Link>
   );
 }
@@ -39,7 +43,10 @@ export function Navbar() {
               <Link
                 to={item.to}
                 className="rounded-md px-3.5 py-2 text-[15px] font-medium text-muted-foreground transition-colors hover:bg-elevated hover:text-foreground"
-                activeProps={{ className: "text-foreground" }}
+                activeProps={{
+                  className:
+                    "!bg-primary !font-extrabold !text-primary-foreground shadow-sm ring-1 ring-inset ring-primary-light/50",
+                }}
               >
                 {"icon" in item ? (
                   <span aria-hidden="true" className="mr-2 inline-block align-[-1px]">
@@ -96,6 +103,10 @@ export function Navbar() {
                   to={item.to}
                   onClick={() => setOpen(false)}
                   className="block rounded-md px-2 py-3 text-base font-medium text-muted-foreground hover:bg-elevated hover:text-foreground"
+                  activeProps={{
+                    className:
+                      "!bg-primary !font-extrabold !text-primary-foreground shadow-sm ring-1 ring-inset ring-primary-light/50",
+                  }}
                 >
                   {"icon" in item ? (
                     <span aria-hidden="true" className="mr-2 inline-block align-[-1px]">

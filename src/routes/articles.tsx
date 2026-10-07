@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Play, Volume2 } from "lucide-react";
 import { PageShell } from "@/components/layout/PageShell";
 import { articles } from "@/data/articles";
+import { canonicalLink } from "@/lib/seo";
 
 export const Route = createFileRoute("/articles")({
   head: () => ({
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/articles")({
           "Guides on Japanese architecture, akiya renovation and buying property in Japan — read or listen.",
       },
     ],
+    links: [canonicalLink("/articles")],
   }),
   component: ArticlesPage,
 });

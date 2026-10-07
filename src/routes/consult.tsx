@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/common/Button";
 import { PageShell } from "@/components/layout/PageShell";
 import { partners } from "@/data/partners";
+import { canonicalLink } from "@/lib/seo";
 
 export const Route = createFileRoute("/consult")({
   head: () => ({
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/consult")({
           "Book a consultation with a licensed Japanese brokerage, surveyor or relocation specialist.",
       },
     ],
+    links: [canonicalLink("/consult")],
   }),
   component: ConsultPage,
 });

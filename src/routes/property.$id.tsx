@@ -7,6 +7,7 @@ import { ReportListingIssue } from "@/components/property/ReportListingIssue";
 
 import { formatJpy, formatUsd, properties } from "@/data/properties";
 import { usListings } from "@/data/us-listings";
+import { canonicalLink, canonicalUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/property/$id")({
   loader: ({ params }) => {
@@ -59,6 +60,7 @@ export const Route = createFileRoute("/property/$id")({
           content: loaderData.property.description,
         },
       ],
+      links: [canonicalLink(`/property/${encodeURIComponent(loaderData.property.id)}`)],
     };
   },
 
@@ -91,7 +93,7 @@ function PropertyDetails() {
     "@context": "https://schema.org",
     "@type": "RealEstateListing",
     name: property.title,
-    url: `https://rylestate.com/property/${property.id}`,
+    url: canonicalUrl(`/property/${encodeURIComponent(property.id)}`),
     description: property.description,
     image: property.images,
     offers:

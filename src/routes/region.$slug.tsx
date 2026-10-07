@@ -5,6 +5,7 @@ import { PropertyCard } from "@/components/property/PropertyCard";
 import { prefectures } from "@/data/prefectures";
 import { properties } from "@/data/properties";
 import { regions } from "@/data/regions";
+import { canonicalLink } from "@/lib/seo";
 
 export const Route = createFileRoute("/region/$slug")({
   loader: ({ params }) => {
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/region/$slug")({
         { property: "og:title", content: t },
         { property: "og:description", content: loaderData.region.blurb },
       ],
+      links: [canonicalLink(`/region/${encodeURIComponent(loaderData.region.slug)}`)],
     };
   },
   errorComponent: () => <PageShell title="This region didn't load" />,

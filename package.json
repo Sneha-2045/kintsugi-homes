@@ -5,12 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "npm run generate-sitemaps && npm run validate-sitemaps && vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "generate-listings": "node scripts/generate-bulk-listings.mjs"
+    "generate-listings": "node scripts/generate-bulk-listings.mjs",
+    "generate-sitemaps": "node scripts/generate-sitemap.mjs",
+    "validate-sitemaps": "node scripts/validate-sitemaps.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

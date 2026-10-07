@@ -5,12 +5,13 @@ import { Button } from "@/components/common/Button";
 import { PageShell } from "@/components/layout/PageShell";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { properties } from "@/data/properties";
+import { canonicalLink } from "@/lib/seo";
 
 export const Route = createFileRoute("/search")({
   validateSearch: (search: Record<string, unknown>): { q?: string | undefined } => ({
     q: typeof search["q"] === "string" && search["q"].length > 0 ? (search["q"] as string) : undefined,
   }),
-  head: () => ({
+  head: ({ match }) => ({
     meta: [
       { title: "Search Japanese Property — Real Estate" },
       {
@@ -22,7 +23,9 @@ export const Route = createFileRoute("/search")({
         property: "og:description",
         content: "Search houses, akiya, land and apartments across all 47 Japanese prefectures.",
       },
+      ...(match.search.q ? [{ name: "robots", content: "noindex,follow" }] : []),
     ],
+    links: [canonicalLink("/search")],
   }),
   component: SearchPage,
 });

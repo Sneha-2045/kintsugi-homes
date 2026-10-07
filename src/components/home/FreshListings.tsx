@@ -22,15 +22,16 @@ export function FreshListings() {
         <SectionHeader
           eyebrow={
             <Badge variant="blue" size="md">
-              {isJapan ? "Japan inventory" : "US inventory"}
+              US &amp; Japan inventory
             </Badge>
           }
           title={
             <span className="inline-flex items-center gap-3">
-              <span aria-hidden="true" className="text-[0.72em]">
-                {isJapan ? "🇯🇵" : "🇺🇸"}
+              <span aria-hidden="true" className="inline-flex items-center gap-2 text-[0.72em]">
+                <span>🇺🇸</span>
+                <span>🇯🇵</span>
               </span>
-              <span>Browse {isJapan ? "Japan" : "US"} listings</span>
+              <span>Browse US &amp; Japan listings</span>
             </span>
           }
           subtitle={
@@ -75,27 +76,27 @@ export function FreshListings() {
             >
               <button
                 type="button"
-                aria-pressed={isJapan}
-                onClick={() => setMarket("japan")}
-                className={`inline-flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:px-4 ${
-                  isJapan
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:bg-elevated hover:text-foreground"
-                }`}
-              >
-                <span aria-hidden="true">🇯🇵</span> Japan
-              </button>
-              <button
-                type="button"
                 aria-pressed={!isJapan}
                 onClick={() => setMarket("us")}
                 className={`inline-flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:px-4 ${
                   !isJapan
-                    ? "bg-primary text-primary-foreground shadow-sm"
+                    ? "bg-primary font-extrabold text-primary-foreground shadow-sm ring-1 ring-inset ring-primary-light/50"
                     : "text-muted-foreground hover:bg-elevated hover:text-foreground"
                 }`}
               >
                 <span aria-hidden="true">🇺🇸</span> United States
+              </button>
+              <button
+                type="button"
+                aria-pressed={isJapan}
+                onClick={() => setMarket("japan")}
+                className={`inline-flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:px-4 ${
+                  isJapan
+                    ? "bg-primary font-extrabold text-primary-foreground shadow-sm ring-1 ring-inset ring-primary-light/50"
+                    : "text-muted-foreground hover:bg-elevated hover:text-foreground"
+                }`}
+              >
+                <span aria-hidden="true">🇯🇵</span> Japan
               </button>
             </div>
           </div>

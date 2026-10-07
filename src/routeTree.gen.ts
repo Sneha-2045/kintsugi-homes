@@ -19,6 +19,7 @@ import { Route as MapRouteImport } from './routes/map'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as SitemapRouteImport } from './routes/sitemap'
 import { Route as UsPropertiesRouteImport } from './routes/us-properties'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as PrefectureSlugRouteImport } from './routes/prefecture.$slug'
@@ -77,6 +78,11 @@ const SearchRoute = SearchRouteImport.update({
   path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapRoute = SitemapRouteImport.update({
+  id: '/sitemap',
+  path: '/sitemap',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UsPropertiesRoute = UsPropertiesRouteImport.update({
   id: '/us-properties',
   path: '/us-properties',
@@ -128,6 +134,7 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
+  '/sitemap': typeof SitemapRoute
   '/us-properties': typeof UsPropertiesRoute
   '/category/$slug': typeof CategorySlugRoute
   '/prefecture/$slug': typeof PrefectureSlugRoute
@@ -147,6 +154,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
+  '/sitemap': typeof SitemapRoute
   '/us-properties': typeof UsPropertiesRoute
   '/category/$slug': typeof CategorySlugRoute
   '/prefecture/$slug': typeof PrefectureSlugRoute
@@ -168,6 +176,7 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
+  '/sitemap': typeof SitemapRoute
   '/us-properties': typeof UsPropertiesRoute
   '/category/$slug': typeof CategorySlugRoute
   '/prefecture/$slug': typeof PrefectureSlugRoute
@@ -189,6 +198,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/saved'
     | '/search'
+    | '/sitemap'
     | '/us-properties'
     | '/category/$slug'
     | '/prefecture/$slug'
@@ -208,6 +218,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/saved'
     | '/search'
+    | '/sitemap'
     | '/us-properties'
     | '/category/$slug'
     | '/prefecture/$slug'
@@ -228,6 +239,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/saved'
     | '/search'
+    | '/sitemap'
     | '/us-properties'
     | '/category/$slug'
     | '/prefecture/$slug'
@@ -249,6 +261,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   SavedRoute: typeof SavedRoute
   SearchRoute: typeof SearchRoute
+  SitemapRoute: typeof SitemapRoute
   UsPropertiesRoute: typeof UsPropertiesRoute
   CategorySlugRoute: typeof CategorySlugRoute
   PrefectureSlugRoute: typeof PrefectureSlugRoute
@@ -326,6 +339,13 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap': {
+      id: '/sitemap'
+      path: '/sitemap'
+      fullPath: '/sitemap'
+      preLoaderRoute: typeof SitemapRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/us-properties': {
@@ -413,6 +433,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   SavedRoute: SavedRoute,
   SearchRoute: SearchRoute,
+  SitemapRoute: SitemapRoute,
   UsPropertiesRoute: UsPropertiesRoute,
   CategorySlugRoute: CategorySlugRoute,
   PrefectureSlugRoute: PrefectureSlugRoute,

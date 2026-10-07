@@ -3,6 +3,7 @@ import { Button } from "@/components/common/Button";
 import { PageShell } from "@/components/layout/PageShell";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { properties, propertyCategories } from "@/data/properties";
+import { canonicalLink } from "@/lib/seo";
 
 export const Route = createFileRoute("/category/$slug")({
   loader: ({ params }) => {
@@ -21,6 +22,7 @@ export const Route = createFileRoute("/category/$slug")({
         { property: "og:title", content: t },
         { property: "og:description", content: d },
       ],
+      links: [canonicalLink(`/category/${encodeURIComponent(loaderData.category.slug)}`)],
     };
   },
   errorComponent: () => <PageShell title="This category didn't load" />,

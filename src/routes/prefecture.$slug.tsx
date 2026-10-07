@@ -4,6 +4,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { prefectures } from "@/data/prefectures";
 import { properties } from "@/data/properties";
+import { canonicalLink } from "@/lib/seo";
 
 export const Route = createFileRoute("/prefecture/$slug")({
   loader: ({ params }) => {
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/prefecture/$slug")({
         { property: "og:title", content: t },
         { property: "og:description", content: d },
       ],
+      links: [canonicalLink(`/prefecture/${encodeURIComponent(loaderData.prefecture.slug)}`)],
     };
   },
   errorComponent: () => <PageShell title="This prefecture didn't load" />,

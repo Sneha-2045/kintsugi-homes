@@ -5,6 +5,7 @@ import { PropertyMap } from "@/components/map/PropertyMap";
 import { properties } from "@/data/properties";
 import { regions } from "@/data/regions";
 import { usListings } from "@/data/us-listings";
+import { canonicalLink } from "@/lib/seo";
 
 export const Route = createFileRoute("/map")({
   validateSearch: (
@@ -14,9 +15,10 @@ export const Route = createFileRoute("/map")({
       typeof search["id"] === "string" && search["id"].length > 0
         ? (search["id"] as string)
         : undefined,
-    market: search["market"] === "us" ? "us" : "japan",
+    market:
+      search["market"] === "us" ? "us" : search["market"] === "japan" ? "japan" : undefined,
   }),
-  head: () => ({
+  head: ({ match }) => ({
     meta: [
       { title: "Map Search — Real Estate" },
       {
@@ -28,7 +30,11 @@ export const Route = createFileRoute("/map")({
         property: "og:description",
         content: "Explore property listings in Japan or the United States on an interactive map.",
       },
+      ...(match.search.id || match.search.market
+        ? [{ name: "robots", content: "noindex,follow" }]
+        : []),
     ],
+    links: [canonicalLink("/map")],
   }),
   component: MapPage,
 });

@@ -13,6 +13,7 @@ import { PropertyTypes } from "@/components/home/PropertyTypes";
 import { RegionGrid } from "@/components/home/RegionGrid";
 import { PrefectureGrid } from "@/components/home/PrefectureGrid";
 import { faqs } from "@/data/faq";
+import { canonicalLink } from "@/lib/seo";
 
 const title = "Real Estate — Japanese Houses, Akiya & Land in English";
 const description =
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: title },
       { property: "og:description", content: description },
     ],
+    links: [canonicalLink("/")],
   }),
   component: Home,
 });

@@ -2,8 +2,8 @@ import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
 const markets = [
-  { id: "japan", label: "Japan Properties", flag: "🇯🇵", to: "/japan-properties" },
   { id: "us", label: "US Properties", flag: "🇺🇸", to: "/us-properties" },
+  { id: "japan", label: "Japan Properties", flag: "🇯🇵", to: "/japan-properties" },
 ] as const;
 
 export function CountrySwitcher({ active }: { active?: (typeof markets)[number]["id"] }) {
@@ -20,7 +20,7 @@ export function CountrySwitcher({ active }: { active?: (typeof markets)[number][
           className={cn(
             "inline-flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:px-4",
             active === market.id
-              ? "bg-primary text-primary-foreground shadow-sm"
+              ? "bg-primary font-extrabold text-primary-foreground shadow-sm ring-1 ring-inset ring-primary-light/50"
               : "text-muted-foreground hover:bg-elevated hover:text-foreground",
           )}
         >

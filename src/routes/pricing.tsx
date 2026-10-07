@@ -9,6 +9,7 @@ import { PageShell } from "@/components/layout/PageShell";
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex,follow" },
       { title: "Pricing — Real Estate Membership" },
       {
         name: "description",

@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Instagram } from "lucide-react";
+import { BrandMark } from "@/components/common/BrandMark";
 
 const propertyLinks = [
   { label: "Buy a House in Japan", to: "/category/house" },
@@ -62,10 +63,13 @@ export function Footer() {
     <footer className="border-t border-border bg-background">
       <div className="container-page grid gap-10 py-14 md:grid-cols-2 lg:grid-cols-5 lg:gap-8 lg:py-20">
         <div className="lg:pr-6">
-          <span className="font-display text-xl font-bold text-foreground">
-            Real Estate
-          </span>
-            <p className="mt-1 text-[10px] tracking-[0.28em] text-subtle">日本の空き家と不動産</p>
+          <div className="flex items-center gap-3">
+            <BrandMark className="h-10 w-10" />
+            <div>
+              <span className="font-display text-xl font-bold text-foreground">Real Estate</span>
+              <p className="mt-1 text-[10px] tracking-[0.12em] text-subtle">Homes in Japan &amp; the US</p>
+            </div>
+          </div>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
             Real Estate is an independent, Japan-focused property search platform. We are not the
             seller or a real-estate broker; purchases are handled by the original listing source
@@ -118,6 +122,11 @@ export function Footer() {
                 </Link>
               </li>
             ))}
+            <li>
+              <a href="/sitemap" className={linkClass}>
+                Sitemap
+              </a>
+            </li>
           </ul>
         </div>
 
@@ -180,6 +189,9 @@ export function Footer() {
           <p>Prices are indicative, may change, and exclude acquisition costs.</p>
           <p className="flex flex-wrap gap-x-3 gap-y-1">
             <span>Menmint LLC</span>
+            <a href="/sitemap" className={linkClass}>
+              Sitemap
+            </a>
             <a href="mailto:support@rylestate.com" className={linkClass}>
               support@rylestate.com
             </a>
