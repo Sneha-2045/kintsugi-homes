@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/common/Button";
 
 const navItems = [
-  { label: "Japan Properties", to: "/japan-properties" },
-  { label: "US Properties", to: "/us-properties" },
+  { label: "Japan Properties", to: "/japan-properties", icon: "🇯🇵" },
+  { label: "US Properties", to: "/us-properties", icon: "🇺🇸" },
   { label: "Search", to: "/search" },
   { label: "Map", to: "/map" },
   { label: "Articles", to: "/articles" },
@@ -41,6 +41,11 @@ export function Navbar() {
                 className="rounded-md px-3.5 py-2 text-[15px] font-medium text-muted-foreground transition-colors hover:bg-elevated hover:text-foreground"
                 activeProps={{ className: "text-foreground" }}
               >
+                {"icon" in item ? (
+                  <span aria-hidden="true" className="mr-2 inline-block align-[-1px]">
+                    {item.icon}
+                  </span>
+                ) : null}
                 {item.label}
               </Link>
             </li>
@@ -92,6 +97,11 @@ export function Navbar() {
                   onClick={() => setOpen(false)}
                   className="block rounded-md px-2 py-3 text-base font-medium text-muted-foreground hover:bg-elevated hover:text-foreground"
                 >
+                  {"icon" in item ? (
+                    <span aria-hidden="true" className="mr-2 inline-block align-[-1px]">
+                      {item.icon}
+                    </span>
+                  ) : null}
                   {item.label}
                 </Link>
               </li>
