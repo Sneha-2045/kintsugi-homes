@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
+import { useState } from "react";
 
 import { Badge } from "@/components/common/Badge";
 import { SectionHeader } from "@/components/common/SectionHeader";
@@ -9,6 +10,9 @@ import { properties } from "@/data/properties";
 import { usListings } from "@/data/us-listings";
 
 export function FreshListings() {
+  const [market, setMarket] = useState<"japan" | "us">("japan");
+  const isJapan = market === "japan";
+
   return (
     <section
       className="bg-background py-16 md:py-24"
@@ -18,20 +22,29 @@ export function FreshListings() {
         <SectionHeader
           eyebrow={
             <Badge variant="blue" size="md">
-              Japan inventory
+              {isJapan ? "Japan inventory" : "US inventory"}
             </Badge>
           }
-          title="Browse Japan listings"
+          title={
+            <span className="inline-flex items-center gap-3">
+              <span aria-hidden="true" className="text-[0.72em]">
+                {isJapan ? "🇯🇵" : "🇺🇸"}
+              </span>
+              <span>Browse {isJapan ? "Japan" : "US"} listings</span>
+            </span>
+          }
           subtitle={
-            "A small selection to start your search. Sources and checked dates may be unavailable; confirm current price and availability with the publisher."
+            isJapan
+              ? "A small selection to start your search. Sources and checked dates may be unavailable; confirm current price and availability with the publisher."
+              : "Browse US foreclosure properties with upcoming auction dates. Confirm current details with the listing source."
           }
           action={
             <Link
-              to="/search"
-              search={{ q: "Japan" }}
+              to={isJapan ? "/search" : "/us-properties"}
+              search={isJapan ? { q: "Japan" } : undefined}
               className="inline-flex items-center gap-2 text-sm font-semibold text-primary-light hover:text-primary"
             >
-              Search all listings
+              Browse all listings
               <ArrowRight className="h-4 w-4" />
             </Link>
           }
@@ -42,41 +55,54 @@ export function FreshListings() {
           Property listings by country
         </h2>
 
-        <div className="mb-16">
-          <div className="mb-6">
-            <h3 className="text-2xl font-semibold text-foreground">
-              Japan Listings
-            </h3>
-
-            <p className="mt-1 text-sm text-muted-foreground">
-              Japanese homes, akiya, land and apartments
-            </p>
-          </div>
-
-          <PropertyCarousel
-            properties={properties.slice(0, 6)}
-            label="Japan listings"
-          />
-        </div>
-
         <div>
-          <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+          <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h3 className="text-2xl font-semibold text-foreground">US Listings</h3>
+              <h3 className="text-2xl font-semibold text-foreground">
+                {isJapan ? "Japan Listings" : "US Listings"}
+              </h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                US foreclosure properties with upcoming auction dates
+                {isJapan
+                  ? "Japanese homes, akiya, land and apartments"
+                  : "US foreclosure properties with upcoming auction dates"}
               </p>
             </div>
-            <Link
-              to="/us-properties"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-primary-light hover:text-primary"
+
+            <div
+              role="group"
+              aria-label="Switch displayed properties"
+              className="inline-flex rounded-xl border border-border bg-surface p-1"
             >
-              Browse all US listings
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+              <button
+                type="button"
+                aria-pressed={isJapan}
+                onClick={() => setMarket("japan")}
+                className={`inline-flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:px-4 ${
+                  isJapan
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-elevated hover:text-foreground"
+                }`}
+              >
+                <span aria-hidden="true">🇯🇵</span> Japan
+              </button>
+              <button
+                type="button"
+                aria-pressed={!isJapan}
+                onClick={() => setMarket("us")}
+                className={`inline-flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:px-4 ${
+                  !isJapan
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-elevated hover:text-foreground"
+                }`}
+              >
+                <span aria-hidden="true">🇺🇸</span> United States
+              </button>
+            </div>
           </div>
 
-          {usListings.length > 0 ? (
+          {isJapan ? (
+            <PropertyCarousel properties={properties.slice(0, 6)} label="Japan listings" />
+          ) : usListings.length > 0 ? (
             <PropertyCarousel properties={usListings.slice(0, 6)} label="US listings" />
           ) : (
             <p className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">

@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Apple, ChevronDown, List, Map as MapIcon, Search, Sparkles } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/common/Button";
+import { CountrySwitcher } from "@/components/common/CountrySwitcher";
 import { IMAGES } from "@/data/properties";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +37,9 @@ export function HeroSearch() {
       <div className="absolute inset-0 -z-10 bg-background/85" />
 
       <div className="container-page py-14 md:py-20">
+        <div className="mb-6">
+          <CountrySwitcher />
+        </div>
         <h1
           id="hero-title"
           className="max-w-4xl text-3xl font-bold leading-tight text-foreground sm:text-4xl md:text-[46px]"
