@@ -80,13 +80,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Real Estate — Japanese Property Search in English" },
+      { title: "US Foreclosure Properties & Auctions | Rylestate.com" },
       {
         name: "description",
         content:
-          "Search Japanese houses, akiya, land and apartments in English. Review original listing sources and check dates when recorded, and confirm availability with the publisher.",
+          "Browse US foreclosure properties and upcoming auctions across Florida, Georgia and North Carolina. Japan listings are also available. Confirm current details with the original source.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Rylestate.com" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
@@ -97,7 +98,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=Instrument+Serif:ital@0;1&display=swap",
       },
-      { rel: "icon", href: "/rylestate-logo-blue-black.png", type: "image/png" },
+      { rel: "icon", href: "/favicon.ico", type: "image/x-icon", sizes: "any" },
+      { rel: "icon", href: "/favicon.png", type: "image/png", sizes: "256x256" },
     ],
   }),
   shellComponent: RootShell,
@@ -125,18 +127,18 @@ const organizationLd = {
   "@graph": [
     {
       "@type": "Organization",
-      name: "Real Estate",
+      name: "Rylestate.com",
       url: "https://rylestate.com",
       description:
-        "English-language search platform for Japanese houses, akiya, land and apartments.",
+        "Search US foreclosure properties and upcoming auctions, with Japanese property listings also available.",
     },
     {
       "@type": "WebSite",
-      name: "Real Estate",
+      name: "Rylestate.com",
       url: "https://rylestate.com",
       potentialAction: {
         "@type": "SearchAction",
-        target: "https://rylestate.com/search?q={search_term_string}",
+        target: "https://rylestate.com/us-properties?q={search_term_string}",
         "query-input": "required name=search_term_string",
       },
     },

@@ -15,9 +15,9 @@ import { PrefectureGrid } from "@/components/home/PrefectureGrid";
 import { faqs } from "@/data/faq";
 import { canonicalLink } from "@/lib/seo";
 
-const title = "Real Estate — Japanese Houses, Akiya & Land in English";
+const title = "US Foreclosure Properties & Auctions | Rylestate.com";
 const description =
-  "Search Japanese houses, akiya, land and apartments in English. Review original asking prices and listing sources where provided, and confirm availability with the publisher.";
+  "Browse US foreclosure properties and upcoming auctions across Florida, Georgia and North Carolina. Japan property listings are also available. Review listing sources and confirm current details with the publisher.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
