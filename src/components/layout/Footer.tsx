@@ -3,48 +3,36 @@ import { Instagram } from "lucide-react";
 import { BrandMark } from "@/components/common/BrandMark";
 
 const propertyLinks = [
-  { label: "Buy a House in Japan", to: "/category/house" },
-  { label: "Japan House Prices", to: "/search" },
-  { label: "Cheap Houses", to: "/category/house" },
-  { label: "Apartments for Sale", to: "/category/apartment" },
-  { label: "Land for Sale", to: "/category/land" },
-  { label: "Akiya Bank Listings", to: "/category/akiya-bank" },
-  { label: "Properties for Rent", to: "/search" },
-  { label: "Map View", to: "/map" },
-  { label: "Browse All for Sale", to: "/search" },
+  { label: "US Foreclosure Properties", to: "/us-properties" },
+  { label: "Upcoming Auctions", to: "/us-properties" },
+  { label: "Florida Listings", to: "/us-properties" },
+  { label: "Georgia Listings", to: "/us-properties" },
+  { label: "North Carolina Listings", to: "/us-properties" },
+  { label: "Browse All US Properties", to: "/us-properties" },
 ];
 
 const regionLinks = [
-  "hokkaido",
-  "tohoku",
-  "kanto",
-  "chubu",
-  "kansai",
-  "chugoku",
-  "shikoku",
-  "kyushu",
-  "okinawa",
+  { label: "Florida", query: "Florida" },
+  { label: "Georgia", query: "Georgia" },
+  { label: "North Carolina", query: "North Carolina" },
 ];
 
 const companyLinks = [
-  { label: "What is an Akiya?", to: "/articles" },
-  { label: "Getting Started Guide", to: "/articles" },
+  { label: "US Property Listings", to: "/us-properties" },
+  { label: "Auction Listing FAQs", to: "/" },
   { label: "About Us", to: "/consult" },
-  { label: "Articles", to: "/articles" },
   { label: "FAQ", to: "/" },
   { label: "Contact", to: "/consult" },
-  { label: "Press & Creators", to: "/consult" },
   { label: "Consult an Expert", to: "/consult" },
-  { label: "Property Management", to: "/consult" },
 ];
 
 const popularSearches = [
-  "Akiya in Tokyo",
-  "Akiya in Osaka",
-  "Akiya in Hokkaido",
-  "Akiya in Kyoto",
-  "Akiya in Okinawa",
-  "Akiya in Nagano",
+  { label: "Miami, Florida", query: "Miami" },
+  { label: "Tampa, Florida", query: "Tampa" },
+  { label: "Orlando, Florida", query: "Orlando" },
+  { label: "Atlanta, Georgia", query: "Atlanta" },
+  { label: "Florida Foreclosures", query: "Florida" },
+  { label: "Georgia Foreclosures", query: "Georgia" },
 ];
 
 const linkClass =
@@ -65,9 +53,8 @@ export function Footer() {
         <div className="lg:pr-6">
           <BrandMark className="h-auto w-40" />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
-            Real Estate is an independent, Japan-focused property search platform. We are not the
-            seller or a real-estate broker; purchases are handled by the original listing source
-            or a licensed local professional.
+            Rylestate helps you find US foreclosure listings and auction opportunities. Confirm
+            current details and sale terms with the original listing source.
           </p>
           <a
             href="https://instagram.com"
@@ -94,12 +81,12 @@ export function Footer() {
         </div>
 
         <div>
-          <ColumnTitle>Regions</ColumnTitle>
+          <ColumnTitle>US Markets</ColumnTitle>
           <ul className="space-y-2.5">
-            {regionLinks.map((slug) => (
-              <li key={slug}>
-                <Link to="/region/$slug" params={{ slug }} className={`${linkClass} capitalize`}>
-                  {slug}
+            {regionLinks.map((region) => (
+              <li key={region.label}>
+                <Link to="/us-properties" search={{ q: region.query }} className={linkClass}>
+                  {region.label}
                 </Link>
               </li>
             ))}
@@ -141,10 +128,10 @@ export function Footer() {
           <div className="mt-8">
             <ColumnTitle>Popular Searches</ColumnTitle>
             <ul className="space-y-2.5">
-              {popularSearches.map((q) => (
-                <li key={q}>
-                  <Link to="/search" search={{ q }} className={linkClass}>
-                    {q}
+              {popularSearches.map((search) => (
+                <li key={search.label}>
+                  <Link to="/us-properties" search={{ q: search.query }} className={linkClass}>
+                    {search.label}
                   </Link>
                 </li>
               ))}
