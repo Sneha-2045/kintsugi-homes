@@ -61,7 +61,7 @@ function ColumnTitle({ children }: { children: string }) {
 export function Footer() {
   return (
     <footer className="border-t border-border bg-background">
-      <div className="container-page grid gap-10 py-14 md:grid-cols-2 lg:grid-cols-5 lg:gap-8 lg:py-20">
+      <div className="container-page grid gap-10 py-14 md:grid-cols-2 xl:grid-cols-5 xl:gap-8 xl:py-20">
         <div className="lg:pr-6">
           <BrandMark className="h-auto w-40" />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">

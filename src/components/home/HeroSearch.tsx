@@ -2,16 +2,22 @@ import { useNavigate } from "@tanstack/react-router";
 import { Apple, ChevronDown, List, Map as MapIcon, Search, Sparkles } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/common/Button";
-import { IMAGES } from "@/data/properties";
+import { usListings } from "@/data/us-listings";
 import { cn } from "@/lib/utils";
 
-const tabs = ["Buy", "Rent", "Sold", "Akiya bank", "Map"] as const;
+const tabs = ["Buy", "Foreclosure", "Auction"] as const;
 const views = ["List", "Grid", "Map"] as const;
 
 const stats = [
-  { value: null, label: "Japan-focused listings" },
-  { value: null, label: "Original JPY shown where recorded" },
-  { value: null, label: "Independent search platform" },
+  { value: usListings.length.toLocaleString("en-US"), label: "US listings in our current index" },
+  {
+    value: usListings.filter((listing) => listing.auctionDate).length.toLocaleString("en-US"),
+    label: "with auction dates shown",
+  },
+  {
+    value: usListings.filter((listing) => listing.sourceUrl).length.toLocaleString("en-US"),
+    label: "with source links",
+  },
 ];
 
 export function HeroSearch() {
@@ -23,14 +29,14 @@ export function HeroSearch() {
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
-    navigate({ to: "/search", search: { q: query.trim() || "Japan" } });
+    navigate({ to: "/us-properties", search: { q: query.trim() || undefined } });
   };
 
   return (
     <section className="relative isolate overflow-hidden" aria-labelledby="hero-title">
       <img
-        src={IMAGES.hero}
-        alt="Traditional Japanese houses along a quiet street"
+        src="/images/miami-1369.avif"
+        alt="Homes in Miami, Florida"
         className="absolute inset-0 -z-10 h-full w-full scale-105 object-cover blur-[2px]"
       />
       <div className="absolute inset-0 -z-10 bg-background/85" />
@@ -40,7 +46,7 @@ export function HeroSearch() {
           id="hero-title"
           className="max-w-4xl text-3xl font-bold leading-tight text-foreground sm:text-4xl md:text-[46px]"
         >
-          Your place in Japan is probably already listed here
+          Find US foreclosure properties and upcoming auctions
         </h1>
 
         <div className="mt-8 overflow-hidden rounded-2xl border border-border bg-background/85 backdrop-blur-md">
@@ -67,14 +73,14 @@ export function HeroSearch() {
           <div className="p-4 md:p-6">
             <form onSubmit={onSubmit} className="flex flex-col gap-3 md:flex-row md:items-center">
               <label htmlFor="hero-search" className="sr-only">
-                Search Japanese property listings
+                Search US property listings
               </label>
               <input
                 id="hero-search"
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder={'Try "land near Hakuba"'}
+                placeholder={'Try "Miami, Florida" or "Atlanta, Georgia"'}
                 className="h-14 w-full flex-1 rounded-lg bg-foreground px-5 text-base text-[#0B1628] placeholder:text-[#6b7280] focus:outline-none focus:ring-2 focus:ring-primary"
               />
               <div className="flex items-center gap-3">
@@ -140,15 +146,15 @@ export function HeroSearch() {
             <div className="flex flex-wrap items-center gap-3">
               <p className="text-sm text-muted-foreground">Not sure where to start?</p>
               <Button variant="subtle" size="md" asChild>
-                <a href="/search">
+                <a href="/us-properties">
                   <Sparkles className="h-4 w-4 text-primary-light" />
-                  Use the search wizard
+                  Browse US listings
                 </a>
               </Button>
               <Button variant="subtle" size="md" asChild>
-                <a href="/map">
+                <a href="/us-properties">
                   <MapIcon className="h-4 w-4 text-primary-light" />
-                  Try the map
+                  See all available properties
                 </a>
               </Button>
             </div>
@@ -178,7 +184,7 @@ export function HeroSearch() {
         </div>
 
         <p className="mt-4 text-right text-xs text-subtle">
-          Photo: traditional house with large land in Fukuchiyama, Kyoto
+          Browse foreclosure listings across the United States
         </p>
       </div>
     </section>

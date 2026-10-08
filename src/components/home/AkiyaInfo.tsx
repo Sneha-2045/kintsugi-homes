@@ -1,78 +1,91 @@
+import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
+import { usListings } from "@/data/us-listings";
+
+const pricedListings = usListings.filter((listing) => listing.priceUsd > 0);
+const minPrice = Math.min(...pricedListings.map((listing) => listing.priceUsd));
+const maxPrice = Math.max(...pricedListings.map((listing) => listing.priceUsd));
+const auctionCount = usListings.filter((listing) => listing.auctionDate).length;
+const formatPrice = (price: number) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+    notation: "compact",
+  }).format(price);
 
 const stats = [
   {
-    value: "$0 – $31K",
-    label: "Typical Price Range",
+    value: `${formatPrice(minPrice)} – ${formatPrice(maxPrice)}`,
+    label: "Asking prices shown",
     color: "text-primary-light",
-    body: "Some municipalities offer akiya for free. Rural homes commonly sell for ¥500,000–¥5,000,000 (about $3K–$31K).",
+    body: "Price data is shown when provided by the listing source. Confirm the current opening bid, fees and sale terms with the publisher.",
   },
   {
-    value: "No Restrictions",
-    label: "Foreign Ownership",
+    value: auctionCount.toLocaleString("en-US"),
+    label: "Listings with auction dates",
     color: "text-success",
-    body: "Japan places no restrictions on foreign property ownership. Buy land and buildings outright, remotely, with a licensed agent.",
+    body: "Auction schedules can change. Check the original listing for the latest date, registration steps and property-specific terms.",
   },
   {
-    value: "Source details",
-    label: "Shown when recorded",
+    value: "Source links",
+    label: "Review before you bid",
     color: "text-primary-light",
-    body: "Original listing links and last-checked dates appear when available. Missing metadata means freshness has not been verified.",
+    body: "Listings link to their source when available. Research title, liens, occupancy, condition and local requirements before making a decision.",
   },
 ];
 
 const steps = [
   {
-    title: "1 · Search & discover",
-    body: "Browse all 47 prefectures with the map, filters and English descriptions.",
+    title: "1 · Search US listings",
+    body: "Browse foreclosure properties by location, price and the details available in each listing.",
   },
   {
-    title: "2 · Save & get alerts",
-    body: "Save searches and get daily email alerts when new properties match.",
+    title: "2 · Review the source",
+    body: "Check the publisher for current auction dates, bidding rules, property condition and sale terms.",
   },
   {
-    title: "3 · Connect & purchase",
-    body: "Buy through a licensed partner agent when you find the right one.",
+    title: "3 · Do your due diligence",
+    body: "Contact the listing provider and qualified local professionals before you bid or make an offer.",
   },
 ];
 
-const quickLinks: { label: string; href: string }[] = [
-  { label: "Houses for Sale", href: "/category/house" },
-  { label: "Cheap Houses", href: "/search" },
-  { label: "Abandoned Houses", href: "/category/akiya-bank" },
-  { label: "Akiya Bank Listings", href: "/category/akiya-bank" },
-  { label: "What is an Akiya?", href: "/articles" },
-  { label: "Compare Japan RE Websites", href: "/articles" },
+const quickLinks = [
+  { label: "Florida Foreclosures", query: "Florida" },
+  { label: "Georgia Foreclosures", query: "Georgia" },
+  { label: "Miami Properties", query: "Miami" },
+  { label: "Tampa Properties", query: "Tampa" },
+  { label: "Orlando Properties", query: "Orlando" },
+  { label: "Atlanta Properties", query: "Atlanta" },
 ];
 
 export function AkiyaInfo() {
   return (
-    <section className="bg-surface py-16 md:py-24" aria-labelledby="akiya-title">
+    <section className="bg-surface py-16 md:py-24" aria-labelledby="us-market-title">
       <div className="container-page">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 id="akiya-title" className="text-3xl font-bold text-foreground md:text-[44px]">
-            What is an Akiya?
+          <h2 id="us-market-title" className="text-3xl font-bold text-foreground md:text-[44px]">
+            Explore US Foreclosure Properties
           </h2>
           <p className="mt-5 text-base leading-relaxed text-muted-foreground md:text-lg">
-            Akiya (空き家) means &ldquo;empty house&rdquo; in Japanese. With over 9 million vacant
-            homes across the country, Japan&rsquo;s akiya represent one of the most affordable entry
-            points into property ownership — and{" "}
+            Find homes listed for foreclosure sale across US markets. Listings may include auction
+            dates, asking prices and property details;{" "}
             <strong className="font-semibold text-foreground">
-              foreigners can buy with the same rights as Japanese citizens
+              always confirm current information and sale requirements with the original source
             </strong>
-            , no visa required.
+            .
           </p>
         </div>
 
         <ul className="mt-12 grid gap-5 md:grid-cols-3">
-          {stats.map((s) => (
+          {stats.map((stat) => (
             <li
-              key={s.label}
+              key={stat.label}
               className="rounded-2xl border border-border bg-card p-7 text-center transition-colors hover:border-primary/40"
             >
-              <p className={`text-2xl font-bold md:text-3xl ${s.color}`}>{s.value}</p>
-              <h3 className="mt-2 text-base font-semibold text-foreground">{s.label}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
+              <p className={`text-2xl font-bold md:text-3xl ${stat.color}`}>{stat.value}</p>
+              <h3 className="mt-2 text-base font-semibold text-foreground">{stat.label}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{stat.body}</p>
             </li>
           ))}
         </ul>
@@ -92,15 +105,16 @@ export function AkiyaInfo() {
         </div>
 
         <ul className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
-          {quickLinks.map((l) => (
-            <li key={l.label}>
-              <a
-                href={l.href}
+          {quickLinks.map((link) => (
+            <li key={link.label}>
+              <Link
+                to="/us-properties"
+                search={{ q: link.query }}
                 className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-light hover:text-primary"
               >
-                {l.label}
+                {link.label}
                 <ArrowRight className="h-3.5 w-3.5" />
-              </a>
+              </Link>
             </li>
           ))}
         </ul>

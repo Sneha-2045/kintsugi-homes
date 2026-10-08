@@ -18,7 +18,7 @@ const navItems = [
 function Brand() {
   return (
     <Link to="/" className="flex shrink-0 items-center leading-none" aria-label="Rylestate.com — home">
-      <BrandMark className="h-auto w-40 md:w-48" />
+      <BrandMark className="h-auto w-32 min-[400px]:w-40 md:w-48" />
     </Link>
   );
 }
@@ -28,10 +28,10 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-surface/95 backdrop-blur">
-      <nav aria-label="Main" className="container-page flex h-18 items-center gap-6 py-3">
+      <nav aria-label="Main" className="container-page flex h-18 items-center gap-2 py-3 sm:gap-4 xl:gap-6">
         <Brand />
 
-        <ul className="hidden flex-1 items-center gap-1 lg:flex">
+        <ul className="hidden flex-1 items-center gap-1 2xl:flex">
           {navItems.map((item) => (
             <li key={item.to}>
               <Link
@@ -53,7 +53,7 @@ export function Navbar() {
           ))}
         </ul>
 
-        <div className="ml-auto hidden items-center gap-3 lg:flex">
+        <div className="ml-auto hidden items-center gap-3 2xl:flex">
           <button
             type="button"
             aria-label="Site settings"
@@ -72,8 +72,8 @@ export function Navbar() {
           </Button>
         </div>
 
-        <div className="ml-auto flex items-center gap-2 lg:hidden">
-          <Button asChild size="sm">
+        <div className="ml-auto flex items-center gap-2 2xl:hidden">
+          <Button asChild size="sm" className="hidden sm:inline-flex">
             <Link to="/pricing">Free Trial</Link>
           </Button>
           <button
@@ -89,7 +89,7 @@ export function Navbar() {
       </nav>
 
       {open ? (
-        <div className="border-t border-border bg-surface lg:hidden">
+        <div className="border-t border-border bg-surface 2xl:hidden">
           <ul className="container-page flex flex-col py-3">
             {[...navItems, { label: "Log in", to: "/login" as const }].map((item) => (
               <li key={item.to}>
