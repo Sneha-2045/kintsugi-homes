@@ -63,13 +63,7 @@ export function Footer() {
     <footer className="border-t border-border bg-background">
       <div className="container-page grid gap-10 py-14 md:grid-cols-2 lg:grid-cols-5 lg:gap-8 lg:py-20">
         <div className="lg:pr-6">
-          <div className="flex items-center gap-3">
-            <BrandMark className="h-10 w-10" />
-            <div>
-              <span className="font-display text-xl font-bold text-foreground">Real Estate</span>
-              <p className="mt-1 text-[10px] tracking-[0.12em] text-subtle">Homes in Japan &amp; the US</p>
-            </div>
-          </div>
+          <BrandMark className="h-auto w-40" />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
             Real Estate is an independent, Japan-focused property search platform. We are not the
             seller or a real-estate broker; purchases are handled by the original listing source
@@ -181,11 +175,6 @@ export function Footer() {
 
       <div className="border-t border-border">
         <div className="container-page grid gap-3 py-6 text-xs text-subtle lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-center">
-          <p>
-            © {new Date().getFullYear()} Real Estate. Demo inventory is illustrative, not live offers.
-            Listing sources and last-checked dates are shown when recorded; missing details are
-            unverified. Confirm availability and terms with the original publisher.
-          </p>
           <p>Prices are indicative, may change, and exclude acquisition costs.</p>
           <p className="flex flex-wrap gap-x-3 gap-y-1">
             <span>Menmint LLC</span>

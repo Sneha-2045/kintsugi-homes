@@ -17,14 +17,8 @@ const navItems = [
 
 function Brand() {
   return (
-    <Link to="/" className="flex shrink-0 items-center gap-3 leading-none" aria-label="Real Estate — home">
-      <BrandMark className="h-10 w-10" />
-      <span className="flex flex-col">
-        <span className="font-display text-xl font-bold tracking-tight text-foreground md:text-[22px]">
-          Real Estate
-        </span>
-        <span className="mt-1 text-[10px] tracking-[0.12em] text-subtle">Homes in Japan &amp; the US</span>
-      </span>
+    <Link to="/" className="flex shrink-0 items-center leading-none" aria-label="Rylestate.com — home">
+      <BrandMark className="h-auto w-40 md:w-48" />
     </Link>
   );
 }
