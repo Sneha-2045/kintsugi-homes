@@ -161,20 +161,11 @@ export function Footer() {
       </div>
 
       <div className="border-t border-border">
-        <div className="container-page grid gap-3 py-6 text-xs text-subtle lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-center">
+        <div className="container-page flex flex-col gap-3 py-6 text-xs text-subtle sm:flex-row sm:items-center sm:justify-between">
           <p>Prices are indicative, may change, and exclude acquisition costs.</p>
-          <p className="flex flex-wrap gap-x-3 gap-y-1">
-            <span>Menmint LLC</span>
-            <a href="/sitemap" className={linkClass}>
-              Sitemap
-            </a>
-            <a href="mailto:support@rylestate.com" className={linkClass}>
-              support@rylestate.com
-            </a>
-            <a href="tel:+18886933908" className={linkClass}>
-              +1 888 693 3908
-            </a>
-          </p>
+          <a href="/sitemap" className={linkClass}>
+            Sitemap
+          </a>
         </div>
       </div>
     </footer>
