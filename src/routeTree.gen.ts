@@ -13,21 +13,27 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as ArticlesRouteImport } from './routes/articles'
 import { Route as ConsultRouteImport } from './routes/consult'
+import { Route as FindAnAgentRouteImport } from './routes/find-an-agent'
 import { Route as JapanPropertiesRouteImport } from './routes/japan-properties'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PropertiesRouteImport } from './routes/properties'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SitemapRouteImport } from './routes/sitemap'
 import { Route as UsPropertiesRouteImport } from './routes/us-properties'
+import { Route as ApiPropertiesRouteImport } from './routes/api.properties'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as PrefectureSlugRouteImport } from './routes/prefecture.$slug'
+import { Route as PropertiesIdRouteImport } from './routes/properties.$id'
 import { Route as PropertyIdRouteImport } from './routes/property.$id'
 import { Route as RegionSlugRouteImport } from './routes/region.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAdminIdRouteImport } from './routes/_authenticated/admin/$id'
 import { Route as AuthenticatedAdminNewRouteImport } from './routes/_authenticated/admin/new'
+import { Route as ApiPropertiesIdRouteImport } from './routes/api.properties.$id'
+import { Route as ApiPropertiesFiltersRouteImport } from './routes/api.properties.filters'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,6 +52,11 @@ const ArticlesRoute = ArticlesRouteImport.update({
 const ConsultRoute = ConsultRouteImport.update({
   id: '/consult',
   path: '/consult',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FindAnAgentRoute = FindAnAgentRouteImport.update({
+  id: '/find-an-agent',
+  path: '/find-an-agent',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JapanPropertiesRoute = JapanPropertiesRouteImport.update({
@@ -68,6 +79,11 @@ const PricingRoute = PricingRouteImport.update({
   path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PropertiesRoute = PropertiesRouteImport.update({
+  id: '/properties',
+  path: '/properties',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SavedRoute = SavedRouteImport.update({
   id: '/saved',
   path: '/saved',
@@ -88,6 +104,11 @@ const UsPropertiesRoute = UsPropertiesRouteImport.update({
   path: '/us-properties',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPropertiesRoute = ApiPropertiesRouteImport.update({
+  id: '/api/properties',
+  path: '/api/properties',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CategorySlugRoute = CategorySlugRouteImport.update({
   id: '/category/$slug',
   path: '/category/$slug',
@@ -97,6 +118,11 @@ const PrefectureSlugRoute = PrefectureSlugRouteImport.update({
   id: '/prefecture/$slug',
   path: '/prefecture/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const PropertiesIdRoute = PropertiesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => PropertiesRoute,
 } as any)
 const PropertyIdRoute = PropertyIdRouteImport.update({
   id: '/property/$id',
@@ -123,45 +149,67 @@ const AuthenticatedAdminNewRoute = AuthenticatedAdminNewRouteImport.update({
   path: '/admin/new',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPropertiesIdRoute = ApiPropertiesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiPropertiesRoute,
+} as any)
+const ApiPropertiesFiltersRoute = ApiPropertiesFiltersRouteImport.update({
+  id: '/filters',
+  path: '/filters',
+  getParentRoute: () => ApiPropertiesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/articles': typeof ArticlesRoute
   '/consult': typeof ConsultRoute
+  '/find-an-agent': typeof FindAnAgentRoute
   '/japan-properties': typeof JapanPropertiesRoute
   '/login': typeof LoginRoute
   '/map': typeof MapRoute
   '/pricing': typeof PricingRoute
+  '/properties': typeof PropertiesRouteWithChildren
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
   '/sitemap': typeof SitemapRoute
   '/us-properties': typeof UsPropertiesRoute
+  '/api/properties': typeof ApiPropertiesRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
   '/prefecture/$slug': typeof PrefectureSlugRoute
+  '/properties/$id': typeof PropertiesIdRoute
   '/property/$id': typeof PropertyIdRoute
   '/region/$slug': typeof RegionSlugRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/new': typeof AuthenticatedAdminNewRoute
+  '/api/properties/$id': typeof ApiPropertiesIdRoute
+  '/api/properties/filters': typeof ApiPropertiesFiltersRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/articles': typeof ArticlesRoute
   '/consult': typeof ConsultRoute
+  '/find-an-agent': typeof FindAnAgentRoute
   '/japan-properties': typeof JapanPropertiesRoute
   '/login': typeof LoginRoute
   '/map': typeof MapRoute
   '/pricing': typeof PricingRoute
+  '/properties': typeof PropertiesRouteWithChildren
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
   '/sitemap': typeof SitemapRoute
   '/us-properties': typeof UsPropertiesRoute
+  '/api/properties': typeof ApiPropertiesRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
   '/prefecture/$slug': typeof PrefectureSlugRoute
+  '/properties/$id': typeof PropertiesIdRoute
   '/property/$id': typeof PropertyIdRoute
   '/region/$slug': typeof RegionSlugRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/new': typeof AuthenticatedAdminNewRoute
+  '/api/properties/$id': typeof ApiPropertiesIdRoute
+  '/api/properties/filters': typeof ApiPropertiesFiltersRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesById {
@@ -170,20 +218,26 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/articles': typeof ArticlesRoute
   '/consult': typeof ConsultRoute
+  '/find-an-agent': typeof FindAnAgentRoute
   '/japan-properties': typeof JapanPropertiesRoute
   '/login': typeof LoginRoute
   '/map': typeof MapRoute
   '/pricing': typeof PricingRoute
+  '/properties': typeof PropertiesRouteWithChildren
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
   '/sitemap': typeof SitemapRoute
   '/us-properties': typeof UsPropertiesRoute
+  '/api/properties': typeof ApiPropertiesRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
   '/prefecture/$slug': typeof PrefectureSlugRoute
+  '/properties/$id': typeof PropertiesIdRoute
   '/property/$id': typeof PropertyIdRoute
   '/region/$slug': typeof RegionSlugRoute
   '/_authenticated/admin/$id': typeof AuthenticatedAdminIdRoute
   '/_authenticated/admin/new': typeof AuthenticatedAdminNewRoute
+  '/api/properties/$id': typeof ApiPropertiesIdRoute
+  '/api/properties/filters': typeof ApiPropertiesFiltersRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -192,40 +246,52 @@ export interface FileRouteTypes {
     | '/'
     | '/articles'
     | '/consult'
+    | '/find-an-agent'
     | '/japan-properties'
     | '/login'
     | '/map'
     | '/pricing'
+    | '/properties'
     | '/saved'
     | '/search'
     | '/sitemap'
     | '/us-properties'
+    | '/api/properties'
     | '/category/$slug'
     | '/prefecture/$slug'
+    | '/properties/$id'
     | '/property/$id'
     | '/region/$slug'
     | '/admin/$id'
     | '/admin/new'
+    | '/api/properties/$id'
+    | '/api/properties/filters'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/articles'
     | '/consult'
+    | '/find-an-agent'
     | '/japan-properties'
     | '/login'
     | '/map'
     | '/pricing'
+    | '/properties'
     | '/saved'
     | '/search'
     | '/sitemap'
     | '/us-properties'
+    | '/api/properties'
     | '/category/$slug'
     | '/prefecture/$slug'
+    | '/properties/$id'
     | '/property/$id'
     | '/region/$slug'
     | '/admin/$id'
     | '/admin/new'
+    | '/api/properties/$id'
+    | '/api/properties/filters'
     | '/admin'
   id:
     | '__root__'
@@ -233,20 +299,26 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/articles'
     | '/consult'
+    | '/find-an-agent'
     | '/japan-properties'
     | '/login'
     | '/map'
     | '/pricing'
+    | '/properties'
     | '/saved'
     | '/search'
     | '/sitemap'
     | '/us-properties'
+    | '/api/properties'
     | '/category/$slug'
     | '/prefecture/$slug'
+    | '/properties/$id'
     | '/property/$id'
     | '/region/$slug'
     | '/_authenticated/admin/$id'
     | '/_authenticated/admin/new'
+    | '/api/properties/$id'
+    | '/api/properties/filters'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -255,14 +327,17 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   ArticlesRoute: typeof ArticlesRoute
   ConsultRoute: typeof ConsultRoute
+  FindAnAgentRoute: typeof FindAnAgentRoute
   JapanPropertiesRoute: typeof JapanPropertiesRoute
   LoginRoute: typeof LoginRoute
   MapRoute: typeof MapRoute
   PricingRoute: typeof PricingRoute
+  PropertiesRoute: typeof PropertiesRouteWithChildren
   SavedRoute: typeof SavedRoute
   SearchRoute: typeof SearchRoute
   SitemapRoute: typeof SitemapRoute
   UsPropertiesRoute: typeof UsPropertiesRoute
+  ApiPropertiesRoute: typeof ApiPropertiesRouteWithChildren
   CategorySlugRoute: typeof CategorySlugRoute
   PrefectureSlugRoute: typeof PrefectureSlugRoute
   PropertyIdRoute: typeof PropertyIdRoute
@@ -299,6 +374,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsultRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/find-an-agent': {
+      id: '/find-an-agent'
+      path: '/find-an-agent'
+      fullPath: '/find-an-agent'
+      preLoaderRoute: typeof FindAnAgentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/japan-properties': {
       id: '/japan-properties'
       path: '/japan-properties'
@@ -325,6 +407,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/properties': {
+      id: '/properties'
+      path: '/properties'
+      fullPath: '/properties'
+      preLoaderRoute: typeof PropertiesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/saved': {
@@ -355,6 +444,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UsPropertiesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/properties': {
+      id: '/api/properties'
+      path: '/api/properties'
+      fullPath: '/api/properties'
+      preLoaderRoute: typeof ApiPropertiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/category/$slug': {
       id: '/category/$slug'
       path: '/category/$slug'
@@ -368,6 +464,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/prefecture/$slug'
       preLoaderRoute: typeof PrefectureSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/properties/$id': {
+      id: '/properties/$id'
+      path: '/$id'
+      fullPath: '/properties/$id'
+      preLoaderRoute: typeof PropertiesIdRouteImport
+      parentRoute: typeof PropertiesRoute
     }
     '/property/$id': {
       id: '/property/$id'
@@ -404,6 +507,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/properties/$id': {
+      id: '/api/properties/$id'
+      path: '/$id'
+      fullPath: '/api/properties/$id'
+      preLoaderRoute: typeof ApiPropertiesIdRouteImport
+      parentRoute: typeof ApiPropertiesRoute
+    }
+    '/api/properties/filters': {
+      id: '/api/properties/filters'
+      path: '/filters'
+      fullPath: '/api/properties/filters'
+      preLoaderRoute: typeof ApiPropertiesFiltersRouteImport
+      parentRoute: typeof ApiPropertiesRoute
+    }
   }
 }
 
@@ -422,19 +539,48 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface PropertiesRouteChildren {
+  PropertiesIdRoute: typeof PropertiesIdRoute
+}
+
+const PropertiesRouteChildren: PropertiesRouteChildren = {
+  PropertiesIdRoute: PropertiesIdRoute,
+}
+
+const PropertiesRouteWithChildren = PropertiesRoute._addFileChildren(
+  PropertiesRouteChildren,
+)
+
+interface ApiPropertiesRouteChildren {
+  ApiPropertiesIdRoute: typeof ApiPropertiesIdRoute
+  ApiPropertiesFiltersRoute: typeof ApiPropertiesFiltersRoute
+}
+
+const ApiPropertiesRouteChildren: ApiPropertiesRouteChildren = {
+  ApiPropertiesIdRoute: ApiPropertiesIdRoute,
+  ApiPropertiesFiltersRoute: ApiPropertiesFiltersRoute,
+}
+
+const ApiPropertiesRouteWithChildren = ApiPropertiesRoute._addFileChildren(
+  ApiPropertiesRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   ArticlesRoute: ArticlesRoute,
   ConsultRoute: ConsultRoute,
+  FindAnAgentRoute: FindAnAgentRoute,
   JapanPropertiesRoute: JapanPropertiesRoute,
   LoginRoute: LoginRoute,
   MapRoute: MapRoute,
   PricingRoute: PricingRoute,
+  PropertiesRoute: PropertiesRouteWithChildren,
   SavedRoute: SavedRoute,
   SearchRoute: SearchRoute,
   SitemapRoute: SitemapRoute,
   UsPropertiesRoute: UsPropertiesRoute,
+  ApiPropertiesRoute: ApiPropertiesRouteWithChildren,
   CategorySlugRoute: CategorySlugRoute,
   PrefectureSlugRoute: PrefectureSlugRoute,
   PropertyIdRoute: PropertyIdRoute,

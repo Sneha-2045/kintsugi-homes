@@ -6,8 +6,10 @@ import { BrandMark } from "@/components/common/BrandMark";
 
 const navItems = [
   { label: "US Properties", to: "/us-properties", icon: "🇺🇸" },
+  { label: "MLS Listings", to: "/properties" },
   { label: "Japan Properties", to: "/japan-properties", icon: "🇯🇵" },
   { label: "Search", to: "/search" },
+  { label: "Find an Agent", to: "/find-an-agent" },
   { label: "Map", to: "/map" },
   { label: "Articles", to: "/articles" },
   { label: "Saved", to: "/saved" },
