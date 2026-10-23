@@ -185,16 +185,22 @@ const safeHttpUrl = (value: unknown): string | undefined => {
 };
 
 export function fromProperty(property: Property): ComparisonProperty {
-  const isUs = ["texas", "georgia"].includes(property.regionSlug) || property.isTranchi === true;
+  const isMls = property.sourceDetails?.["sourceProvider"] === "Repliers";
+  const isUs =
+    ["texas", "georgia", "us"].includes(property.regionSlug) ||
+    property.isTranchi === true ||
+    isMls;
   const address = property.address ?? property.title;
   const sourceUrl = safeHttpUrl(property.sourceUrl);
   const provider = sourceUrl ? new URL(sourceUrl).hostname.replace(/^www\./i, "") : undefined;
   return {
-    key: `${property.isTranchi ? "tranchi" : isUs ? "us" : "japan"}:${property.sourcePropertyId ?? property.id}`,
-    source: isUs ? "us" : "japan",
-    sourceLabel: property.isTranchi
-      ? "Tranchi AI"
-      : (provider ?? (isUs ? "US listing" : "Japan listing")),
+    key: `${isMls ? "mls" : property.isTranchi ? "tranchi" : isUs ? "us" : "japan"}:${property.sourcePropertyId ?? property.id}`,
+    source: isMls ? "mls" : isUs ? "us" : "japan",
+    sourceLabel: isMls
+      ? "Repliers MLS"
+      : property.isTranchi
+        ? "Tranchi AI"
+        : (provider ?? (isUs ? "US listing" : "Japan listing")),
     name: property.title,
     address,
     city: property.city,
@@ -202,13 +208,15 @@ export function fromProperty(property: Property): ComparisonProperty {
     zipCode: property.zipCode,
     image: property.images[0],
     price: finitePositive(property.priceJpy ?? property.priceUsd),
-    priceBasis: property.isTranchi
-      ? "tranchi-reported"
-      : isUs
-        ? property.auctionDate || property.sourceUrl?.includes("auction.com")
-          ? "auction-listed"
-          : "source-reported"
-        : "japan-listed",
+    priceBasis: isMls
+      ? "mls-asking"
+      : property.isTranchi
+        ? "tranchi-reported"
+        : isUs
+          ? property.auctionDate || property.sourceUrl?.includes("auction.com")
+            ? "auction-listed"
+            : "source-reported"
+          : "japan-listed",
     currency: property.priceJpy != null ? "JPY" : "USD",
     marketValue: finitePositive(property.estimatedMarketValue),
     appraisedValue: finitePositive(property.estimatedAppraisedValue),
@@ -234,7 +242,9 @@ export function fromProperty(property: Property): ComparisonProperty {
     lastCheckedAt: property.lastCheckedAt ?? property.sourceDetails?.["lastFreshnessCheck"],
     monthlyRent: finitePositive(property.monthlyRentEstimate),
     reportedMonthlyCashFlow: finiteNumber(property.monthlyCashFlowEstimate),
-    detailHref: `/property/${encodeURIComponent(property.id)}`,
+    detailHref: isMls
+      ? `/properties/${encodeURIComponent(property.sourceDetails?.["repliersId"] ?? property.id)}`
+      : `/property/${encodeURIComponent(property.id)}`,
   };
 }
 
