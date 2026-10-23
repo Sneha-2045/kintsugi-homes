@@ -99,7 +99,9 @@ export function buildSitemapGroups(data) {
     ),
   );
   const usProperties = propertyEntries(
-    data.usProperties.filter((property) => property.sourceUrl && property.lastCheckedAt),
+    data.usProperties.filter(
+      (property) => property.isTranchi || (property.sourceUrl && property.lastCheckedAt),
+    ),
   );
 
   const locations = [

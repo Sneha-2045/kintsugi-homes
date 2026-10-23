@@ -1,21 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://rylestate.com/property/miami-891f8a6052</loc>
-  </url>
-  <url>
-    <loc>https://rylestate.com/property/miami-7316f6e1ab</loc>
-  </url>
-  <url>
-    <loc>https://rylestate.com/property/tampa-cac67d9bad</loc>
-  </url>
-  <url>
-    <loc>https://rylestate.com/property/orlando-3ba36f9442</loc>
-  </url>
-  <url>
-    <loc>https://rylestate.com/property/orlando-f01ad4c004</loc>
-  </url>
-  <url>
     <loc>https://rylestate.com/property/houston-b4cffe0721</loc>
   </url>
   <url>
@@ -37,9 +22,6 @@
     <loc>https://rylestate.com/property/houston-bcd468e45e</loc>
   </url>
   <url>
-    <loc>https://rylestate.com/property/houston-05d21811f8</loc>
-  </url>
-  <url>
     <loc>https://rylestate.com/property/houston-9b1162de9d</loc>
   </url>
   <url>
@@ -47,6 +29,9 @@
   </url>
   <url>
     <loc>https://rylestate.com/property/houston-993169511c</loc>
+  </url>
+  <url>
+    <loc>https://rylestate.com/property/houston-7a84bdabc6</loc>
   </url>
   <url>
     <loc>https://rylestate.com/property/dallas-4c47ade504</loc>
@@ -70,9 +55,6 @@
     <loc>https://rylestate.com/property/dallas-ff4f55c9df</loc>
   </url>
   <url>
-    <loc>https://rylestate.com/property/dallas-797db8a341</loc>
-  </url>
-  <url>
     <loc>https://rylestate.com/property/dallas-1c01b7a6ad</loc>
   </url>
   <url>
@@ -82,13 +64,16 @@
     <loc>https://rylestate.com/property/dallas-6717012c19</loc>
   </url>
   <url>
-    <loc>https://rylestate.com/property/atlanta-74a9fd5663</loc>
+    <loc>https://rylestate.com/property/dallas-0db2c5ed63</loc>
   </url>
   <url>
     <loc>https://rylestate.com/property/atlanta-34564c892c</loc>
   </url>
   <url>
     <loc>https://rylestate.com/property/atlanta-faa492535b</loc>
+  </url>
+  <url>
+    <loc>https://rylestate.com/property/atlanta-f9eeb04aa8</loc>
   </url>
   <url>
     <loc>https://rylestate.com/property/atlanta-290ef5129b</loc>
@@ -107,5 +92,29 @@
   </url>
   <url>
     <loc>https://rylestate.com/property/atlanta-9bd96d2168</loc>
+  </url>
+  <url>
+    <loc>https://rylestate.com/property/tranchi-784057</loc>
+  </url>
+  <url>
+    <loc>https://rylestate.com/property/tranchi-851805</loc>
+  </url>
+  <url>
+    <loc>https://rylestate.com/property/tranchi-853140</loc>
+  </url>
+  <url>
+    <loc>https://rylestate.com/property/tranchi-240178</loc>
+  </url>
+  <url>
+    <loc>https://rylestate.com/property/tranchi-780033</loc>
+  </url>
+  <url>
+    <loc>https://rylestate.com/property/tranchi-240006</loc>
+  </url>
+  <url>
+    <loc>https://rylestate.com/property/tranchi-152249</loc>
+  </url>
+  <url>
+    <loc>https://rylestate.com/property/tranchi-270014</loc>
   </url>
 </urlset>

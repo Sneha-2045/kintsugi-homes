@@ -97,7 +97,7 @@ function PropertyDetails() {
     description: property.description,
     image: property.images,
     offers:
-      property.priceUsd > 0
+      !property.isTranchi && property.priceUsd > 0
         ? {
             "@type": "Offer",
             price: property.priceUsd,
@@ -129,8 +129,14 @@ function PropertyDetails() {
                 src={src}
                 alt={`${property.title} — photo ${i + 1}`}
                 loading={i === 0 ? "eager" : "lazy"}
+                onError={(event) => {
+                  event.currentTarget.hidden = true;
+                  const fallback = event.currentTarget.nextElementSibling;
+                  if (fallback instanceof HTMLElement) fallback.hidden = false;
+                }}
                 className="aspect-16/9 w-full rounded-2xl border border-border object-cover"
               />
+              <div hidden className="grid aspect-16/9 place-items-center rounded-2xl border border-border bg-elevated text-sm text-muted-foreground">Property photo unavailable</div>
             </li>
           ))}
         </ul>
@@ -154,6 +160,43 @@ function PropertyDetails() {
             <p className="mt-3 leading-relaxed text-muted-foreground">
               {property.description}
             </p>
+
+            {property.isTranchi ? (
+              <section className="mt-8 rounded-2xl border border-border bg-card p-5" aria-labelledby="investment-estimates">
+                <h2 id="investment-estimates" className="text-xl font-bold text-foreground">Investment details</h2>
+                <p className="mt-2 text-sm text-muted-foreground">Figures below are estimates provided in the source data. They are not a verified sale price, valuation, rent, or return.</p>
+                <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {[
+                    ["Reported source price", property.priceUsd > 0 ? formatUsd(property.priceUsd) : "Unavailable"],
+                    ["Estimated appraised value", property.estimatedAppraisedValue ? formatUsd(property.estimatedAppraisedValue) : "Unavailable"],
+                    ["Estimated market value", property.estimatedMarketValue ? formatUsd(property.estimatedMarketValue) : "Unavailable"],
+                    ["Estimated monthly rent", property.monthlyRentEstimate ? `${formatUsd(property.monthlyRentEstimate)}/month` : "Unavailable"],
+                    ["Estimated monthly cash flow", property.monthlyCashFlowEstimate != null ? `${formatUsd(property.monthlyCashFlowEstimate)}/month` : "Unavailable"],
+                    ["Property status", property.status ?? "Unavailable"],
+                    ["Lead status", property.leadStatus ?? "Unavailable"],
+                    ["Source property ID", property.sourcePropertyId ?? "Unavailable"],
+                  ].map(([label, value]) => (
+                    <div key={label} className="rounded-xl bg-elevated p-4">
+                      <dt className="text-xs text-muted-foreground">{label}</dt>
+                      <dd className="mt-1 font-semibold text-foreground">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+                {property.sourceDetails && Object.keys(property.sourceDetails).length ? (
+                  <details className="mt-5 border-t border-border pt-4">
+                    <summary className="cursor-pointer font-semibold text-foreground">Additional source data</summary>
+                    <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+                      {Object.entries(property.sourceDetails).map(([key, value]) => (
+                        <div key={key} className="rounded-xl bg-elevated p-3">
+                          <dt className="text-xs capitalize text-muted-foreground">{key.replace(/([A-Z])/g, " $1").replaceAll("_", " ")}</dt>
+                          <dd className="mt-1 break-words text-sm font-medium text-foreground">{value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </details>
+                ) : null}
+              </section>
+            ) : null}
 
             <section className="mt-8 border-t border-border pt-6" aria-labelledby="source-title">
               <h3 id="source-title" className="text-lg font-semibold text-foreground">
@@ -214,11 +257,12 @@ function PropertyDetails() {
                     ? String(property.bedrooms)
                     : "—",
                 ],
+                ...(property.isTranchi ? [["Bathrooms", property.bathrooms ? String(property.bathrooms) : "—"]] : []),
                 [
                   "Floor area",
                   property.floorArea
                     ? `${property.floorArea} ${
-                        property.prefecture === "Florida"
+                        property.isTranchi || property.prefecture === "Florida"
                           ? "sq ft"
                           : "m²"
                       }`
@@ -262,9 +306,12 @@ function PropertyDetails() {
           </div>
 
           <aside className="h-fit rounded-2xl border border-border bg-card p-6">
+            {property.isTranchi ? <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Reported source price</p> : null}
             <p className="text-3xl font-bold text-foreground">
               {property.priceUsd > 0 ? formatUsd(property.priceUsd) : "Price unavailable"}
             </p>
+
+            {property.isTranchi ? <p className="mt-2 text-sm leading-6 text-muted-foreground">Source data does not confirm current availability or acquisition terms. Verify the price and listing directly before making a decision.</p> : null}
 
             {property.priceJpy != null && (
               <p className="mt-1 text-sm text-muted-foreground">
@@ -272,21 +319,21 @@ function PropertyDetails() {
               </p>
             )}
 
-            <Button
+            {property.isTranchi && property.sourceUrl ? <Button asChild className="mt-6 w-full" size="lg"><a href={property.sourceUrl} target="_blank" rel="noreferrer noopener">View original listing</a></Button> : property.isTranchi ? <p className="mt-6 rounded-lg bg-elevated p-3 text-sm text-muted-foreground">Original source listing URL was not included in the supplied data.</p> : <Button
               asChild
               className="mt-6 w-full"
               size="lg"
             >
               <Link to="/consult">Enquire via partner</Link>
-            </Button>
+            </Button>}
 
-            <Button
+            {!property.isTranchi ? <Button
               asChild
               variant="outline"
               className="mt-3 w-full"
             >
               <Link to="/saved">Save this property</Link>
-            </Button>
+            </Button> : null}
           </aside>
         </div>
       </PageShell>

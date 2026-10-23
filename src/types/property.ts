@@ -24,6 +24,26 @@ propertyType?: string;
   description: string;
   latitude?: number;
   longitude?: number;
+  sourcePropertyId?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  bathrooms?: number;
+  status?: string;
+  leadStatus?: string;
+  dealCategory?: string;
+  estimatedAppraisedValue?: number;
+  estimatedMarketValue?: number;
+  monthlyRentEstimate?: number;
+  monthlyCashFlowEstimate?: number;
+  isTranchi?: boolean;
+  sourceDetails?: Record<string, string>;
+}
+
+export interface TranchiProperty extends Property {
+  sourcePropertyId: string;
+  isTranchi: true;
 }
 
 export interface Region {

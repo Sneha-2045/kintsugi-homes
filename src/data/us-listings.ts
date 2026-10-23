@@ -1,6 +1,8 @@
 import type { Property } from "@/types/property";
+import { tranchiProperties } from "@/data/tranchi-properties";
+import { tranchiPropertyImages } from "@/data/tranchi-property-images";
 
-export const usListings: Property[] = [
+const existingUsListings: Property[] = [
   {
     id: "houston-b4cffe0721",
     sourceUrl: "https://www.auction.com/details/5030-aspen-orchard-dr-houston-tx-2151461",
@@ -684,3 +686,16 @@ export const usListings: Property[] = [
     propertyType: "Foreclosure Sale",
   },
 ];
+
+const importedTranchiListings: Property[] = tranchiProperties.map((property) => ({
+  ...property,
+  images: tranchiPropertyImages[property.id] ?? [],
+}));
+
+// Source property IDs keep the import deduplicated if the source export is refreshed.
+const uniqueImportedListings = importedTranchiListings.filter(
+  (property, index, all) => all.findIndex((candidate) => candidate.sourcePropertyId === property.sourcePropertyId) === index,
+);
+
+export const usListings: Property[] = [...existingUsListings, ...uniqueImportedListings];
+export const tranchiUsListings: Property[] = uniqueImportedListings;
