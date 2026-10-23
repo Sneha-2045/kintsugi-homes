@@ -13,13 +13,18 @@ const navItems = [
   { label: "Map", to: "/map" },
   { label: "Articles", to: "/articles" },
   { label: "Saved", to: "/saved" },
+  { label: "Compare", to: "/compare" },
   { label: "Pricing", to: "/pricing" },
   { label: "Consult", to: "/consult" },
 ] as const;
 
 function Brand() {
   return (
-    <Link to="/" className="flex shrink-0 items-center leading-none" aria-label="Rylestate.com — home">
+    <Link
+      to="/"
+      className="flex shrink-0 items-center leading-none"
+      aria-label="Rylestate.com — home"
+    >
       <BrandMark className="h-auto w-32 min-[400px]:w-40 md:w-48" />
     </Link>
   );
@@ -30,7 +35,10 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-surface/95 backdrop-blur">
-      <nav aria-label="Main" className="container-page flex h-18 items-center gap-2 py-3 sm:gap-4 xl:gap-6">
+      <nav
+        aria-label="Main"
+        className="container-page flex h-18 items-center gap-2 py-3 sm:gap-4 xl:gap-6"
+      >
         <Brand />
 
         <ul className="hidden flex-1 items-center gap-1 2xl:flex">

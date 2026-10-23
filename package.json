@@ -12,7 +12,8 @@
     "format": "prettier --write .",
     "generate-listings": "node scripts/generate-bulk-listings.mjs",
     "generate-sitemaps": "node scripts/generate-sitemap.mjs",
-    "validate-sitemaps": "node scripts/validate-sitemaps.mjs"
+    "validate-sitemaps": "node scripts/validate-sitemaps.mjs",
+    "test:comparison": "node --experimental-strip-types --test src/lib/property-comparison.test.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

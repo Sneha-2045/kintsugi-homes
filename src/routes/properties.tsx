@@ -2,6 +2,8 @@ import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-r
 import { useEffect, useState } from "react";
 import { Bath, BedDouble, MapPin, Search, Square } from "lucide-react";
 import { PageShell } from "@/components/layout/PageShell";
+import { CompareToggle, usePropertyComparison } from "@/components/property/PropertyComparison";
+import { fromMlsListing } from "@/lib/property-comparison";
 
 export const Route = createFileRoute("/properties")({ component: PropertiesPage });
 type Listing = {
@@ -25,6 +27,8 @@ type Listing = {
   details?: { numBedrooms?: number; numBathrooms?: number; sqft?: number; propertyType?: string };
   office?: { brokerageName?: string };
   listOfficeName?: string;
+  sourceUrl?: string;
+  status?: string;
 };
 type ApiFailure = { code?: string; message?: string; retryable?: boolean };
 type Results = {
@@ -65,6 +69,7 @@ function imageOf(listing: Listing) {
 }
 function PropertiesPage() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const comparison = usePropertyComparison();
   const [city, setCity] = useState("");
   const [stateOrMarket, setStateOrMarket] = useState("");
   const [kind, setKind] = useState("all");
@@ -295,10 +300,12 @@ function PropertiesPage() {
                 ? [address.city, address.state].filter(Boolean).join(", ") || "Address withheld"
                 : location;
             const listingId = item.boardId ? `${item.boardId}~${mls}` : String(mls);
+            const comparisonProperty = fromMlsListing(item);
+            const comparisonSelected = comparison.selected(comparisonProperty.key);
             return (
               <article
                 key={mls}
-                className="overflow-hidden rounded-2xl border border-border bg-card shadow-card"
+                className={`overflow-hidden rounded-2xl border bg-card shadow-card ${comparisonSelected ? "border-primary ring-2 ring-primary/40" : "border-border"}`}
               >
                 <Link to="/properties/$id" params={{ id: listingId }} className="block">
                   <div className="aspect-[4/3] bg-elevated">
@@ -343,6 +350,9 @@ function PropertiesPage() {
                   {item.office?.brokerageName ?? item.listOfficeName ?? "See listing details"} ·
                   Data provided through Repliers
                 </p>
+                <div className="relative z-10 px-5 pb-4">
+                  <CompareToggle property={comparisonProperty} />
+                </div>
               </article>
             );
           })}

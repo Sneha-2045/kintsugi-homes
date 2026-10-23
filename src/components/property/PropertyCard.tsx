@@ -16,21 +16,29 @@ import { Button } from "@/components/common/Button";
 import { formatJpy, formatUsd } from "@/data/properties";
 import { ReportListingIssue } from "@/components/property/ReportListingIssue";
 import { cn } from "@/lib/utils";
+import { CompareToggle, usePropertyComparison } from "@/components/property/PropertyComparison";
+import { fromProperty } from "@/lib/property-comparison";
 import type { Property } from "@/types/property";
 
 export function PropertyCard({ property }: { property: Property }) {
   const [index, setIndex] = useState(0);
   const [saved, setSaved] = useState(false);
+  const comparison = usePropertyComparison();
+  const comparisonProperty = fromProperty(property);
+  const comparisonSelected = comparison.selected(comparisonProperty.key);
   const total = property.images.length;
   const tags = property.tags.filter(
     (tag, index, values) =>
-      values.findIndex((value) => value.trim().toLowerCase() === tag.trim().toLowerCase()) === index,
+      values.findIndex((value) => value.trim().toLowerCase() === tag.trim().toLowerCase()) ===
+      index,
   );
 
   const step = (dir: 1 | -1) => setIndex((i) => (i + dir + total) % total);
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-elevated">
+    <article
+      className={`group flex h-full flex-col overflow-hidden rounded-2xl border bg-card shadow-card transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-elevated ${comparisonSelected ? "border-primary ring-2 ring-primary/40" : "border-border"}`}
+    >
       <div className="relative aspect-[4/3] overflow-hidden bg-elevated">
         <img
           src={property.images[index]}
@@ -219,6 +227,9 @@ export function PropertyCard({ property }: { property: Property }) {
             Show on Map
           </Link>
         </Button>
+        <div className="relative z-10 mt-3 self-start">
+          <CompareToggle property={comparisonProperty} />
+        </div>
       </div>
     </article>
   );

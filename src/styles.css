@@ -217,3 +217,29 @@
   background-color: var(--primary);
   color: white;
 }
+@media print {
+  .comparison-print-hide {
+    display: none !important;
+  }
+  .comparison-scroll {
+    overflow: visible !important;
+    border: 0 !important;
+  }
+  .comparison-scroll table {
+    min-width: 0 !important;
+    font-size: 10pt;
+  }
+  .comparison-scroll th,
+  .comparison-scroll td {
+    position: static !important;
+    min-width: 0 !important;
+  }
+  .comparison-scroll img {
+    max-height: 120px;
+    object-fit: cover;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+  }
+}

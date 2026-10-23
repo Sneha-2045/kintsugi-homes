@@ -5,16 +5,18 @@ import { BedDouble, Bath, Maximize2, MapPin } from "lucide-react";
 import { PageShell } from "@/components/layout/PageShell";
 import { CountrySwitcher } from "@/components/common/CountrySwitcher";
 import { PropertyCard } from "@/components/property/PropertyCard";
+import { CompareToggle, usePropertyComparison } from "@/components/property/PropertyComparison";
 import { tranchiUsListings, usListings } from "@/data/us-listings";
 import { formatUsd } from "@/data/properties";
 import { canonicalLink } from "@/lib/seo";
+import { fromProperty } from "@/lib/property-comparison";
 import type { Property } from "@/types/property";
 
 const title = "US Properties & Investment Opportunities | Rylestate";
 const description = "Explore US property opportunities with source-provided prices, property images, and clearly identified investment estimates.";
 
 export const Route = createFileRoute("/us-properties")({
-  validateSearch: (search: Record<string, unknown>): { q?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { q?: string | undefined } => ({
     q: typeof search["q"] === "string" && search["q"].length > 0 ? search["q"] : undefined,
   }),
   head: () => ({
@@ -102,11 +104,14 @@ function USPropertiesPage() {
 
 function InvestmentCard({ property }: { property: Property }) {
   const [imageFailed, setImageFailed] = useState(false);
+  const comparison = usePropertyComparison();
+  const comparisonProperty = fromProperty(property);
+  const comparisonSelected = comparison.selected(comparisonProperty.key);
   const cityState = [property.city, property.state].filter(Boolean).join(", ");
   const fullLocation = [cityState, property.zipCode].filter(Boolean).join(" ") || "Location unavailable";
   const displayedValue = property.estimatedAppraisedValue ?? property.estimatedMarketValue;
   return (
-    <article className="h-full overflow-hidden rounded-2xl border border-white/10 bg-[#111d30] shadow-lg transition hover:-translate-y-0.5 hover:border-blue-400/40">
+    <article className={`h-full overflow-hidden rounded-2xl border bg-[#111d30] shadow-lg transition hover:-translate-y-0.5 hover:border-blue-400/40 ${comparisonSelected ? "border-blue-300 ring-2 ring-blue-400/50" : "border-white/10"}`}>
       <Link to="/property/$id" params={{ id: property.id }} className="group block" aria-label={`View property: ${property.title}`}>
         <div className="relative aspect-[4/3] overflow-hidden bg-slate-900">
           {property.images[0] && !imageFailed ? <img src={property.images[0]} alt={`${property.title} property`} loading="lazy" sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw" onError={() => setImageFailed(true)} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" /> : <div className="grid h-full place-items-center text-sm text-slate-400">Property image unavailable</div>}
@@ -131,6 +136,7 @@ function InvestmentCard({ property }: { property: Property }) {
           {property.leadStatus && <Metric label="Lead status" value={property.leadStatus} />}
         </dl>
         <Link to="/property/$id" params={{ id: property.id }} className="mt-5 flex min-h-11 items-center justify-center rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-300">View Property</Link>
+        <div className="mt-3"><CompareToggle property={comparisonProperty} /></div>
         <p className="mt-3 text-[11px] leading-5 text-slate-400">Source figures may be estimates. Confirm price, availability, and terms independently.</p>
       </div>
     </article>

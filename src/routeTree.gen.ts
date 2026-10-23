@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as ArticlesRouteImport } from './routes/articles'
+import { Route as CompareRouteImport } from './routes/compare'
 import { Route as ConsultRouteImport } from './routes/consult'
 import { Route as FindAnAgentRouteImport } from './routes/find-an-agent'
 import { Route as JapanPropertiesRouteImport } from './routes/japan-properties'
@@ -47,6 +48,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const ArticlesRoute = ArticlesRouteImport.update({
   id: '/articles',
   path: '/articles',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompareRoute = CompareRouteImport.update({
+  id: '/compare',
+  path: '/compare',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConsultRoute = ConsultRouteImport.update({
@@ -163,6 +169,7 @@ const ApiPropertiesFiltersRoute = ApiPropertiesFiltersRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/articles': typeof ArticlesRoute
+  '/compare': typeof CompareRoute
   '/consult': typeof ConsultRoute
   '/find-an-agent': typeof FindAnAgentRoute
   '/japan-properties': typeof JapanPropertiesRoute
@@ -189,6 +196,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/articles': typeof ArticlesRoute
+  '/compare': typeof CompareRoute
   '/consult': typeof ConsultRoute
   '/find-an-agent': typeof FindAnAgentRoute
   '/japan-properties': typeof JapanPropertiesRoute
@@ -217,6 +225,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/articles': typeof ArticlesRoute
+  '/compare': typeof CompareRoute
   '/consult': typeof ConsultRoute
   '/find-an-agent': typeof FindAnAgentRoute
   '/japan-properties': typeof JapanPropertiesRoute
@@ -245,6 +254,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/articles'
+    | '/compare'
     | '/consult'
     | '/find-an-agent'
     | '/japan-properties'
@@ -271,6 +281,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/articles'
+    | '/compare'
     | '/consult'
     | '/find-an-agent'
     | '/japan-properties'
@@ -298,6 +309,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/articles'
+    | '/compare'
     | '/consult'
     | '/find-an-agent'
     | '/japan-properties'
@@ -326,6 +338,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   ArticlesRoute: typeof ArticlesRoute
+  CompareRoute: typeof CompareRoute
   ConsultRoute: typeof ConsultRoute
   FindAnAgentRoute: typeof FindAnAgentRoute
   JapanPropertiesRoute: typeof JapanPropertiesRoute
@@ -365,6 +378,13 @@ declare module '@tanstack/react-router' {
       path: '/articles'
       fullPath: '/articles'
       preLoaderRoute: typeof ArticlesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compare': {
+      id: '/compare'
+      path: '/compare'
+      fullPath: '/compare'
+      preLoaderRoute: typeof CompareRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/consult': {
@@ -569,6 +589,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   ArticlesRoute: ArticlesRoute,
+  CompareRoute: CompareRoute,
   ConsultRoute: ConsultRoute,
   FindAnAgentRoute: FindAnAgentRoute,
   JapanPropertiesRoute: JapanPropertiesRoute,
