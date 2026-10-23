@@ -73,7 +73,7 @@ function USPropertiesPage() {
       <section aria-labelledby="investment-heading" className="mb-16">
         <div className="rounded-3xl border border-blue-900/40 bg-gradient-to-br from-[#101d32] via-[#0d1728] to-[#111a2a] p-6 shadow-elevated md:p-10">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-300">Curated US opportunities</p>
-          <h2 id="investment-heading" className="mt-3 text-2xl font-bold text-white md:text-4xl">Discover Your Next Real Estate Investment</h2>
+          <h2 id="investment-heading" className="mt-3 text-2xl font-bold text-white md:text-4xl">Find Your Next <em>$5k House.</em></h2>
           <p className="mt-4 max-w-4xl text-sm leading-7 text-slate-300 md:text-base">Explore handpicked US property opportunities, from foreclosure sales to below-market homes, with property images and investment insights to help you make informed decisions.</p>
 
           <div className="mt-8 grid gap-3 rounded-2xl border border-white/10 bg-black/10 p-4 sm:grid-cols-2 lg:grid-cols-4">
