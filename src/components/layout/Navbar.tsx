@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Menu, Settings, X } from "lucide-react";
+import { Menu, Phone, Settings, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/common/Button";
 import { BrandMark } from "@/components/common/BrandMark";
@@ -64,6 +64,14 @@ export function Navbar() {
         </ul>
 
         <div className="ml-auto hidden items-center gap-3 2xl:flex">
+          <a
+            href="tel:+18886933908"
+            className="inline-flex items-center gap-2 rounded-md px-2 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-elevated"
+            aria-label="Call +1 (888) 693-3908"
+          >
+            <Phone className="h-4 w-4" aria-hidden="true" />
+            Call (888) 693-3908
+          </a>
           <button
             type="button"
             aria-label="Site settings"
@@ -83,6 +91,15 @@ export function Navbar() {
         </div>
 
         <div className="ml-auto flex items-center gap-2 2xl:hidden">
+          <a
+            href="tel:+18886933908"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-md px-2 text-sm font-semibold text-foreground hover:bg-elevated"
+            aria-label="Call +1 (888) 693-3908"
+          >
+            <Phone className="h-4 w-4" aria-hidden="true" />
+            <span className="hidden min-[360px]:inline">Call</span>
+            <span>(888) 693-3908</span>
+          </a>
           <Button asChild size="sm" className="hidden sm:inline-flex">
             <Link to="/pricing">Free Trial</Link>
           </Button>
