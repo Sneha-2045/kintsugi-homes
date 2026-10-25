@@ -1,8 +1,13 @@
 import type { Property } from "@/types/property";
 
-export type ComparisonSource = "us" | "japan" | "mls";
+export type ComparisonSource = "us" | "japan" | "mls" | "rentcast";
 export type PriceBasis =
-  "mls-asking" | "auction-listed" | "tranchi-reported" | "source-reported" | "japan-listed";
+  | "mls-asking"
+  | "auction-listed"
+  | "tranchi-reported"
+  | "source-reported"
+  | "japan-listed"
+  | "rentcast-listing";
 
 export type ComparisonProperty = {
   key: string;
@@ -62,14 +67,17 @@ export function sanitizeComparisonProperties(value: unknown): ComparisonProperty
         key.length >= 250 ||
         !name ||
         !detailHref ||
-        (!detailHref.startsWith("/property/") && !detailHref.startsWith("/properties/")) ||
-        !["us", "japan", "mls"].includes(String(source)) ||
+        (!detailHref.startsWith("/property/") &&
+          !detailHref.startsWith("/properties/") &&
+          !detailHref.startsWith("/property-intelligence/")) ||
+        !["us", "japan", "mls", "rentcast"].includes(String(source)) ||
         ![
           "mls-asking",
           "auction-listed",
           "tranchi-reported",
           "source-reported",
           "japan-listed",
+          "rentcast-listing",
         ].includes(String(priceBasis)) ||
         (currency !== "USD" && currency !== "JPY") ||
         (price != null && (typeof price !== "number" || !Number.isFinite(price)))

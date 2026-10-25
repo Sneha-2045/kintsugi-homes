@@ -61,6 +61,7 @@ export function buildSitemapGroups(data) {
     "/",
     "/japan-properties",
     "/us-properties",
+    "/property-intelligence",
     "/search",
     "/map",
     "/consult",

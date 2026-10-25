@@ -257,6 +257,8 @@ function ComparePage() {
                   values={properties.map((p) =>
                     p.priceBasis === "mls-asking"
                       ? "MLS asking price"
+                      : p.priceBasis === "rentcast-listing"
+                        ? "RentCast listed price or rent"
                       : p.priceBasis === "auction-listed"
                         ? "Auction/source-listed price"
                         : p.priceBasis === "japan-listed"

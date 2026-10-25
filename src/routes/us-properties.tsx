@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { BedDouble, Bath, Maximize2, MapPin } from "lucide-react";
 
 import { PageShell } from "@/components/layout/PageShell";
@@ -18,15 +18,15 @@ const title = "US Properties & Investment Opportunities | Rylestate";
 const description = "Explore US property opportunities with source-provided prices, property images, and clearly identified investment estimates.";
 
 export const Route = createFileRoute("/us-properties")({
-  validateSearch: (search: Record<string, unknown>): { q?: string; minPrice?: string; maxPrice?: string; state?: string; city?: string; category?: string; bedrooms?: string; status?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { q?: string | undefined; minPrice?: string | undefined; maxPrice?: string | undefined; state?: string | undefined; city?: string | undefined; category?: string | undefined; bedrooms?: string | undefined; status?: string | undefined } => ({
     q: typeof search["q"] === "string" && search["q"].length > 0 ? search["q"] : undefined,
-    minPrice: typeof search.minPrice === "string" ? search.minPrice : undefined,
-    maxPrice: typeof search.maxPrice === "string" ? search.maxPrice : undefined,
-    state: typeof search.state === "string" ? search.state : undefined,
-    city: typeof search.city === "string" ? search.city : undefined,
-    category: typeof search.category === "string" ? search.category : undefined,
-    bedrooms: typeof search.bedrooms === "string" ? search.bedrooms : undefined,
-    status: typeof search.status === "string" ? search.status : undefined,
+    minPrice: typeof search["minPrice"] === "string" ? search["minPrice"] : undefined,
+    maxPrice: typeof search["maxPrice"] === "string" ? search["maxPrice"] : undefined,
+    state: typeof search["state"] === "string" ? search["state"] : undefined,
+    city: typeof search["city"] === "string" ? search["city"] : undefined,
+    category: typeof search["category"] === "string" ? search["category"] : undefined,
+    bedrooms: typeof search["bedrooms"] === "string" ? search["bedrooms"] : undefined,
+    status: typeof search["status"] === "string" ? search["status"] : undefined,
   }),
   head: () => ({
     meta: [

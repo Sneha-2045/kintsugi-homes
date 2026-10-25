@@ -20,14 +20,18 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PropertiesRouteImport } from './routes/properties'
+import { Route as PropertyIntelligenceRouteImport } from './routes/property-intelligence'
 import { Route as SavedRouteImport } from './routes/saved'
+import { Route as SavedPropertiesRouteImport } from './routes/saved-properties'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SitemapRouteImport } from './routes/sitemap'
 import { Route as UsPropertiesRouteImport } from './routes/us-properties'
 import { Route as ApiPropertiesRouteImport } from './routes/api.properties'
+import { Route as ApiPropertyIntelligenceRouteImport } from './routes/api.property-intelligence'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as PrefectureSlugRouteImport } from './routes/prefecture.$slug'
 import { Route as PropertiesIdRouteImport } from './routes/properties.$id'
+import { Route as PropertyIntelligenceIdRouteImport } from './routes/property-intelligence.$id'
 import { Route as PropertyIdRouteImport } from './routes/property.$id'
 import { Route as RegionSlugRouteImport } from './routes/region.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
@@ -37,6 +41,7 @@ import { Route as ApiAlertsUnsubscribeRouteImport } from './routes/api.alerts.un
 import { Route as ApiCronSavedSearchesRouteImport } from './routes/api.cron.saved-searches'
 import { Route as ApiPropertiesIdRouteImport } from './routes/api.properties.$id'
 import { Route as ApiPropertiesFiltersRouteImport } from './routes/api.properties.filters'
+import { Route as ApiPropertyIntelligenceDetailsRouteImport } from './routes/api.property-intelligence.details'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -92,9 +97,19 @@ const PropertiesRoute = PropertiesRouteImport.update({
   path: '/properties',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PropertyIntelligenceRoute = PropertyIntelligenceRouteImport.update({
+  id: '/property-intelligence',
+  path: '/property-intelligence',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SavedRoute = SavedRouteImport.update({
   id: '/saved',
   path: '/saved',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SavedPropertiesRoute = SavedPropertiesRouteImport.update({
+  id: '/saved-properties',
+  path: '/saved-properties',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SearchRoute = SearchRouteImport.update({
@@ -117,6 +132,11 @@ const ApiPropertiesRoute = ApiPropertiesRouteImport.update({
   path: '/api/properties',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPropertyIntelligenceRoute = ApiPropertyIntelligenceRouteImport.update({
+  id: '/api/property-intelligence',
+  path: '/api/property-intelligence',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CategorySlugRoute = CategorySlugRouteImport.update({
   id: '/category/$slug',
   path: '/category/$slug',
@@ -131,6 +151,11 @@ const PropertiesIdRoute = PropertiesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => PropertiesRoute,
+} as any)
+const PropertyIntelligenceIdRoute = PropertyIntelligenceIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => PropertyIntelligenceRoute,
 } as any)
 const PropertyIdRoute = PropertyIdRouteImport.update({
   id: '/property/$id',
@@ -177,6 +202,12 @@ const ApiPropertiesFiltersRoute = ApiPropertiesFiltersRouteImport.update({
   path: '/filters',
   getParentRoute: () => ApiPropertiesRoute,
 } as any)
+const ApiPropertyIntelligenceDetailsRoute =
+  ApiPropertyIntelligenceDetailsRouteImport.update({
+    id: '/details',
+    path: '/details',
+    getParentRoute: () => ApiPropertyIntelligenceRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -189,14 +220,18 @@ export interface FileRoutesByFullPath {
   '/map': typeof MapRoute
   '/pricing': typeof PricingRoute
   '/properties': typeof PropertiesRouteWithChildren
+  '/property-intelligence': typeof PropertyIntelligenceRouteWithChildren
   '/saved': typeof SavedRoute
+  '/saved-properties': typeof SavedPropertiesRoute
   '/search': typeof SearchRoute
   '/sitemap': typeof SitemapRoute
   '/us-properties': typeof UsPropertiesRoute
   '/api/properties': typeof ApiPropertiesRouteWithChildren
+  '/api/property-intelligence': typeof ApiPropertyIntelligenceRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
   '/prefecture/$slug': typeof PrefectureSlugRoute
   '/properties/$id': typeof PropertiesIdRoute
+  '/property-intelligence/$id': typeof PropertyIntelligenceIdRoute
   '/property/$id': typeof PropertyIdRoute
   '/region/$slug': typeof RegionSlugRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
@@ -205,6 +240,7 @@ export interface FileRoutesByFullPath {
   '/api/cron/saved-searches': typeof ApiCronSavedSearchesRoute
   '/api/properties/$id': typeof ApiPropertiesIdRoute
   '/api/properties/filters': typeof ApiPropertiesFiltersRoute
+  '/api/property-intelligence/details': typeof ApiPropertyIntelligenceDetailsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -218,14 +254,18 @@ export interface FileRoutesByTo {
   '/map': typeof MapRoute
   '/pricing': typeof PricingRoute
   '/properties': typeof PropertiesRouteWithChildren
+  '/property-intelligence': typeof PropertyIntelligenceRouteWithChildren
   '/saved': typeof SavedRoute
+  '/saved-properties': typeof SavedPropertiesRoute
   '/search': typeof SearchRoute
   '/sitemap': typeof SitemapRoute
   '/us-properties': typeof UsPropertiesRoute
   '/api/properties': typeof ApiPropertiesRouteWithChildren
+  '/api/property-intelligence': typeof ApiPropertyIntelligenceRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
   '/prefecture/$slug': typeof PrefectureSlugRoute
   '/properties/$id': typeof PropertiesIdRoute
+  '/property-intelligence/$id': typeof PropertyIntelligenceIdRoute
   '/property/$id': typeof PropertyIdRoute
   '/region/$slug': typeof RegionSlugRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
@@ -234,6 +274,7 @@ export interface FileRoutesByTo {
   '/api/cron/saved-searches': typeof ApiCronSavedSearchesRoute
   '/api/properties/$id': typeof ApiPropertiesIdRoute
   '/api/properties/filters': typeof ApiPropertiesFiltersRoute
+  '/api/property-intelligence/details': typeof ApiPropertyIntelligenceDetailsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesById {
@@ -249,14 +290,18 @@ export interface FileRoutesById {
   '/map': typeof MapRoute
   '/pricing': typeof PricingRoute
   '/properties': typeof PropertiesRouteWithChildren
+  '/property-intelligence': typeof PropertyIntelligenceRouteWithChildren
   '/saved': typeof SavedRoute
+  '/saved-properties': typeof SavedPropertiesRoute
   '/search': typeof SearchRoute
   '/sitemap': typeof SitemapRoute
   '/us-properties': typeof UsPropertiesRoute
   '/api/properties': typeof ApiPropertiesRouteWithChildren
+  '/api/property-intelligence': typeof ApiPropertyIntelligenceRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
   '/prefecture/$slug': typeof PrefectureSlugRoute
   '/properties/$id': typeof PropertiesIdRoute
+  '/property-intelligence/$id': typeof PropertyIntelligenceIdRoute
   '/property/$id': typeof PropertyIdRoute
   '/region/$slug': typeof RegionSlugRoute
   '/_authenticated/admin/$id': typeof AuthenticatedAdminIdRoute
@@ -265,6 +310,7 @@ export interface FileRoutesById {
   '/api/cron/saved-searches': typeof ApiCronSavedSearchesRoute
   '/api/properties/$id': typeof ApiPropertiesIdRoute
   '/api/properties/filters': typeof ApiPropertiesFiltersRoute
+  '/api/property-intelligence/details': typeof ApiPropertyIntelligenceDetailsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -280,14 +326,18 @@ export interface FileRouteTypes {
     | '/map'
     | '/pricing'
     | '/properties'
+    | '/property-intelligence'
     | '/saved'
+    | '/saved-properties'
     | '/search'
     | '/sitemap'
     | '/us-properties'
     | '/api/properties'
+    | '/api/property-intelligence'
     | '/category/$slug'
     | '/prefecture/$slug'
     | '/properties/$id'
+    | '/property-intelligence/$id'
     | '/property/$id'
     | '/region/$slug'
     | '/admin/$id'
@@ -296,6 +346,7 @@ export interface FileRouteTypes {
     | '/api/cron/saved-searches'
     | '/api/properties/$id'
     | '/api/properties/filters'
+    | '/api/property-intelligence/details'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -309,14 +360,18 @@ export interface FileRouteTypes {
     | '/map'
     | '/pricing'
     | '/properties'
+    | '/property-intelligence'
     | '/saved'
+    | '/saved-properties'
     | '/search'
     | '/sitemap'
     | '/us-properties'
     | '/api/properties'
+    | '/api/property-intelligence'
     | '/category/$slug'
     | '/prefecture/$slug'
     | '/properties/$id'
+    | '/property-intelligence/$id'
     | '/property/$id'
     | '/region/$slug'
     | '/admin/$id'
@@ -325,6 +380,7 @@ export interface FileRouteTypes {
     | '/api/cron/saved-searches'
     | '/api/properties/$id'
     | '/api/properties/filters'
+    | '/api/property-intelligence/details'
     | '/admin'
   id:
     | '__root__'
@@ -339,14 +395,18 @@ export interface FileRouteTypes {
     | '/map'
     | '/pricing'
     | '/properties'
+    | '/property-intelligence'
     | '/saved'
+    | '/saved-properties'
     | '/search'
     | '/sitemap'
     | '/us-properties'
     | '/api/properties'
+    | '/api/property-intelligence'
     | '/category/$slug'
     | '/prefecture/$slug'
     | '/properties/$id'
+    | '/property-intelligence/$id'
     | '/property/$id'
     | '/region/$slug'
     | '/_authenticated/admin/$id'
@@ -355,6 +415,7 @@ export interface FileRouteTypes {
     | '/api/cron/saved-searches'
     | '/api/properties/$id'
     | '/api/properties/filters'
+    | '/api/property-intelligence/details'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -370,11 +431,14 @@ export interface RootRouteChildren {
   MapRoute: typeof MapRoute
   PricingRoute: typeof PricingRoute
   PropertiesRoute: typeof PropertiesRouteWithChildren
+  PropertyIntelligenceRoute: typeof PropertyIntelligenceRouteWithChildren
   SavedRoute: typeof SavedRoute
+  SavedPropertiesRoute: typeof SavedPropertiesRoute
   SearchRoute: typeof SearchRoute
   SitemapRoute: typeof SitemapRoute
   UsPropertiesRoute: typeof UsPropertiesRoute
   ApiPropertiesRoute: typeof ApiPropertiesRouteWithChildren
+  ApiPropertyIntelligenceRoute: typeof ApiPropertyIntelligenceRouteWithChildren
   CategorySlugRoute: typeof CategorySlugRoute
   PrefectureSlugRoute: typeof PrefectureSlugRoute
   PropertyIdRoute: typeof PropertyIdRoute
@@ -462,11 +526,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PropertiesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/property-intelligence': {
+      id: '/property-intelligence'
+      path: '/property-intelligence'
+      fullPath: '/property-intelligence'
+      preLoaderRoute: typeof PropertyIntelligenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/saved': {
       id: '/saved'
       path: '/saved'
       fullPath: '/saved'
       preLoaderRoute: typeof SavedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/saved-properties': {
+      id: '/saved-properties'
+      path: '/saved-properties'
+      fullPath: '/saved-properties'
+      preLoaderRoute: typeof SavedPropertiesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search': {
@@ -497,6 +575,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPropertiesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/property-intelligence': {
+      id: '/api/property-intelligence'
+      path: '/api/property-intelligence'
+      fullPath: '/api/property-intelligence'
+      preLoaderRoute: typeof ApiPropertyIntelligenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/category/$slug': {
       id: '/category/$slug'
       path: '/category/$slug'
@@ -517,6 +602,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/properties/$id'
       preLoaderRoute: typeof PropertiesIdRouteImport
       parentRoute: typeof PropertiesRoute
+    }
+    '/property-intelligence/$id': {
+      id: '/property-intelligence/$id'
+      path: '/$id'
+      fullPath: '/property-intelligence/$id'
+      preLoaderRoute: typeof PropertyIntelligenceIdRouteImport
+      parentRoute: typeof PropertyIntelligenceRoute
     }
     '/property/$id': {
       id: '/property/$id'
@@ -581,6 +673,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPropertiesFiltersRouteImport
       parentRoute: typeof ApiPropertiesRoute
     }
+    '/api/property-intelligence/details': {
+      id: '/api/property-intelligence/details'
+      path: '/details'
+      fullPath: '/api/property-intelligence/details'
+      preLoaderRoute: typeof ApiPropertyIntelligenceDetailsRouteImport
+      parentRoute: typeof ApiPropertyIntelligenceRoute
+    }
   }
 }
 
@@ -611,6 +710,17 @@ const PropertiesRouteWithChildren = PropertiesRoute._addFileChildren(
   PropertiesRouteChildren,
 )
 
+interface PropertyIntelligenceRouteChildren {
+  PropertyIntelligenceIdRoute: typeof PropertyIntelligenceIdRoute
+}
+
+const PropertyIntelligenceRouteChildren: PropertyIntelligenceRouteChildren = {
+  PropertyIntelligenceIdRoute: PropertyIntelligenceIdRoute,
+}
+
+const PropertyIntelligenceRouteWithChildren =
+  PropertyIntelligenceRoute._addFileChildren(PropertyIntelligenceRouteChildren)
+
 interface ApiPropertiesRouteChildren {
   ApiPropertiesIdRoute: typeof ApiPropertiesIdRoute
   ApiPropertiesFiltersRoute: typeof ApiPropertiesFiltersRoute
@@ -625,6 +735,20 @@ const ApiPropertiesRouteWithChildren = ApiPropertiesRoute._addFileChildren(
   ApiPropertiesRouteChildren,
 )
 
+interface ApiPropertyIntelligenceRouteChildren {
+  ApiPropertyIntelligenceDetailsRoute: typeof ApiPropertyIntelligenceDetailsRoute
+}
+
+const ApiPropertyIntelligenceRouteChildren: ApiPropertyIntelligenceRouteChildren =
+  {
+    ApiPropertyIntelligenceDetailsRoute: ApiPropertyIntelligenceDetailsRoute,
+  }
+
+const ApiPropertyIntelligenceRouteWithChildren =
+  ApiPropertyIntelligenceRoute._addFileChildren(
+    ApiPropertyIntelligenceRouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -637,11 +761,14 @@ const rootRouteChildren: RootRouteChildren = {
   MapRoute: MapRoute,
   PricingRoute: PricingRoute,
   PropertiesRoute: PropertiesRouteWithChildren,
+  PropertyIntelligenceRoute: PropertyIntelligenceRouteWithChildren,
   SavedRoute: SavedRoute,
+  SavedPropertiesRoute: SavedPropertiesRoute,
   SearchRoute: SearchRoute,
   SitemapRoute: SitemapRoute,
   UsPropertiesRoute: UsPropertiesRoute,
   ApiPropertiesRoute: ApiPropertiesRouteWithChildren,
+  ApiPropertyIntelligenceRoute: ApiPropertyIntelligenceRouteWithChildren,
   CategorySlugRoute: CategorySlugRoute,
   PrefectureSlugRoute: PrefectureSlugRoute,
   PropertyIdRoute: PropertyIdRoute,
