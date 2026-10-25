@@ -35,7 +35,8 @@ STATE_CODES = {
 # ==========================================
 # MINIMUM DAYS BEFORE AUCTION
 # ==========================================
-MIN_DAYS = 10
+# Keep upcoming auctions visible through auction day. Past auctions are excluded.
+MIN_DAYS = 0
 
 
 HISTORY_FILE = os.path.join(
@@ -538,6 +539,19 @@ for property_data in qualifying_properties:
 
 
 # ==========================================
+# SAFETY CHECK
+# ==========================================
+# Check before opening the output file so an empty scrape cannot truncate it.
+if len(unique_properties) == 0:
+
+    print("\n======================================")
+    print("WARNING: 0 qualifying properties found")
+    print("Existing US listings file will NOT be overwritten.")
+    print("======================================")
+    raise SystemExit(1)
+
+
+# ==========================================
 # CREATE TYPESCRIPT FILE
 # ==========================================
 output_file = os.path.join(
@@ -613,23 +627,6 @@ with open(
         file.write("  },\n")
 
     file.write("];\n")
-
-# ==========================================
-# SAFETY CHECK
-# ==========================================
-# Do not overwrite existing listings if the
-# scraper unexpectedly returns zero results.
-
-if len(unique_properties) == 0:
-
-    print("\n======================================")
-    print("WARNING: 0 qualifying properties found")
-    print("Existing US listings file will NOT be overwritten.")
-    print("======================================")
-
-    # Do not save empty results.
-    # Exit before writing us-listings.ts.
-    raise SystemExit(1)
 
 with open(
     HISTORY_FILE,

@@ -1,7 +1,9 @@
 const API_BASE = "https://api.rentcast.io/v1";
-const PAGE_SIZE = 24;
+const PAGE_SIZE = 20;
 const STATE_CODES = new Set(
-  "AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY DC".split(" "),
+  "AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY DC".split(
+    " ",
+  ),
 );
 const PROPERTY_TYPES = new Set([
   "Single Family",
@@ -71,12 +73,7 @@ export class RentCastError extends Error {
   public code: RentCastErrorCode;
   public retryable: boolean;
 
-  constructor(
-    status: number,
-    code: RentCastErrorCode,
-    message: string,
-    retryable = false,
-  ) {
+  constructor(status: number, code: RentCastErrorCode, message: string, retryable = false) {
     super(message);
     this.status = status;
     this.code = code;
@@ -106,7 +103,11 @@ function rangeValue(minRaw: string | null, maxRaw: string | null, label: string,
   const min = parse(minRaw);
   const high = parse(maxRaw);
   if (min != null && high != null && min > high) {
-    throw new RentCastError(400, "INVALID_SEARCH", `Minimum ${label} must not exceed maximum ${label}.`);
+    throw new RentCastError(
+      400,
+      "INVALID_SEARCH",
+      `Minimum ${label} must not exceed maximum ${label}.`,
+    );
   }
   return { min, max: high };
 }
@@ -116,7 +117,11 @@ export function parseRentCastFilters(params: URLSearchParams): RentCastFilters {
   const zipCode = boundedText(params.get("zipCode"), "ZIP code", 5);
   const state = boundedText(params.get("state"), "state", 2).toUpperCase();
   if ((!city && !zipCode) || !state || !STATE_CODES.has(state)) {
-    throw new RentCastError(400, "INVALID_SEARCH", "Enter a city or ZIP code and select a valid US state.");
+    throw new RentCastError(
+      400,
+      "INVALID_SEARCH",
+      "Enter a city or ZIP code and select a valid US state.",
+    );
   }
   if (zipCode && !/^\d{5}$/.test(zipCode)) {
     throw new RentCastError(400, "INVALID_SEARCH", "Enter a 5-digit ZIP code.");
@@ -129,10 +134,25 @@ export function parseRentCastFilters(params: URLSearchParams): RentCastFilters {
   if (listingType !== "sale" && listingType !== "rental") {
     throw new RentCastError(400, "INVALID_SEARCH", "Choose sale or rental listings.");
   }
-  const bedrooms = rangeValue(params.get("bedrooms"), params.get("bedrooms"), "bedroom count", 20).min;
-  const bathrooms = rangeValue(params.get("bathrooms"), params.get("bathrooms"), "bathroom count", 20).min;
+  const bedrooms = rangeValue(
+    params.get("bedrooms"),
+    params.get("bedrooms"),
+    "bedroom count",
+    20,
+  ).min;
+  const bathrooms = rangeValue(
+    params.get("bathrooms"),
+    params.get("bathrooms"),
+    "bathroom count",
+    20,
+  ).min;
   const price = rangeValue(params.get("minPrice"), params.get("maxPrice"), "price", 100_000_000);
-  const area = rangeValue(params.get("minSquareFootage"), params.get("maxSquareFootage"), "square footage", 1_000_000);
+  const area = rangeValue(
+    params.get("minSquareFootage"),
+    params.get("maxSquareFootage"),
+    "square footage",
+    1_000_000,
+  );
   const rawOffset = params.get("offset") ?? "0";
   const offset = Number(rawOffset);
   if (!Number.isSafeInteger(offset) || offset < 0 || offset > 10_000 || offset % PAGE_SIZE !== 0) {
@@ -212,12 +232,44 @@ function apiKey() {
 }
 
 function classifyUpstream(status: number) {
-  if (status === 401) return new RentCastError(502, "AUTHENTICATION_FAILED", "RentCast rejected the server credentials. Check the API key in the hosting dashboard.");
-  if (status === 403) return new RentCastError(403, "MARKET_ACCESS_DENIED", "RentCast denied this request. Check your subscription and endpoint access.");
-  if (status === 404) return new RentCastError(422, "UNSUPPORTED_MARKET", "RentCast has no data for this location or property.");
-  if (status === 429) return new RentCastError(429, "RATE_LIMITED", "RentCast API quota or rate limit reached. Please try again later.", true);
-  if (status === 400 || status === 422) return new RentCastError(400, "INVALID_SEARCH", "RentCast could not use these search filters. Check the location and property details.");
-  if (status === 408 || status >= 500) return new RentCastError(503, "UPSTREAM_UNAVAILABLE", "RentCast is temporarily unavailable. Please try again.", true);
+  if (status === 401)
+    return new RentCastError(
+      502,
+      "AUTHENTICATION_FAILED",
+      "RentCast rejected the server credentials. Check the API key in the hosting dashboard.",
+    );
+  if (status === 403)
+    return new RentCastError(
+      403,
+      "MARKET_ACCESS_DENIED",
+      "RentCast denied this request. Check your subscription and endpoint access.",
+    );
+  if (status === 404)
+    return new RentCastError(
+      422,
+      "UNSUPPORTED_MARKET",
+      "RentCast has no data for this location or property.",
+    );
+  if (status === 429)
+    return new RentCastError(
+      429,
+      "RATE_LIMITED",
+      "RentCast API quota or rate limit reached. Please try again later.",
+      true,
+    );
+  if (status === 400 || status === 422)
+    return new RentCastError(
+      400,
+      "INVALID_SEARCH",
+      "RentCast could not use these search filters. Check the location and property details.",
+    );
+  if (status === 408 || status >= 500)
+    return new RentCastError(
+      503,
+      "UPSTREAM_UNAVAILABLE",
+      "RentCast is temporarily unavailable. Please try again.",
+      true,
+    );
   return new RentCastError(502, "UPSTREAM_FAILURE", "RentCast could not complete the request.");
 }
 
@@ -232,8 +284,16 @@ async function rentCastGet(url: URL, ttlMs = 60_000) {
       signal: AbortSignal.timeout(12_000),
     });
   } catch (cause) {
-    const timedOut = cause instanceof Error && (cause.name === "TimeoutError" || cause.name === "AbortError");
-    throw new RentCastError(503, timedOut ? "UPSTREAM_TIMEOUT" : "UPSTREAM_UNAVAILABLE", timedOut ? "RentCast took too long to respond. Please try again." : "Could not connect to RentCast. Please try again.", true);
+    const timedOut =
+      cause instanceof Error && (cause.name === "TimeoutError" || cause.name === "AbortError");
+    throw new RentCastError(
+      503,
+      timedOut ? "UPSTREAM_TIMEOUT" : "UPSTREAM_UNAVAILABLE",
+      timedOut
+        ? "RentCast took too long to respond. Please try again."
+        : "Could not connect to RentCast. Please try again.",
+      true,
+    );
   }
   if (!response.ok) {
     // Read only for classification; response bodies are never logged or sent to the browser.
@@ -245,10 +305,18 @@ async function rentCastGet(url: URL, ttlMs = 60_000) {
   try {
     value = await response.json();
   } catch {
-    throw new RentCastError(502, "INVALID_UPSTREAM_RESPONSE", "RentCast returned an unreadable response.");
+    throw new RentCastError(
+      502,
+      "INVALID_UPSTREAM_RESPONSE",
+      "RentCast returned an unreadable response.",
+    );
   }
   if (!value || typeof value !== "object") {
-    throw new RentCastError(502, "INVALID_UPSTREAM_RESPONSE", "RentCast returned an unexpected response.");
+    throw new RentCastError(
+      502,
+      "INVALID_UPSTREAM_RESPONSE",
+      "RentCast returned an unexpected response.",
+    );
   }
   const headers = new Headers({
     "X-Total-Count": response.headers.get("X-Total-Count") ?? "",
@@ -262,35 +330,52 @@ export async function searchRentCast(params: URLSearchParams) {
   const url = buildListingUrl(filters);
   const result = await rentCastGet(url);
   if (!Array.isArray(result.value)) {
-    throw new RentCastError(502, "INVALID_UPSTREAM_RESPONSE", "RentCast returned an unexpected listings response.");
+    throw new RentCastError(
+      502,
+      "INVALID_UPSTREAM_RESPONSE",
+      "RentCast returned an unexpected listings response.",
+    );
   }
-  const listings = (result.value as unknown[]).filter(
-    (item): item is RentCastListing =>
-      Boolean(item && typeof item === "object" && typeof (item as Record<string, unknown>)["id"] === "string"),
+  const listings = (result.value as unknown[]).filter((item): item is RentCastListing =>
+    Boolean(
+      item &&
+      typeof item === "object" &&
+      typeof (item as Record<string, unknown>)["id"] === "string",
+    ),
   );
+  const totalCount = Number(result.headers.get("X-Total-Count")) || undefined;
   return {
     listings,
     offset: filters.offset,
     limit: PAGE_SIZE,
-    hasMore: listings.length === PAGE_SIZE,
-    totalCount: Number(result.headers.get("X-Total-Count")) || undefined,
+    hasMore:
+      totalCount != null
+        ? totalCount > filters.offset + listings.length
+        : listings.length === PAGE_SIZE,
+    totalCount,
   };
 }
 
 function detailsAddress(params: URLSearchParams) {
   const address = boundedText(params.get("address"), "property address", 250);
   if (!address || !/[A-Za-z]/.test(address)) {
-    throw new RentCastError(400, "INVALID_SEARCH", "A complete property address is required for investment details.");
+    throw new RentCastError(
+      400,
+      "INVALID_SEARCH",
+      "A complete property address is required for investment details.",
+    );
   }
   const propertyType = boundedText(params.get("propertyType"), "property type", 40);
-  if (propertyType && !PROPERTY_TYPES.has(propertyType)) throw new RentCastError(400, "INVALID_SEARCH", "Choose a supported property type.");
+  if (propertyType && !PROPERTY_TYPES.has(propertyType))
+    throw new RentCastError(400, "INVALID_SEARCH", "Choose a supported property type.");
   const query = new URLSearchParams({ address });
   if (propertyType) query.set("propertyType", propertyType);
   for (const key of ["bedrooms", "bathrooms", "squareFootage"] as const) {
     const raw = params.get(key);
     if (raw == null || raw === "") continue;
     const value = Number(raw);
-    if (!Number.isFinite(value) || value < 0 || value > 1_000_000) throw new RentCastError(400, "INVALID_SEARCH", `Enter valid ${key}.`);
+    if (!Number.isFinite(value) || value < 0 || value > 1_000_000)
+      throw new RentCastError(400, "INVALID_SEARCH", `Enter valid ${key}.`);
     query.set(key, String(value));
   }
   return query;
@@ -324,12 +409,24 @@ export async function getRentCastDetails(params: URLSearchParams) {
 }
 
 export function rentCastErrorResponse(error: unknown) {
-  const normalized = error instanceof RentCastError
-    ? error
-    : new RentCastError(500, "UPSTREAM_FAILURE", "Property search failed unexpectedly. Please try again.");
-  if (normalized.status >= 500) console.error("[RentCast] request error", { code: normalized.code });
+  const normalized =
+    error instanceof RentCastError
+      ? error
+      : new RentCastError(
+          500,
+          "UPSTREAM_FAILURE",
+          "Property search failed unexpectedly. Please try again.",
+        );
+  if (normalized.status >= 500)
+    console.error("[RentCast] request error", { code: normalized.code });
   return Response.json(
-    { error: { code: normalized.code, message: normalized.message, retryable: normalized.retryable } },
+    {
+      error: {
+        code: normalized.code,
+        message: normalized.message,
+        retryable: normalized.retryable,
+      },
+    },
     { status: normalized.status, headers: { "Cache-Control": "no-store" } },
   );
 }

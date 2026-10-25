@@ -10,10 +10,7 @@ import { toRentCastComparison } from "./rentcast-property.ts";
 import { sanitizeComparisonProperties } from "./property-comparison.ts";
 
 test("requires a city or ZIP and a valid state", () => {
-  assert.throws(
-    () => parseRentCastFilters(new URLSearchParams("state=TX")),
-    /city or ZIP code/,
-  );
+  assert.throws(() => parseRentCastFilters(new URLSearchParams("state=TX")), /city or ZIP code/);
   assert.throws(
     () => parseRentCastFilters(new URLSearchParams("city=Austin&state=XX")),
     /city or ZIP code/,
@@ -38,10 +35,14 @@ test("builds supported sale and rental searches with validated ranges", () => {
   assert.equal(url.searchParams.get("price"), "100000:500000");
   assert.equal(url.searchParams.get("squareFootage"), "1200:2400");
   assert.equal(url.searchParams.get("status"), "Active");
-  assert.equal(url.searchParams.get("limit"), "24");
-  assert.equal(buildListingUrl({ ...sale, listingType: "rental" }).pathname, "/v1/listings/rental/long-term");
+  assert.equal(url.searchParams.get("limit"), "20");
+  assert.equal(
+    buildListingUrl({ ...sale, listingType: "rental" }).pathname,
+    "/v1/listings/rental/long-term",
+  );
   assert.throws(
-    () => parseRentCastFilters(new URLSearchParams("zipCode=78701&state=TX&minPrice=50&maxPrice=20")),
+    () =>
+      parseRentCastFilters(new URLSearchParams("zipCode=78701&state=TX&minPrice=50&maxPrice=20")),
     /Minimum price must not exceed maximum price/,
   );
 });

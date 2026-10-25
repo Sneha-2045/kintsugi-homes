@@ -16,6 +16,7 @@ import {
 import { PageShell } from "@/components/layout/PageShell";
 import { PropertyMap } from "@/components/map/PropertyMap";
 import { CompareToggle, usePropertyComparison } from "@/components/property/PropertyComparison";
+import { SubscribeForMore } from "@/components/property/SubscribeForMore";
 import { properties } from "@/data/properties";
 import { regions } from "@/data/regions";
 import { usListings } from "@/data/us-listings";
@@ -238,7 +239,15 @@ function MapPage() {
       }),
     [combinedBase, query, minPrice, maxPrice, propertyType, minBeds, minBaths, category, minYield],
   );
-  const mappable = useMemo(() => filtered.filter((p) => explicitCoordinates(p)), [filtered]);
+  const visibleListings = useMemo(
+    () => (isUs ? filtered.slice(0, 20) : filtered),
+    [filtered, isUs],
+  );
+  const hasMoreUsListings = isUs && filtered.length > visibleListings.length;
+  const mappable = useMemo(
+    () => visibleListings.filter((p) => explicitCoordinates(p)),
+    [visibleListings],
+  );
   const clear = () => {
     setQuery("");
     setMinPrice("");
@@ -315,7 +324,9 @@ function MapPage() {
         </nav>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <MapPin className="h-4 w-4 text-primary" />
-          {filtered.length} matches · {mappable.length} mapped
+          {isUs && hasMoreUsListings
+            ? `Showing ${visibleListings.length} of ${filtered.length} matches · ${mappable.length} mapped`
+            : `${filtered.length} matches · ${mappable.length} mapped`}
         </div>
       </div>
       <section
@@ -467,6 +478,7 @@ function MapPage() {
           </button>
         </section>
       )}
+      {hasMoreUsListings && <SubscribeForMore className="mb-4" />}
       <div
         className={`grid gap-4 ${sidebarOpen ? "lg:grid-cols-[minmax(280px,350px)_minmax(0,1fr)]" : "grid-cols-1"}`}
       >
@@ -479,7 +491,8 @@ function MapPage() {
               <h2 className="font-semibold">
                 Listings{" "}
                 <span className="text-sm font-normal text-muted-foreground">
-                  ({filtered.length})
+                  ({visibleListings.length}
+                  {hasMoreUsListings ? ` of ${filtered.length}` : ""})
                 </span>
               </h2>
               <button
@@ -490,7 +503,7 @@ function MapPage() {
                 <X className="h-4 w-4" />
               </button>
             </div>
-            {!filtered.length ? (
+            {!visibleListings.length ? (
               <div className="rounded-xl border border-dashed border-border p-6 text-center">
                 <p className="font-medium">No properties match these filters.</p>
                 <button className="mt-2 text-sm text-primary" onClick={clear}>
@@ -499,7 +512,7 @@ function MapPage() {
               </div>
             ) : (
               <ul className="space-y-3">
-                {filtered.map((p) => {
+                {visibleListings.map((p) => {
                   const coords = explicitCoordinates(p);
                   return (
                     <li key={p.sourcePropertyId || p.id}>

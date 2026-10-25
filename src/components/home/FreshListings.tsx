@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Badge } from "@/components/common/Badge";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import { PropertyCarousel } from "@/components/property/PropertyCarousel";
+import { SubscribeForMore } from "@/components/property/SubscribeForMore";
 
 import { properties } from "@/data/properties";
 import { usListings } from "@/data/us-listings";
@@ -14,10 +15,7 @@ export function FreshListings() {
   const isJapan = market === "japan";
 
   return (
-    <section
-      className="bg-background py-16 md:py-24"
-      aria-labelledby="fresh-title"
-    >
+    <section className="bg-background py-16 md:py-24" aria-labelledby="fresh-title">
       <div className="container-page">
         <SectionHeader
           eyebrow={
@@ -104,7 +102,10 @@ export function FreshListings() {
           {isJapan ? (
             <PropertyCarousel properties={properties.slice(0, 6)} label="Japan listings" />
           ) : usListings.length > 0 ? (
-            <PropertyCarousel properties={usListings.slice(0, 6)} label="US listings" />
+            <>
+              <PropertyCarousel properties={usListings.slice(0, 20)} label="US listings" />
+              {usListings.length > 20 ? <SubscribeForMore className="mt-6" /> : null}
+            </>
           ) : (
             <p className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
               No US listings are available right now.

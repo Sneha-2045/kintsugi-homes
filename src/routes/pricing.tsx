@@ -33,7 +33,12 @@ const tiers = [
     price: "$0",
     period: "forever",
     badge: null,
-    features: ["Search & map", "Original listing links", "30 property views", "1 email alert"],
+    features: [
+      "Search & map",
+      "Original listing links",
+      "20 US listings per search",
+      "1 email alert",
+    ],
     cta: "Current plan",
     variant: "outline" as const,
   },

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { PageShell } from "@/components/layout/PageShell";
 import { RentCastActions } from "@/components/property/RentCastActions";
+import { SubscribeForMore } from "@/components/property/SubscribeForMore";
 import {
   propertyAddress,
   rentCastDetailHref,
@@ -74,23 +75,20 @@ function PropertyIntelligencePage() {
   const [filters, setFilters] = useState(initialFilters);
   const [listings, setListings] = useState<RentCastSearchListing[]>([]);
   const [hasMore, setHasMore] = useState(false);
-  const [nextOffset, setNextOffset] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [searched, setSearched] = useState(false);
   const set = (key: keyof SearchFilters, value: string) =>
     setFilters((current) => ({ ...current, [key]: value }));
 
-  async function requestResults(offset: number, append: boolean) {
+  async function requestResults() {
     setBusy(true);
     setError("");
-    if (!append) {
-      setSearched(true);
-      setListings([]);
-    }
+    setSearched(true);
+    setListings([]);
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries(filters)) if (value) params.set(key, value);
-    params.set("offset", String(offset));
+    params.set("offset", "0");
     try {
       const response = await fetch(`/api/property-intelligence?${params.toString()}`);
       const body: unknown = await response.json();
@@ -110,16 +108,8 @@ function PropertyIntelligencePage() {
         throw new Error("RentCast returned an unexpected search result. Please try again.");
       }
       const result = body as SearchResponse;
-      setListings((current) =>
-        append
-          ? [
-              ...current,
-              ...result.listings.map((item) => ({ ...item, listingType: filters.listingType })),
-            ]
-          : result.listings.map((item) => ({ ...item, listingType: filters.listingType })),
-      );
+      setListings(result.listings.map((item) => ({ ...item, listingType: filters.listingType })));
       setHasMore(result.hasMore);
-      setNextOffset(result.offset + result.listings.length);
     } catch (cause) {
       setError(
         cause instanceof Error ? cause.message : "Property search failed. Please try again.",
@@ -131,7 +121,7 @@ function PropertyIntelligencePage() {
 
   function search(event: FormEvent) {
     event.preventDefault();
-    void requestResults(0, false);
+    void requestResults();
   }
 
   return (
@@ -327,7 +317,7 @@ function PropertyIntelligencePage() {
                   RentCast results
                 </p>
                 <h2 className="mt-1 text-2xl font-bold text-foreground">
-                  {listings.length} properties{hasMore ? "+" : ""}
+                  {listings.length} properties{hasMore ? " shown" : ""}
                 </h2>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -341,18 +331,7 @@ function PropertyIntelligencePage() {
                 </li>
               ))}
             </ul>
-            {hasMore ? (
-              <div className="mt-8 text-center">
-                <button
-                  disabled={busy}
-                  onClick={() => void requestResults(nextOffset, true)}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-5 font-semibold hover:bg-elevated disabled:opacity-60"
-                >
-                  {busy ? "Loading…" : "Load more properties"}
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            ) : null}
+            {hasMore ? <SubscribeForMore className="mt-8" /> : null}
           </>
         ) : null}
       </section>
