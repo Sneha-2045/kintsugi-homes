@@ -50,12 +50,11 @@ function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
       <HeroSearch />
+      <PaymentPlan />
       <PropertyTypes />
       <FreshListings />
       <MemberPromo />
       <PricingSection />
-      <PaymentPlan />
-
       <PartnersSection />
       <MembershipComparison />
       <AudioArticles />
