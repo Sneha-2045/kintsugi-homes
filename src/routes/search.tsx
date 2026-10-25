@@ -6,10 +6,14 @@ import { PageShell } from "@/components/layout/PageShell";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { properties } from "@/data/properties";
 import { canonicalLink } from "@/lib/seo";
+import { SaveSearchButton } from "@/components/search/SaveSearchButton";
 
 export const Route = createFileRoute("/search")({
   validateSearch: (search: Record<string, unknown>): { q?: string | undefined } => ({
-    q: typeof search["q"] === "string" && search["q"].length > 0 ? (search["q"] as string) : undefined,
+    q:
+      typeof search["q"] === "string" && search["q"].length > 0
+        ? (search["q"] as string)
+        : undefined,
   }),
   head: ({ match }) => ({
     meta: [
@@ -38,7 +42,10 @@ function SearchPage() {
   const term = (q ?? "").toLowerCase();
   const results = term
     ? properties.filter((p) =>
-        [p.location, p.title, p.prefecture, p.tags.join(" ")].join(" ").toLowerCase().includes(term),
+        [p.location, p.title, p.prefecture, p.tags.join(" ")]
+          .join(" ")
+          .toLowerCase()
+          .includes(term),
       )
     : properties;
 
@@ -52,23 +59,26 @@ function SearchPage() {
       title={q ? `Results for “${q}”` : "Search properties"}
       description={`${results.length} matching ${results.length === 1 ? "listing" : "listings"} from our mock index of Japanese property.`}
     >
-      <form onSubmit={onSubmit} className="mb-10 flex flex-col gap-3 sm:flex-row">
-        <label htmlFor="search-input" className="sr-only">
-          Search query
-        </label>
-        <input
-          id="search-input"
-          type="search"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          placeholder={'Try "kominka in Okayama"'}
-          className="h-13 flex-1 rounded-lg border border-border bg-card px-5 text-base text-foreground placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-primary"
-        />
-        <Button type="submit" size="lg">
-          <SearchIcon className="h-4 w-4" />
-          Search
-        </Button>
-      </form>
+      <div className="mb-10 flex flex-col gap-3 sm:flex-row">
+        <form onSubmit={onSubmit} className="flex flex-1 flex-col gap-3 sm:flex-row">
+          <label htmlFor="search-input" className="sr-only">
+            Search query
+          </label>
+          <input
+            id="search-input"
+            type="search"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder={'Try "kominka in Okayama"'}
+            className="h-13 flex-1 rounded-lg border border-border bg-card px-5 text-base text-foreground placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+          <Button type="submit" size="lg">
+            <SearchIcon className="h-4 w-4" />
+            Search
+          </Button>
+        </form>
+        <SaveSearchButton filters={{ source: "japan", q: value.trim() }} />
+      </div>
 
       {results.length === 0 ? (
         <p className="rounded-xl border border-border bg-card p-10 text-center text-muted-foreground">

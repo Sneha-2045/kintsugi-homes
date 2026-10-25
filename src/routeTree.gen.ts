@@ -33,6 +33,8 @@ import { Route as RegionSlugRouteImport } from './routes/region.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAdminIdRouteImport } from './routes/_authenticated/admin/$id'
 import { Route as AuthenticatedAdminNewRouteImport } from './routes/_authenticated/admin/new'
+import { Route as ApiAlertsUnsubscribeRouteImport } from './routes/api.alerts.unsubscribe'
+import { Route as ApiCronSavedSearchesRouteImport } from './routes/api.cron.saved-searches'
 import { Route as ApiPropertiesIdRouteImport } from './routes/api.properties.$id'
 import { Route as ApiPropertiesFiltersRouteImport } from './routes/api.properties.filters'
 
@@ -155,6 +157,16 @@ const AuthenticatedAdminNewRoute = AuthenticatedAdminNewRouteImport.update({
   path: '/admin/new',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiAlertsUnsubscribeRoute = ApiAlertsUnsubscribeRouteImport.update({
+  id: '/api/alerts/unsubscribe',
+  path: '/api/alerts/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCronSavedSearchesRoute = ApiCronSavedSearchesRouteImport.update({
+  id: '/api/cron/saved-searches',
+  path: '/api/cron/saved-searches',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPropertiesIdRoute = ApiPropertiesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -189,6 +201,8 @@ export interface FileRoutesByFullPath {
   '/region/$slug': typeof RegionSlugRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/new': typeof AuthenticatedAdminNewRoute
+  '/api/alerts/unsubscribe': typeof ApiAlertsUnsubscribeRoute
+  '/api/cron/saved-searches': typeof ApiCronSavedSearchesRoute
   '/api/properties/$id': typeof ApiPropertiesIdRoute
   '/api/properties/filters': typeof ApiPropertiesFiltersRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -216,6 +230,8 @@ export interface FileRoutesByTo {
   '/region/$slug': typeof RegionSlugRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/new': typeof AuthenticatedAdminNewRoute
+  '/api/alerts/unsubscribe': typeof ApiAlertsUnsubscribeRoute
+  '/api/cron/saved-searches': typeof ApiCronSavedSearchesRoute
   '/api/properties/$id': typeof ApiPropertiesIdRoute
   '/api/properties/filters': typeof ApiPropertiesFiltersRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -245,6 +261,8 @@ export interface FileRoutesById {
   '/region/$slug': typeof RegionSlugRoute
   '/_authenticated/admin/$id': typeof AuthenticatedAdminIdRoute
   '/_authenticated/admin/new': typeof AuthenticatedAdminNewRoute
+  '/api/alerts/unsubscribe': typeof ApiAlertsUnsubscribeRoute
+  '/api/cron/saved-searches': typeof ApiCronSavedSearchesRoute
   '/api/properties/$id': typeof ApiPropertiesIdRoute
   '/api/properties/filters': typeof ApiPropertiesFiltersRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -274,6 +292,8 @@ export interface FileRouteTypes {
     | '/region/$slug'
     | '/admin/$id'
     | '/admin/new'
+    | '/api/alerts/unsubscribe'
+    | '/api/cron/saved-searches'
     | '/api/properties/$id'
     | '/api/properties/filters'
     | '/admin/'
@@ -301,6 +321,8 @@ export interface FileRouteTypes {
     | '/region/$slug'
     | '/admin/$id'
     | '/admin/new'
+    | '/api/alerts/unsubscribe'
+    | '/api/cron/saved-searches'
     | '/api/properties/$id'
     | '/api/properties/filters'
     | '/admin'
@@ -329,6 +351,8 @@ export interface FileRouteTypes {
     | '/region/$slug'
     | '/_authenticated/admin/$id'
     | '/_authenticated/admin/new'
+    | '/api/alerts/unsubscribe'
+    | '/api/cron/saved-searches'
     | '/api/properties/$id'
     | '/api/properties/filters'
     | '/_authenticated/admin/'
@@ -355,6 +379,8 @@ export interface RootRouteChildren {
   PrefectureSlugRoute: typeof PrefectureSlugRoute
   PropertyIdRoute: typeof PropertyIdRoute
   RegionSlugRoute: typeof RegionSlugRoute
+  ApiAlertsUnsubscribeRoute: typeof ApiAlertsUnsubscribeRoute
+  ApiCronSavedSearchesRoute: typeof ApiCronSavedSearchesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -527,6 +553,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/alerts/unsubscribe': {
+      id: '/api/alerts/unsubscribe'
+      path: '/api/alerts/unsubscribe'
+      fullPath: '/api/alerts/unsubscribe'
+      preLoaderRoute: typeof ApiAlertsUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/saved-searches': {
+      id: '/api/cron/saved-searches'
+      path: '/api/cron/saved-searches'
+      fullPath: '/api/cron/saved-searches'
+      preLoaderRoute: typeof ApiCronSavedSearchesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/properties/$id': {
       id: '/api/properties/$id'
       path: '/$id'
@@ -606,6 +646,8 @@ const rootRouteChildren: RootRouteChildren = {
   PrefectureSlugRoute: PrefectureSlugRoute,
   PropertyIdRoute: PropertyIdRoute,
   RegionSlugRoute: RegionSlugRoute,
+  ApiAlertsUnsubscribeRoute: ApiAlertsUnsubscribeRoute,
+  ApiCronSavedSearchesRoute: ApiCronSavedSearchesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -7,6 +7,7 @@ import { ReportListingIssue } from "@/components/property/ReportListingIssue";
 
 import { formatJpy, formatUsd, properties } from "@/data/properties";
 import { usListings } from "@/data/us-listings";
+import { tranchiProperties } from "@/data/tranchi-properties";
 import { canonicalLink, canonicalUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/property/$id")({
@@ -16,9 +17,10 @@ export const Route = createFileRoute("/property/$id")({
 
     // If not found, search US listings
     const usProperty = usListings.find((p) => p.id === params.id);
+    const tranchiProperty = tranchiProperties.find((p) => p.id === params.id || p.sourcePropertyId === params.id);
 
     // Use whichever listing was found
-    const property = japanProperty ?? usProperty;
+    const property = japanProperty ?? usProperty ?? tranchiProperty;
 
     if (!property) {
       throw notFound();

@@ -134,6 +134,30 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_searches: {
+        Row: { id: string; user_id: string; name: string; filters: Json; criteria_hash: string; alerts_enabled: boolean; alert_frequency: string; last_checked_at: string | null; last_match_count: number | null; match_count_checked_at: string | null; last_notification_at: string | null; created_at: string; updated_at: string }
+        Insert: { id?: string; user_id: string; name: string; filters: Json; criteria_hash: string; alerts_enabled?: boolean; alert_frequency?: string; last_checked_at?: string | null; last_match_count?: number | null; match_count_checked_at?: string | null; last_notification_at?: string | null; created_at?: string; updated_at?: string }
+        Update: { id?: string; user_id?: string; name?: string; filters?: Json; criteria_hash?: string; alerts_enabled?: boolean; alert_frequency?: string; last_checked_at?: string | null; last_match_count?: number | null; match_count_checked_at?: string | null; last_notification_at?: string | null; created_at?: string; updated_at?: string }
+        Relationships: []
+      }
+      saved_search_matches: {
+        Row: { id: string; saved_search_id: string; source: string; listing_id: string; listing_state: Json; first_seen_at: string; last_seen_at: string }
+        Insert: { id?: string; saved_search_id: string; source: string; listing_id: string; listing_state?: Json; first_seen_at?: string; last_seen_at?: string }
+        Update: { id?: string; saved_search_id?: string; source?: string; listing_id?: string; listing_state?: Json; first_seen_at?: string; last_seen_at?: string }
+        Relationships: []
+      }
+      saved_search_events: {
+        Row: { id: string; saved_search_id: string; source: string; listing_id: string; event_type: string; event_key: string; previous_value: Json | null; current_value: Json | null; created_at: string; sent_at: string | null }
+        Insert: { id?: string; saved_search_id: string; source: string; listing_id: string; event_type: string; event_key: string; previous_value?: Json | null; current_value?: Json | null; created_at?: string; sent_at?: string | null }
+        Update: { id?: string; saved_search_id?: string; source?: string; listing_id?: string; event_type?: string; event_key?: string; previous_value?: Json | null; current_value?: Json | null; created_at?: string; sent_at?: string | null }
+        Relationships: []
+      }
+      saved_search_monitor_lock: {
+        Row: { id: boolean; locked_until: string | null; last_search_id: string | null }
+        Insert: { id?: boolean; locked_until?: string | null; last_search_id?: string | null }
+        Update: { id?: boolean; locked_until?: string | null; last_search_id?: string | null }
+        Relationships: []
+      }
       property_images: {
         Row: {
           alt_text: string | null

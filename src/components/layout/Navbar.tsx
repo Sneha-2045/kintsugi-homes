@@ -12,7 +12,7 @@ const navItems = [
   { label: "Find an Agent", to: "/find-an-agent" },
   { label: "Map", to: "/map" },
   { label: "Articles", to: "/articles" },
-  { label: "Saved", to: "/saved" },
+  { label: "Saved Searches", to: "/saved" },
   { label: "Compare", to: "/compare" },
   { label: "Pricing", to: "/pricing" },
   { label: "Consult", to: "/consult" },

@@ -4,8 +4,27 @@ import { Bath, BedDouble, MapPin, Search, Square } from "lucide-react";
 import { PageShell } from "@/components/layout/PageShell";
 import { CompareToggle, usePropertyComparison } from "@/components/property/PropertyComparison";
 import { fromMlsListing } from "@/lib/property-comparison";
+import { SaveSearchButton } from "@/components/search/SaveSearchButton";
 
-export const Route = createFileRoute("/properties")({ component: PropertiesPage });
+type SearchState = {
+  city?: string;
+  region?: string;
+  kind?: string;
+  minPrice?: string;
+  maxPrice?: string;
+  minBedrooms?: string;
+};
+export const Route = createFileRoute("/properties")({
+  validateSearch: (search: Record<string, unknown>): SearchState => ({
+    city: typeof search.city === "string" ? search.city : undefined,
+    region: typeof search.region === "string" ? search.region : undefined,
+    kind: typeof search.kind === "string" ? search.kind : undefined,
+    minPrice: typeof search.minPrice === "string" ? search.minPrice : undefined,
+    maxPrice: typeof search.maxPrice === "string" ? search.maxPrice : undefined,
+    minBedrooms: typeof search.minBedrooms === "string" ? search.minBedrooms : undefined,
+  }),
+  component: PropertiesPage,
+});
 type Listing = {
   images?: Array<string | { url?: string; path?: string }>;
   address?: {
@@ -68,19 +87,35 @@ function imageOf(listing: Listing) {
   }
 }
 function PropertiesPage() {
+  const initialSearch = Route.useSearch();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const comparison = usePropertyComparison();
-  const [city, setCity] = useState("");
-  const [stateOrMarket, setStateOrMarket] = useState("");
-  const [kind, setKind] = useState("all");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [minBedrooms, setMinBedrooms] = useState("");
+  const [city, setCity] = useState(initialSearch.city ?? "");
+  const [stateOrMarket, setStateOrMarket] = useState(initialSearch.region ?? "");
+  const [kind, setKind] = useState(initialSearch.kind ?? "all");
+  const [minPrice, setMinPrice] = useState(initialSearch.minPrice ?? "");
+  const [maxPrice, setMaxPrice] = useState(initialSearch.maxPrice ?? "");
+  const [minBedrooms, setMinBedrooms] = useState(initialSearch.minBedrooms ?? "");
   const [page, setPage] = useState(1);
   const [data, setData] = useState<Results>({});
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState<ApiFailure | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  useEffect(() => {
+    setCity(initialSearch.city ?? "");
+    setStateOrMarket(initialSearch.region ?? "");
+    setKind(initialSearch.kind ?? "all");
+    setMinPrice(initialSearch.minPrice ?? "");
+    setMaxPrice(initialSearch.maxPrice ?? "");
+    setMinBedrooms(initialSearch.minBedrooms ?? "");
+  }, [
+    initialSearch.city,
+    initialSearch.region,
+    initialSearch.kind,
+    initialSearch.minPrice,
+    initialSearch.maxPrice,
+    initialSearch.minBedrooms,
+  ]);
   useEffect(() => {
     if (pathname !== "/properties") return;
     const controller = new AbortController();
@@ -146,7 +181,7 @@ function PropertiesPage() {
       description="Search current public MLS listings. Listing availability and details may change."
     >
       <form
-        className="mb-7 flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:flex-wrap"
+        className="mb-4 flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:flex-wrap"
         onSubmit={(event) => {
           event.preventDefault();
           setPage(1);
@@ -237,6 +272,19 @@ function PropertiesPage() {
           Search
         </button>
       </form>
+      <div className="mb-7 flex justify-end">
+        <SaveSearchButton
+          filters={{
+            source: "mls",
+            city,
+            region: stateOrMarket,
+            kind,
+            minPrice,
+            maxPrice,
+            minBedrooms,
+          }}
+        />
+      </div>
       <p className="mb-5 text-sm text-muted-foreground" aria-live="polite">
         {busy
           ? "Loading listings…"

@@ -6,18 +6,27 @@ import { PageShell } from "@/components/layout/PageShell";
 import { CountrySwitcher } from "@/components/common/CountrySwitcher";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { CompareToggle, usePropertyComparison } from "@/components/property/PropertyComparison";
-import { tranchiUsListings, usListings } from "@/data/us-listings";
+import { usListings } from "@/data/us-listings";
+import { tranchiProperties } from "@/data/tranchi-properties";
 import { formatUsd } from "@/data/properties";
 import { canonicalLink } from "@/lib/seo";
 import { fromProperty } from "@/lib/property-comparison";
 import type { Property } from "@/types/property";
+import { SaveSearchButton } from "@/components/search/SaveSearchButton";
 
 const title = "US Properties & Investment Opportunities | Rylestate";
 const description = "Explore US property opportunities with source-provided prices, property images, and clearly identified investment estimates.";
 
 export const Route = createFileRoute("/us-properties")({
-  validateSearch: (search: Record<string, unknown>): { q?: string | undefined } => ({
+  validateSearch: (search: Record<string, unknown>): { q?: string; minPrice?: string; maxPrice?: string; state?: string; city?: string; category?: string; bedrooms?: string; status?: string } => ({
     q: typeof search["q"] === "string" && search["q"].length > 0 ? search["q"] : undefined,
+    minPrice: typeof search.minPrice === "string" ? search.minPrice : undefined,
+    maxPrice: typeof search.maxPrice === "string" ? search.maxPrice : undefined,
+    state: typeof search.state === "string" ? search.state : undefined,
+    city: typeof search.city === "string" ? search.city : undefined,
+    category: typeof search.category === "string" ? search.category : undefined,
+    bedrooms: typeof search.bedrooms === "string" ? search.bedrooms : undefined,
+    status: typeof search.status === "string" ? search.status : undefined,
   }),
   head: () => ({
     meta: [
@@ -32,20 +41,25 @@ export const Route = createFileRoute("/us-properties")({
 });
 
 function USPropertiesPage() {
-  const { q } = Route.useSearch();
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [state, setState] = useState("");
-  const [city, setCity] = useState("");
-  const [category, setCategory] = useState("");
-  const [bedrooms, setBedrooms] = useState("");
-  const [status, setStatus] = useState("");
+  const search = Route.useSearch();
+  const { q } = search;
+  const [minPrice, setMinPrice] = useState(search.minPrice ?? "");
+  const [maxPrice, setMaxPrice] = useState(search.maxPrice ?? "");
+  const [state, setState] = useState(search.state ?? "");
+  const [city, setCity] = useState(search.city ?? "");
+  const [category, setCategory] = useState(search.category ?? "");
+  const [bedrooms, setBedrooms] = useState(search.bedrooms ?? "");
+  const [status, setStatus] = useState(search.status ?? "");
   const [sort, setSort] = useState("default");
+  useEffect(() => {
+    setMinPrice(search.minPrice ?? ""); setMaxPrice(search.maxPrice ?? ""); setState(search.state ?? "");
+    setCity(search.city ?? ""); setCategory(search.category ?? ""); setBedrooms(search.bedrooms ?? ""); setStatus(search.status ?? "");
+  }, [search.minPrice, search.maxPrice, search.state, search.city, search.category, search.bedrooms, search.status]);
   const term = q?.toLowerCase() ?? "";
-  const categories = [...new Set(tranchiUsListings.map((p) => p.dealCategory).filter((v): v is string => Boolean(v)))];
-  const statuses = [...new Set(tranchiUsListings.map((p) => p.status).filter((v): v is string => Boolean(v)))];
+  const categories = [...new Set(tranchiProperties.map((p) => p.dealCategory).filter((v): v is string => Boolean(v)))];
+  const statuses = [...new Set(tranchiProperties.map((p) => p.status).filter((v): v is string => Boolean(v)))];
   const listings = useMemo(() => {
-    const filtered = tranchiUsListings.filter((p) => {
+    const filtered = tranchiProperties.filter((p) => {
       const price = p.priceUsd;
       return (!term || [p.title, p.location, p.dealCategory, p.leadStatus].join(" ").toLowerCase().includes(term))
         && (!minPrice || (price > 0 && price >= Number(minPrice)))
@@ -87,6 +101,13 @@ function USPropertiesPage() {
             <label className="text-xs font-medium text-slate-300">Bedrooms<select value={bedrooms} onChange={(e) => setBedrooms(e.target.value)} className="mt-1.5 w-full rounded-lg border border-white/15 bg-slate-950/50 px-3 py-2.5 text-sm text-white"><option value="">Any</option>{[1,2,3,4,5].map((v) => <option key={v} value={v}>{v}+ bedrooms</option>)}</select></label>
             <label className="text-xs font-medium text-slate-300">Property status<select disabled={!statuses.length} value={status} onChange={(e) => setStatus(e.target.value)} className="mt-1.5 w-full rounded-lg border border-white/15 bg-slate-950/50 px-3 py-2.5 text-sm text-white disabled:opacity-60"><option value="">{statuses.length ? "Any status" : "Unavailable in source"}</option>{statuses.map((v) => <option key={v} value={v}>{v}</option>)}</select></label>
             <label className="text-xs font-medium text-slate-300">Sort by<select value={sort} onChange={(e) => setSort(e.target.value)} className="mt-1.5 w-full rounded-lg border border-white/15 bg-slate-950/50 px-3 py-2.5 text-sm text-white"><option value="default">Recommended</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="value-desc">Estimated value</option><option value="cashflow-desc">Estimated cash flow</option></select></label>
+          </div>
+
+          <div className="mt-4 flex justify-end">
+            <SaveSearchButton
+              filters={{ source: "us", q: q ?? "", minPrice, maxPrice, state, city, category, bedrooms, status }}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/5 px-4 font-semibold text-white transition hover:bg-white/10"
+            />
           </div>
 
           <p className="mt-5 text-sm text-slate-400">{listings.length} opportunities · Price and investment figures are source-provided estimates and should be independently confirmed.</p>
