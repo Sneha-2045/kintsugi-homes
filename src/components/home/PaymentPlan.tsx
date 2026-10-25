@@ -61,12 +61,12 @@ export function PaymentPlan() {
                   key={t.label}
                   className={`relative rounded-2xl border p-6 text-center ${
                     t.highlight
-                      ? "border-blue-400/50 bg-blue-400/10"
+                      ? "border-blue-400/50 bg-blue-400/10 pt-9"
                       : "border-white/10 bg-white/[0.05]"
                   }`}
                 >
                   {t.highlight ? (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <div className="absolute inset-x-0 top-2 flex justify-center">
                       <Badge variant="blue" size="xs">
                         PAY IN 3 TO 4 YEARS
                       </Badge>
