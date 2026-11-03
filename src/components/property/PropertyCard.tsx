@@ -106,6 +106,11 @@ export function PropertyCard({ property }: { property: Property }) {
             {property.priceJpy != null ? "Approx. " : ""}
             {property.priceUsd > 0 ? formatUsd(property.priceUsd) : "Price unavailable"}
           </p>
+          {property.priceJpy == null && property.priceUsd > 0 ? (
+            <p className="text-xs text-muted-foreground">
+              Target offer (30% below asking): {formatUsd(Math.round(property.priceUsd * 0.7))}
+            </p>
+          ) : null}
           {property.priceJpy != null ? (
             <p className="text-xs text-muted-foreground">Original {formatJpy(property.priceJpy)}</p>
           ) : null}
