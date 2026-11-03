@@ -2,7 +2,16 @@ import { Link } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 import { Badge } from "@/components/common/Badge";
 import { Button } from "@/components/common/Button";
-import { formatJpy, lockedListings } from "@/data/properties";
+import { usListings } from "@/data/us-listings";
+
+const lockedUsListings = usListings.filter((listing) => listing.priceUsd > 0).slice(0, 3);
+
+const formatUsd = (amount: number) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(amount);
 
 export function MemberPromo() {
   return (
@@ -20,8 +29,8 @@ export function MemberPromo() {
               Every new listing is members-only for its first 24 hours
             </h2>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground">
-              These three are the most viewed right now — locked until their first day is up. On
-              249 arrivals a day, that head start is how the good ones get claimed.
+              These US properties are locked until their first day is up. Members get early access
+              to new listings before they become public.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <Button asChild size="lg">
@@ -35,7 +44,7 @@ export function MemberPromo() {
           </div>
 
           <ul className="space-y-4">
-            {lockedListings.map((l) => (
+            {lockedUsListings.map((l) => (
               <li
                 key={l.id}
                 className="flex items-center gap-4 rounded-xl border border-border bg-elevated/60 p-3"
@@ -53,7 +62,7 @@ export function MemberPromo() {
                   </span>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-lg font-bold text-foreground">{formatJpy(l.priceJpy)}</p>
+                  <p className="truncate text-lg font-bold text-foreground">{formatUsd(l.priceUsd)}</p>
                   <p className="truncate text-sm text-muted-foreground">{l.location}</p>
                 </div>
                 <Badge variant="orangeSoft" size="xs">

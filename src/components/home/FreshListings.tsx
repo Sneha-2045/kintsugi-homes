@@ -11,7 +11,7 @@ import { properties } from "@/data/properties";
 import { usListings } from "@/data/us-listings";
 
 export function FreshListings() {
-  const [market, setMarket] = useState<"japan" | "us">("japan");
+  const [market, setMarket] = useState<"japan" | "us">("us");
   const isJapan = market === "japan";
 
   return (
