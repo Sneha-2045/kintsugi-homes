@@ -5,10 +5,19 @@ import { useState } from "react";
 import { Badge } from "@/components/common/Badge";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import { PropertyCarousel } from "@/components/property/PropertyCarousel";
-import { SubscribeForMore } from "@/components/property/SubscribeForMore";
 
 import { properties } from "@/data/properties";
 import { usListings } from "@/data/us-listings";
+import { tranchiProperties } from "@/data/tranchi-properties";
+
+const allUsListings = [...usListings, ...tranchiProperties];
+const featuredUsListings = [...allUsListings]
+  .sort((a, b) => Number(hasListingPhoto(b)) - Number(hasListingPhoto(a)))
+  .slice(0, 20);
+
+function hasListingPhoto(property: (typeof allUsListings)[number]) {
+  return Array.isArray(property.images) && property.images.some((image) => Boolean(image?.trim()));
+}
 
 export function FreshListings() {
   const [market, setMarket] = useState<"japan" | "us">("us");
@@ -40,7 +49,7 @@ export function FreshListings() {
           action={
             <Link
               to={isJapan ? "/search" : "/us-properties"}
-              search={isJapan ? { q: "Japan" } : undefined}
+              search={isJapan ? { q: "Japan" } : {}}
               className="inline-flex items-center gap-2 text-sm font-semibold text-primary-light hover:text-primary"
             >
               Browse all listings
@@ -101,10 +110,13 @@ export function FreshListings() {
 
           {isJapan ? (
             <PropertyCarousel properties={properties.slice(0, 6)} label="Japan listings" />
-          ) : usListings.length > 0 ? (
+          ) : allUsListings.length > 0 ? (
             <>
-              <PropertyCarousel properties={usListings.slice(0, 20)} label="US listings" />
-              {usListings.length > 20 ? <SubscribeForMore className="mt-6" /> : null}
+              <PropertyCarousel properties={featuredUsListings} label="US listings" />
+              <p className="mt-4 text-sm text-muted-foreground">
+                Showing 20 featured properties from {allUsListings.length} US listings across our
+                auction and investment sources.
+              </p>
             </>
           ) : (
             <p className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">

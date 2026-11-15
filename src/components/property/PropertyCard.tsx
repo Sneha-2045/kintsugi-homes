@@ -26,7 +26,8 @@ export function PropertyCard({ property }: { property: Property }) {
   const comparison = usePropertyComparison();
   const comparisonProperty = fromProperty(property);
   const comparisonSelected = comparison.selected(comparisonProperty.key);
-  const total = property.images.length;
+  const images = Array.isArray(property.images) ? property.images : [];
+  const total = images.length;
   const tags = property.tags.filter(
     (tag, index, values) =>
       values.findIndex((value) => value.trim().toLowerCase() === tag.trim().toLowerCase()) ===
@@ -40,12 +41,18 @@ export function PropertyCard({ property }: { property: Property }) {
       className={`group flex h-full flex-col overflow-hidden rounded-2xl border bg-card shadow-card transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-elevated ${comparisonSelected ? "border-primary ring-2 ring-primary/40" : "border-border"}`}
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-elevated">
-        <img
-          src={property.images[index]}
-          alt={`${property.title} in ${property.location}`}
-          loading="lazy"
-          className="h-full w-full object-cover"
-        />
+        {images[index] ? (
+          <img
+            src={images[index]}
+            alt={`${property.title} in ${property.location}`}
+            loading="lazy"
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="grid h-full place-items-center text-sm text-muted-foreground">
+            Property image unavailable
+          </div>
+        )}
         <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/80 to-transparent" />
 
         <div className="absolute left-3 top-3">
@@ -85,7 +92,7 @@ export function PropertyCard({ property }: { property: Property }) {
               <ChevronRight className="h-5 w-5" />
             </button>
             <div className="absolute bottom-4 right-4 flex items-center gap-1.5">
-              {property.images.map((src, i) => (
+              {images.map((src, i) => (
                 <button
                   key={src}
                   type="button"

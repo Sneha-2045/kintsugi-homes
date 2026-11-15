@@ -86,6 +86,7 @@ export const Route = createFileRoute("/property/$id")({
 
 function PropertyDetails() {
   const { property } = Route.useLoaderData();
+  const images = Array.isArray(property.images) ? property.images : [];
   const tags = property.tags.filter(
     (tag, index, values) =>
       values.findIndex((value) => value.trim().toLowerCase() === tag.trim().toLowerCase()) === index,
@@ -97,7 +98,7 @@ function PropertyDetails() {
     name: property.title,
     url: canonicalUrl(`/property/${encodeURIComponent(property.id)}`),
     description: property.description,
-    image: property.images,
+    image: images,
     offers:
       !property.isTranchi && property.priceUsd > 0
         ? {
@@ -122,7 +123,7 @@ function PropertyDetails() {
         description={property.title}
       >
         <ul className="grid gap-4 md:grid-cols-2">
-          {property.images.map((src: string, i: number) => (
+          {images.map((src: string, i: number) => (
             <li
               key={src}
               className={i === 0 ? "md:col-span-2" : undefined}

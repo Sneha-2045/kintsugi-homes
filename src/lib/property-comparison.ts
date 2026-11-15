@@ -214,7 +214,7 @@ export function fromProperty(property: Property): ComparisonProperty {
     city: property.city,
     state: property.state ?? property.prefecture,
     zipCode: property.zipCode,
-    image: property.images[0],
+    image: property.images?.[0],
     price: finitePositive(property.priceJpy ?? property.priceUsd),
     priceBasis: isMls
       ? "mls-asking"
