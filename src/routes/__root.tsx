@@ -15,6 +15,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { BackToTop } from "@/components/layout/BackToTop";
 import { PropertyComparisonProvider } from "@/components/property/PropertyComparison";
+import { AIAssistant } from "@/components/ai/AIAssistant";
 
 function NotFoundComponent() {
   return (
@@ -163,6 +164,7 @@ function RootComponent() {
         </main>
         <Footer />
         <BackToTop />
+        <AIAssistant />
       </PropertyComparisonProvider>
     </QueryClientProvider>
   );

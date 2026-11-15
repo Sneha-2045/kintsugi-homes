@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: rylestate-web
+    runtime: node
+    buildCommand: npm ci && npm run build:node
+    startCommand: npm run start:node
+    healthCheckPath: /__health
+    envVars:
+      - key: CLIENT_URL
+        value: https://rylestate.com
+      - key: APP_BASE_URL
+        value: https://rylestate.com
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: RENTCAST_API_KEY
+        sync: false
+      - key: REPLIERS_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: ALERT_FROM_EMAIL
+        sync: false
