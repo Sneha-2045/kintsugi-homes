@@ -32,6 +32,26 @@ type Agent = {
 };
 
 type AgentResponse = { agents: Agent[]; total: number; page: number; totalPages: number };
+const AGENT_CACHE_TTL = 24 * 60 * 60 * 1000;
+
+function readAgentCache(key: string): AgentResponse | undefined {
+  try {
+    const cached = window.localStorage.getItem(key);
+    if (!cached) return undefined;
+    const parsed = JSON.parse(cached) as { savedAt?: number; data?: AgentResponse };
+    if (
+      !parsed.savedAt ||
+      Date.now() - parsed.savedAt > AGENT_CACHE_TTL ||
+      !Array.isArray(parsed.data?.agents)
+    ) {
+      window.localStorage.removeItem(key);
+      return undefined;
+    }
+    return parsed.data;
+  } catch {
+    return undefined;
+  }
+}
 
 function locationTitle(location: string) {
   const [city, state] = location.split(",").map((part) => part.trim());
@@ -59,8 +79,21 @@ function FindAnAgentPage() {
       sortBy,
     });
     if (appliedQuery) search.set("q", appliedQuery);
-    setLoading(true);
+    const cacheKey = `rylestate-agents:${search.toString()}`;
+    const cached = readAgentCache(cacheKey);
+    let timedOut = false;
+    if (cached) {
+      setData(cached);
+      setLoading(false);
+    } else {
+      setData(null);
+      setLoading(true);
+    }
     setError("");
+    const timeoutId = window.setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, 12000);
     fetch(`/api/agents?${search.toString()}`, { signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) {
@@ -69,18 +102,37 @@ function FindAnAgentPage() {
         }
         return response.json() as Promise<AgentResponse>;
       })
-      .then(setData)
+      .then((result) => {
+        setData(result);
+        try {
+          window.localStorage.setItem(
+            cacheKey,
+            JSON.stringify({ savedAt: Date.now(), data: result }),
+          );
+        } catch {
+          // The live database response remains usable when browser storage is unavailable.
+        }
+      })
       .catch((reason: unknown) => {
-        if (reason instanceof Error && reason.name === "AbortError") return;
+        if (controller.signal.aborted && !timedOut) return;
+        if (cached) return;
+        if (timedOut) {
+          setError("Agent results are taking too long to load. Please try again shortly.");
+          return;
+        }
         setError(
           reason instanceof Error ? reason.message : "Agent search is temporarily unavailable.",
         );
         setData(null);
       })
       .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
+        window.clearTimeout(timeoutId);
+        if (!controller.signal.aborted || timedOut) setLoading(false);
       });
-    return () => controller.abort();
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
   }, [appliedLocation, appliedQuery, page, sortBy]);
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {

@@ -5,6 +5,18 @@ import {
   syncAgentsForLocation,
 } from "../server/agent-service.ts";
 import { resolveAuthUser } from "../server/auth-router.ts";
+import { connectMongo } from "../server/mongo.ts";
+
+// Start the first Atlas connection while the server is initializing so a page
+// visit does not pay the cold-connection cost.
+if (process.env["MONGODB_URI"]) {
+  void connectMongo().catch((error: unknown) => {
+    console.error(
+      "[agents] MongoDB warm-up failed",
+      error instanceof Error ? error.name : "UnknownError",
+    );
+  });
+}
 
 function searchArgs(url: URL, forceQuery?: string) {
   const query = url.searchParams;

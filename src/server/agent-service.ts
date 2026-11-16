@@ -237,6 +237,7 @@ export async function syncAgentsForLocation(
   const startedAt = new Date();
   const log = await AgentSyncLog.create({ location: locationLabel, status: "running", startedAt });
   let runId: string | undefined;
+  let actorStatus: string | undefined;
   let datasetId: string | undefined;
   let usageUsd: number | undefined;
   let recordsFetched = 0;
@@ -253,6 +254,7 @@ export async function syncAgentsForLocation(
     });
     runId = run.id;
     datasetId = run.defaultDatasetId;
+    actorStatus = run.status;
     if (run.status !== "SUCCEEDED") {
       throw new Error(
         `Apify Actor run ${run.status.toLowerCase()}${run.id ? ` (${run.id})` : ""}.`,
@@ -268,6 +270,11 @@ export async function syncAgentsForLocation(
     }
     recordsFetched = items.length;
     const mapped = mergeMappedAgents(items, location);
+    if (mapped.length === 0) {
+      throw new Error(
+        `The Actor returned no usable agent records for ${locationLabel}. Check its source access and output data.`,
+      );
+    }
     const now = new Date();
     const locationKey =
       `${location.city ?? ""}|${location.state ?? ""}|${location.zipCode ?? ""}`.toLowerCase();
@@ -344,7 +351,7 @@ export async function syncAgentsForLocation(
       {
         $set: {
           status: "succeeded",
-          actorStatus: run.status,
+          actorStatus,
           actorRunId: runId,
           datasetId,
           recordsFetched,
@@ -368,7 +375,7 @@ export async function syncAgentsForLocation(
       {
         $set: {
           status: "failed",
-          ...(runId ? { actorStatus: "FAILED" } : {}),
+          ...(actorStatus ? { actorStatus } : {}),
           ...(runId ? { actorRunId: runId } : {}),
           ...(datasetId ? { datasetId } : {}),
           recordsFetched,

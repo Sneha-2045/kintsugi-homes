@@ -16,6 +16,8 @@ export function connectMongo() {
       dbName: "rylestate",
       bufferCommands: false,
       autoIndex: process.env["NODE_ENV"] !== "production",
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 10000,
     })
     .catch((error: unknown) => {
       connection = undefined;
