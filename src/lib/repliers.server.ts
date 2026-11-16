@@ -19,6 +19,7 @@ export type RepliersSearchResponse = {
   pageSize?: number;
   numPages?: number;
   count?: number;
+  aggregates?: Record<string, unknown>;
   [key: string]: unknown;
 };
 
@@ -215,11 +216,7 @@ function publicListing(item: RepliersListing) {
 }
 
 export function filterPublicListings(data: unknown): RepliersSearchResponse {
-  if (
-    !data ||
-    typeof data !== "object" ||
-    !Array.isArray((data as Record<string, unknown>)["listings"])
-  ) {
+  if (!data || typeof data !== "object") {
     throw new RepliersError(
       502,
       "INVALID_UPSTREAM_RESPONSE",
@@ -227,6 +224,16 @@ export function filterPublicListings(data: unknown): RepliersSearchResponse {
     );
   }
   const response = data as RepliersSearchResponse;
+  if (!Array.isArray(response.listings)) {
+    if (response.aggregates && typeof response.aggregates === "object") {
+      return { ...response, listings: [] };
+    }
+    throw new RepliersError(
+      502,
+      "INVALID_UPSTREAM_RESPONSE",
+      "The MLS provider returned an unexpected listings response.",
+    );
+  }
   return { ...response, listings: response.listings.filter(publicListing) };
 }
 
@@ -248,6 +255,8 @@ function validateFilters(params: URLSearchParams) {
     "sortBy",
     "pageNum",
     "resultsPerPage",
+    "aggregates",
+    "listings",
   ]);
   for (const name of params.keys()) {
     if (!allowed.has(name))
@@ -290,6 +299,12 @@ function validateFilters(params: URLSearchParams) {
   }
   if (params.get("type") && !["sale", "lease"].includes(params.get("type")!)) {
     throw new RepliersError(400, "INVALID_SEARCH", "Listing type must be sale or lease.");
+  }
+  if (params.get("aggregates") && params.get("aggregates") !== "address.state") {
+    throw new RepliersError(400, "INVALID_SEARCH", "Unsupported aggregate field.");
+  }
+  if (params.get("listings") && !["true", "false"].includes(params.get("listings")!)) {
+    throw new RepliersError(400, "INVALID_SEARCH", "Invalid listings option.");
   }
   for (const name of ["pageNum", "resultsPerPage"]) {
     const value = params.get(name);

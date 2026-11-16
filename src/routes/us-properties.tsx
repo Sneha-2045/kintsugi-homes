@@ -11,6 +11,7 @@ import { tranchiProperties } from "@/data/tranchi-properties";
 import { formatUsd } from "@/data/properties";
 import { canonicalLink } from "@/lib/seo";
 import { fromMlsListing, fromProperty } from "@/lib/property-comparison";
+import { getUsStateCode, stateCodes } from "@/lib/us-states";
 import type { Property } from "@/types/property";
 import { SaveSearchButton } from "@/components/search/SaveSearchButton";
 
@@ -159,6 +160,7 @@ function USPropertiesPage() {
     return () => controller.abort();
   }, [mlsPage, city, state, minPrice, maxPrice, bedrooms]);
   const term = q?.toLowerCase() ?? "";
+  const selectedStateCode = stateCodes[state] ?? state.toUpperCase();
   // Keep every US source in one searchable inventory. Tranchi opportunities and
   // auction listings used to be rendered in separate, capped sections.
   const allUsListings = useMemo(() => [...tranchiProperties, ...usListings], []);
@@ -183,7 +185,7 @@ function USPropertiesPage() {
         (!term || searchable.includes(term)) &&
         (!minPrice || (price > 0 && price >= Number(minPrice))) &&
         (!maxPrice || (price > 0 && price <= Number(maxPrice))) &&
-        (!state || location.includes(state.toLowerCase())) &&
+        (!state || getUsStateCode(p) === selectedStateCode || location.includes(state.toLowerCase())) &&
         (!city || location.includes(city.toLowerCase())) &&
         (!category || p.dealCategory === category || p.tags.includes(category)) &&
         (!bedrooms || (p.bedrooms ?? 0) >= Number(bedrooms)) &&

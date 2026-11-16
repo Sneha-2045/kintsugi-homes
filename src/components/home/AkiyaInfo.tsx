@@ -1,11 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
 import { usListings } from "@/data/us-listings";
+import { tranchiProperties } from "@/data/tranchi-properties";
 
+const otherUsListings = usListings.length + tranchiProperties.length;
 const pricedListings = usListings.filter((listing) => listing.priceUsd > 0);
 const minPrice = Math.min(...pricedListings.map((listing) => listing.priceUsd));
 const maxPrice = Math.max(...pricedListings.map((listing) => listing.priceUsd));
-const auctionCount = usListings.filter((listing) => listing.auctionDate).length;
 const formatPrice = (price: number) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -22,10 +24,10 @@ const stats = [
     body: "Price data is shown when provided by the listing source. Confirm the current opening bid, fees and sale terms with the publisher.",
   },
   {
-    value: auctionCount.toLocaleString("en-US"),
-    label: "Listings with auction dates",
+    value: null,
+    label: "US listings in our current index",
     color: "text-success",
-    body: "Auction schedules can change. Check the original listing for the latest date, registration steps and property-specific terms.",
+    body: "Total foreclosure, MLS and investment listings in our US index. Check each source for current availability and sale terms.",
   },
   {
     value: "Source links",
@@ -60,6 +62,21 @@ const quickLinks = [
 ];
 
 export function AkiyaInfo() {
+  const [totalListings, setTotalListings] = useState(otherUsListings);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/properties?pageNum=1&resultsPerPage=1", { signal: controller.signal })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { count?: unknown } | null) => {
+        if (typeof data?.count === "number" && Number.isFinite(data.count) && data.count >= 0) {
+          setTotalListings(otherUsListings + data.count);
+        }
+      })
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, []);
+
   return (
     <section className="bg-surface py-16 md:py-24" aria-labelledby="us-market-title">
       <div className="container-page">
@@ -83,7 +100,9 @@ export function AkiyaInfo() {
               key={stat.label}
               className="rounded-2xl border border-border bg-card p-7 text-center transition-colors hover:border-primary/40"
             >
-              <p className={`text-2xl font-bold md:text-3xl ${stat.color}`}>{stat.value}</p>
+              <p className={`text-2xl font-bold md:text-3xl ${stat.color}`}>
+                {stat.value ?? totalListings.toLocaleString("en-US")}
+              </p>
               <h3 className="mt-2 text-base font-semibold text-foreground">{stat.label}</h3>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{stat.body}</p>
             </li>

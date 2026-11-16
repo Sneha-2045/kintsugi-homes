@@ -1,25 +1,78 @@
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import { usListings } from "@/data/us-listings";
+import { tranchiProperties } from "@/data/tranchi-properties";
+import { getUsStateCode, stateCodes, stateNames } from "@/lib/us-states";
 
 const popularStates = Array.from(
-  usListings.reduce((states, listing) => {
-    states.set(listing.prefecture, (states.get(listing.prefecture) ?? 0) + 1);
+  [...usListings, ...tranchiProperties].reduce((states, listing) => {
+    const code = getUsStateCode(listing);
+    const state = code ? stateNames[code] : undefined;
+    if (!code || !state) return states;
+    const current = states.get(state) ?? { count: 0, code };
+    current.count += 1;
+    states.set(state, current);
     return states;
-  }, new Map<string, number>()),
+  }, new Map<string, { count: number; code: string }>()),
 )
-  .sort((a, b) => b[1] - a[1])
-  .slice(0, 12);
+  .sort((a, b) => b[1].count - a[1].count);
 
 export function PrefectureGrid() {
+  const [repliersCounts, setRepliersCounts] = useState<Record<string, number>>({});
+  const [repliersTotal, setRepliersTotal] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/properties?aggregates=address.state&listings=false", {
+      signal: controller.signal,
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .then(
+        (data: {
+          count?: unknown;
+          aggregates?: { address?: { state?: Record<string, unknown> } };
+        } | null) => {
+          if (controller.signal.aborted || !data) return;
+          if (typeof data.count === "number" && Number.isFinite(data.count)) {
+            setRepliersTotal(data.count);
+          }
+          const stateCounts = data.aggregates?.address?.state ?? {};
+          const normalizedCounts = Object.fromEntries(
+            Object.entries(stateCounts).flatMap(([code, count]) => {
+              const name = stateNames[code.toUpperCase()];
+              const numericCount = Number(count);
+              return name && Number.isFinite(numericCount) ? [[name, numericCount]] : [];
+            }),
+          );
+          setRepliersCounts(normalizedCounts);
+          if (typeof data.count !== "number") {
+            setRepliersTotal(Object.values(normalizedCounts).reduce((sum, count) => sum + count, 0));
+          }
+        },
+      )
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, []);
+
+  const localStateCounts = new Map(popularStates);
+  const statesToShow = Array.from(new Set([...localStateCounts.keys(), ...Object.keys(repliersCounts)]))
+    .flatMap((state) => {
+      const code = stateCodes[state];
+      if (!code) return [];
+      const localCount = localStateCounts.get(state)?.count ?? 0;
+      return [[state, { code }, localCount + (repliersCounts[state] ?? 0)] as const];
+    })
+    .sort((a, b) => b[2] - a[2]);
+
   return (
     <section className="bg-surface py-16 md:py-24" aria-labelledby="states-title">
       <div className="container-page">
         <SectionHeader
           align="center"
           title="Popular US States"
-          subtitle="Browse states with foreclosure listings in our current index"
+          subtitle={`${(usListings.length + tranchiProperties.length + repliersTotal).toLocaleString("en-US")} total US listings across foreclosure, MLS and investment sources`}
           className="mb-12"
         />
         <h2 id="states-title" className="sr-only">
@@ -27,12 +80,12 @@ export function PrefectureGrid() {
         </h2>
 
         <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-          {popularStates.map(([state, count]) => (
+          {statesToShow.map(([state, details, count]) => (
             <li key={state}>
               <Link
                 to="/us-properties"
-                search={{ q: state }}
-                className="block rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/50 hover:bg-elevated"
+                search={{ state: details.code }}
+                className="group block rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/50 hover:bg-elevated"
               >
                 <h3 className="text-base font-bold text-foreground hover:text-primary-light">
                   {state}
@@ -43,6 +96,10 @@ export function PrefectureGrid() {
                   </span>{" "}
                   listings
                 </p>
+                <span className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-primary/40 px-3 py-2 text-sm font-semibold text-primary-light transition-colors group-hover:border-primary/70 group-hover:bg-primary/10">
+                  See listings
+                  <ArrowRight className="h-4 w-4" />
+                </span>
               </Link>
             </li>
           ))}
