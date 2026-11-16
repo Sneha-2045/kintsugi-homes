@@ -5,7 +5,16 @@
 //     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { loadEnv } from "vite";
 import { fileURLToPath } from "node:url";
+
+// Vite exposes .env values through import.meta.env, while server-only API
+// routes and services read process.env. Load the same local configuration for
+// those Node handlers without exposing secrets to the browser bundle.
+const serverEnv = loadEnv(process.env["NODE_ENV"] ?? "development", process.cwd(), "");
+for (const [key, value] of Object.entries(serverEnv)) {
+  if (process.env[key] === undefined) process.env[key] = value;
+}
 
 const savedSearchCron = {
   name: "saved-search-cron",

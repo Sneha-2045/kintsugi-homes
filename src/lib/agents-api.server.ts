@@ -42,7 +42,11 @@ export async function listAgents(request: Request, forceQuery?: string) {
     return Response.json(await searchStoredAgents(searchArgs(new URL(request.url), forceQuery)), {
       headers: { "Cache-Control": "private, no-store" },
     });
-  } catch {
+  } catch (error) {
+    console.error(
+      "[agents] Directory request failed",
+      error instanceof Error ? error.name : "UnknownError",
+    );
     return Response.json({ error: "Agent search is temporarily unavailable." }, { status: 503 });
   }
 }
