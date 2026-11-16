@@ -275,7 +275,7 @@ function USPropertiesPage() {
             Curated US opportunities
           </p>
           <h2 id="investment-heading" className="mt-3 text-2xl font-bold text-white md:text-4xl">
-            Find Your Next <em>$5k House.</em>
+            Find Your Next <em>$99k House.</em>
           </h2>
           <p className="mt-4 max-w-4xl text-sm leading-7 text-slate-300 md:text-base">
             Explore handpicked US property opportunities, from foreclosure sales to below-market
