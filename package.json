@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite dev",
     "build:node": "npm run generate-sitemaps && npm run validate-sitemaps && NITRO_PRESET=node-middleware vite build",
-    "start:node": "node --experimental-strip-types scripts/express-server.mjs",
+    "start:node": "node --env-file-if-exists=.env --experimental-strip-types --experimental-transform-types scripts/express-server.mjs",
     "build": "npm run generate-sitemaps && npm run validate-sitemaps && vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
@@ -55,6 +55,7 @@
     "@tanstack/react-start": "^1.168.60",
     "@tanstack/router-plugin": "^1.168.23",
     "@tanstack/start-server-core": "^1.169.39",
+    "apify-client": "^2.26.0",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

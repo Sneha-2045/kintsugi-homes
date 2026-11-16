@@ -3,8 +3,10 @@ import { middleware } from "../.output/server/index.mjs";
 import { authRouter } from "../src/server/auth-router.ts";
 import { chatRouter, mongoRateLimit } from "../src/server/chat-router.ts";
 import { propertyRouter } from "../src/server/property-router.ts";
+import { adminAgentRouter, agentRouter } from "../src/server/agent-router.ts";
 import { initializeMongo } from "../src/server/mongo.ts";
 import { seedKnowledgeBase } from "../src/server/knowledge-base.ts";
+import { configuredAgentLocations, syncAgentsForLocation } from "../src/server/agent-service.ts";
 import mongoose from "mongoose";
 import { apiErrorHandler } from "../src/server/chat-router.ts";
 
@@ -43,6 +45,26 @@ app.get("/__health", (_request, response) => {
 app.use("/api/auth", express.json({ limit: "32kb" }), mongoRateLimit, authRouter);
 app.use("/api/chat", express.json({ limit: "32kb" }), mongoRateLimit, chatRouter);
 app.use("/api/properties", express.json({ limit: "32kb" }), mongoRateLimit, propertyRouter);
+app.use("/api/agents", express.json({ limit: "32kb" }), mongoRateLimit, agentRouter);
+app.use("/api/admin/agents", express.json({ limit: "32kb" }), mongoRateLimit, adminAgentRouter);
+
+const agentSyncDays = Number(process.env["AGENT_SYNC_INTERVAL_DAYS"] ?? 7);
+if (Number.isFinite(agentSyncDays) && agentSyncDays >= 1) {
+  const intervalMs = agentSyncDays * 24 * 60 * 60 * 1000;
+  setInterval(() => {
+    void configuredAgentLocations()
+      .then(async (locations) => {
+        for (const location of locations) {
+          try {
+            await syncAgentsForLocation(location, { skipIfRecent: true });
+          } catch (error) {
+            console.error(`Scheduled agent sync failed for ${location}:`, error);
+          }
+        }
+      })
+      .catch((error) => console.error("Could not load scheduled agent locations:", error));
+  }, intervalMs).unref();
+}
 app.use((error, request, response, next) => {
   if (!request.path.startsWith("/api/")) return next(error);
   if (!request.path.startsWith("/api/auth")) return apiErrorHandler(error, request, response, next);

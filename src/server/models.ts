@@ -365,6 +365,61 @@ const monitorLeaseSchema = new Schema(
   { timestamps: true, collection: "jobLeases" },
 );
 
+const agentLocationSchema = new Schema(
+  {
+    locationKey: { type: String, required: true },
+    city: { type: String, trim: true },
+    state: { type: String, trim: true, uppercase: true },
+    zipCode: { type: String, trim: true },
+    salesInLocation: { type: Number, min: 0 },
+    lastUpdatedAt: { type: Date, required: true },
+  },
+  { _id: false },
+);
+
+const realEstateAgentSchema = new Schema(
+  {
+    agentKey: { type: String, required: true, unique: true, index: true },
+    name: { type: String, required: true, trim: true, index: true },
+    profileImage: { type: String, trim: true },
+    brokerage: { type: String, trim: true, index: true },
+    rating: { type: Number, min: 0, max: 5 },
+    reviewCount: { type: Number, min: 0 },
+    salesPriceRange: { type: String, trim: true },
+    salesLast12Months: { type: Number, min: 0, index: true },
+    salesInSearchedCity: { type: Number, min: 0 },
+    city: { type: String, trim: true, index: true },
+    state: { type: String, trim: true, uppercase: true, index: true },
+    zipCode: { type: String, trim: true, index: true },
+    locations: { type: [agentLocationSchema], default: [] },
+    zillowProfileUrl: { type: String, required: true, trim: true },
+    source: { type: String, required: true, default: "Zillow" },
+    lastUpdatedAt: { type: Date, required: true, index: true },
+  },
+  { timestamps: true, collection: "real_estate_agents", strict: true },
+);
+realEstateAgentSchema.index({ city: 1, state: 1, rating: -1 });
+realEstateAgentSchema.index({ zipCode: 1, rating: -1 });
+realEstateAgentSchema.index({ name: "text", brokerage: "text" });
+
+const agentSyncLogSchema = new Schema(
+  {
+    location: { type: String, required: true },
+    status: { type: String, enum: ["running", "succeeded", "failed"], required: true },
+    actorStatus: { type: String, trim: true },
+    actorRunId: { type: String },
+    datasetId: { type: String },
+    recordsFetched: { type: Number, min: 0 },
+    recordsUpserted: { type: Number, min: 0 },
+    usageUsd: { type: Number, min: 0 },
+    error: { type: String, maxlength: 2000 },
+    startedAt: { type: Date, required: true },
+    finishedAt: { type: Date },
+  },
+  { timestamps: true, collection: "real_estate_agent_sync_logs" },
+);
+agentSyncLogSchema.index({ location: 1, createdAt: -1 });
+
 export const User = model("User", userSchema);
 export const PropertyModel = model("Property", propertySchema);
 export const AuthSession = model("AuthSession", refreshSessionSchema);
@@ -387,6 +442,8 @@ export const NewsletterSubscription = model("NewsletterSubscription", newsletter
 export const PropertySyncLog = model("PropertySyncLog", syncLogSchema);
 export const StorageObject = model("StorageObject", storageObjectSchema);
 export const JobLease = model("JobLease", monitorLeaseSchema);
+export const RealEstateAgent = model("RealEstateAgent", realEstateAgentSchema);
+export const AgentSyncLog = model("AgentSyncLog", agentSyncLogSchema);
 
 export const mongoModels: mongoose.Model<unknown>[] = [
   User,
@@ -411,6 +468,8 @@ export const mongoModels: mongoose.Model<unknown>[] = [
   PropertySyncLog,
   StorageObject,
   JobLease,
+  RealEstateAgent,
+  AgentSyncLog,
 ];
 
 export type UserDocument = InferSchemaType<typeof userSchema>;

@@ -101,8 +101,18 @@ function clearCookies(response: Response) {
   });
 }
 
-function cookieValue(request: Request, name: string) {
-  const header = request.headers.cookie;
+type AuthLookupRequest = Request | globalThis.Request;
+
+function requestHeader(request: AuthLookupRequest, name: string) {
+  if (typeof (request.headers as Headers).get === "function") {
+    return (request.headers as Headers).get(name) ?? undefined;
+  }
+  const value = (request.headers as Request["headers"])[name.toLowerCase()];
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function cookieValue(request: AuthLookupRequest, name: string) {
+  const header = requestHeader(request, "cookie");
   if (!header) return undefined;
   for (const part of header.split(";")) {
     const separator = part.indexOf("=");
@@ -116,8 +126,8 @@ function cookieValue(request: Request, name: string) {
   return undefined;
 }
 
-function accessToken(request: Request) {
-  const authorization = request.headers.authorization;
+function accessToken(request: AuthLookupRequest) {
+  const authorization = requestHeader(request, "authorization");
   if (authorization?.startsWith("Bearer ")) return authorization.slice(7).trim();
   return cookieValue(request, ACCESS_COOKIE);
 }
@@ -349,7 +359,7 @@ router.post("/password-reset/confirm", async (request, response) => {
   return response.json({ message: "Password updated. Sign in with your new password." });
 });
 
-export async function resolveAuthUser(request: Request) {
+export async function resolveAuthUser(request: AuthLookupRequest) {
   await connectMongo();
   const token = accessToken(request);
   if (!token) return undefined;

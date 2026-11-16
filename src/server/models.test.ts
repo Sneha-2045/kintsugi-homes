@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
   AuthSession,
   ApiRateLimit,
+  AgentSyncLog,
   ChatSession,
   ChatMessage,
   ContactInquiry,
@@ -16,6 +17,7 @@ import {
   PropertyComparison,
   PropertyModel,
   PropertySyncLog,
+  RealEstateAgent,
   SavedSearch,
   SavedSearchEvent,
   SavedSearchMatch,
@@ -32,6 +34,8 @@ test("all application collections are registered as Mongoose models", () => {
     [
       "authSessions",
       "apiRateLimits",
+      "real_estate_agent_sync_logs",
+      "real_estate_agents",
       "chat_sessions",
       "chat_messages",
       "contactInquiries",
@@ -127,4 +131,17 @@ test("saved-search, favorite, report, storage and operational collections declar
   assert.ok(ContactInquiry.schema.path("message"));
   assert.equal(NewsletterSubscription.schema.path("email").isRequired, true);
   assert.ok(PropertySyncLog.schema.path("recordsWritten"));
+});
+
+test("real estate agents are stored separately with a unique deduplication key", () => {
+  assert.equal(RealEstateAgent.collection.collectionName, "real_estate_agents");
+  assert.equal(AgentSyncLog.collection.collectionName, "real_estate_agent_sync_logs");
+  assert.equal(RealEstateAgent.schema.path("agentKey").isRequired, true);
+  assert.ok(
+    RealEstateAgent.schema
+      .indexes()
+      .some(([keys, options]) => keys["agentKey"] === 1 && options.unique === true),
+  );
+  assert.ok(RealEstateAgent.schema.path("locations"));
+  assert.ok(RealEstateAgent.schema.path("zillowProfileUrl"));
 });

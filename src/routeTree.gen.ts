@@ -26,6 +26,7 @@ import { Route as SavedPropertiesRouteImport } from './routes/saved-properties'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SitemapRouteImport } from './routes/sitemap'
 import { Route as UsPropertiesRouteImport } from './routes/us-properties'
+import { Route as ApiAgentsRouteImport } from './routes/api.agents'
 import { Route as ApiPropertiesRouteImport } from './routes/api.properties'
 import { Route as ApiPropertyIntelligenceRouteImport } from './routes/api.property-intelligence'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
@@ -37,11 +38,14 @@ import { Route as RegionSlugRouteImport } from './routes/region.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAdminIdRouteImport } from './routes/_authenticated/admin/$id'
 import { Route as AuthenticatedAdminNewRouteImport } from './routes/_authenticated/admin/new'
+import { Route as ApiAgentsIdRouteImport } from './routes/api.agents.$id'
+import { Route as ApiAgentsSearchRouteImport } from './routes/api.agents.search'
 import { Route as ApiAlertsUnsubscribeRouteImport } from './routes/api.alerts.unsubscribe'
 import { Route as ApiCronSavedSearchesRouteImport } from './routes/api.cron.saved-searches'
 import { Route as ApiPropertiesIdRouteImport } from './routes/api.properties.$id'
 import { Route as ApiPropertiesFiltersRouteImport } from './routes/api.properties.filters'
 import { Route as ApiPropertyIntelligenceDetailsRouteImport } from './routes/api.property-intelligence.details'
+import { Route as ApiAdminAgentsSyncRouteImport } from './routes/api.admin.agents.sync'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -127,6 +131,11 @@ const UsPropertiesRoute = UsPropertiesRouteImport.update({
   path: '/us-properties',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAgentsRoute = ApiAgentsRouteImport.update({
+  id: '/api/agents',
+  path: '/api/agents',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPropertiesRoute = ApiPropertiesRouteImport.update({
   id: '/api/properties',
   path: '/api/properties',
@@ -182,6 +191,16 @@ const AuthenticatedAdminNewRoute = AuthenticatedAdminNewRouteImport.update({
   path: '/admin/new',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiAgentsIdRoute = ApiAgentsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiAgentsRoute,
+} as any)
+const ApiAgentsSearchRoute = ApiAgentsSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => ApiAgentsRoute,
+} as any)
 const ApiAlertsUnsubscribeRoute = ApiAlertsUnsubscribeRouteImport.update({
   id: '/api/alerts/unsubscribe',
   path: '/api/alerts/unsubscribe',
@@ -208,6 +227,11 @@ const ApiPropertyIntelligenceDetailsRoute =
     path: '/details',
     getParentRoute: () => ApiPropertyIntelligenceRoute,
   } as any)
+const ApiAdminAgentsSyncRoute = ApiAdminAgentsSyncRouteImport.update({
+  id: '/api/admin/agents/sync',
+  path: '/api/admin/agents/sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -226,6 +250,7 @@ export interface FileRoutesByFullPath {
   '/search': typeof SearchRoute
   '/sitemap': typeof SitemapRoute
   '/us-properties': typeof UsPropertiesRoute
+  '/api/agents': typeof ApiAgentsRouteWithChildren
   '/api/properties': typeof ApiPropertiesRouteWithChildren
   '/api/property-intelligence': typeof ApiPropertyIntelligenceRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
@@ -236,12 +261,15 @@ export interface FileRoutesByFullPath {
   '/region/$slug': typeof RegionSlugRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/new': typeof AuthenticatedAdminNewRoute
+  '/api/agents/$id': typeof ApiAgentsIdRoute
+  '/api/agents/search': typeof ApiAgentsSearchRoute
   '/api/alerts/unsubscribe': typeof ApiAlertsUnsubscribeRoute
   '/api/cron/saved-searches': typeof ApiCronSavedSearchesRoute
   '/api/properties/$id': typeof ApiPropertiesIdRoute
   '/api/properties/filters': typeof ApiPropertiesFiltersRoute
   '/api/property-intelligence/details': typeof ApiPropertyIntelligenceDetailsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/admin/agents/sync': typeof ApiAdminAgentsSyncRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -260,6 +288,7 @@ export interface FileRoutesByTo {
   '/search': typeof SearchRoute
   '/sitemap': typeof SitemapRoute
   '/us-properties': typeof UsPropertiesRoute
+  '/api/agents': typeof ApiAgentsRouteWithChildren
   '/api/properties': typeof ApiPropertiesRouteWithChildren
   '/api/property-intelligence': typeof ApiPropertyIntelligenceRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
@@ -270,12 +299,15 @@ export interface FileRoutesByTo {
   '/region/$slug': typeof RegionSlugRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/new': typeof AuthenticatedAdminNewRoute
+  '/api/agents/$id': typeof ApiAgentsIdRoute
+  '/api/agents/search': typeof ApiAgentsSearchRoute
   '/api/alerts/unsubscribe': typeof ApiAlertsUnsubscribeRoute
   '/api/cron/saved-searches': typeof ApiCronSavedSearchesRoute
   '/api/properties/$id': typeof ApiPropertiesIdRoute
   '/api/properties/filters': typeof ApiPropertiesFiltersRoute
   '/api/property-intelligence/details': typeof ApiPropertyIntelligenceDetailsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/api/admin/agents/sync': typeof ApiAdminAgentsSyncRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -296,6 +328,7 @@ export interface FileRoutesById {
   '/search': typeof SearchRoute
   '/sitemap': typeof SitemapRoute
   '/us-properties': typeof UsPropertiesRoute
+  '/api/agents': typeof ApiAgentsRouteWithChildren
   '/api/properties': typeof ApiPropertiesRouteWithChildren
   '/api/property-intelligence': typeof ApiPropertyIntelligenceRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
@@ -306,12 +339,15 @@ export interface FileRoutesById {
   '/region/$slug': typeof RegionSlugRoute
   '/_authenticated/admin/$id': typeof AuthenticatedAdminIdRoute
   '/_authenticated/admin/new': typeof AuthenticatedAdminNewRoute
+  '/api/agents/$id': typeof ApiAgentsIdRoute
+  '/api/agents/search': typeof ApiAgentsSearchRoute
   '/api/alerts/unsubscribe': typeof ApiAlertsUnsubscribeRoute
   '/api/cron/saved-searches': typeof ApiCronSavedSearchesRoute
   '/api/properties/$id': typeof ApiPropertiesIdRoute
   '/api/properties/filters': typeof ApiPropertiesFiltersRoute
   '/api/property-intelligence/details': typeof ApiPropertyIntelligenceDetailsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/admin/agents/sync': typeof ApiAdminAgentsSyncRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -332,6 +368,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/sitemap'
     | '/us-properties'
+    | '/api/agents'
     | '/api/properties'
     | '/api/property-intelligence'
     | '/category/$slug'
@@ -342,12 +379,15 @@ export interface FileRouteTypes {
     | '/region/$slug'
     | '/admin/$id'
     | '/admin/new'
+    | '/api/agents/$id'
+    | '/api/agents/search'
     | '/api/alerts/unsubscribe'
     | '/api/cron/saved-searches'
     | '/api/properties/$id'
     | '/api/properties/filters'
     | '/api/property-intelligence/details'
     | '/admin/'
+    | '/api/admin/agents/sync'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -366,6 +406,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/sitemap'
     | '/us-properties'
+    | '/api/agents'
     | '/api/properties'
     | '/api/property-intelligence'
     | '/category/$slug'
@@ -376,12 +417,15 @@ export interface FileRouteTypes {
     | '/region/$slug'
     | '/admin/$id'
     | '/admin/new'
+    | '/api/agents/$id'
+    | '/api/agents/search'
     | '/api/alerts/unsubscribe'
     | '/api/cron/saved-searches'
     | '/api/properties/$id'
     | '/api/properties/filters'
     | '/api/property-intelligence/details'
     | '/admin'
+    | '/api/admin/agents/sync'
   id:
     | '__root__'
     | '/'
@@ -401,6 +445,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/sitemap'
     | '/us-properties'
+    | '/api/agents'
     | '/api/properties'
     | '/api/property-intelligence'
     | '/category/$slug'
@@ -411,12 +456,15 @@ export interface FileRouteTypes {
     | '/region/$slug'
     | '/_authenticated/admin/$id'
     | '/_authenticated/admin/new'
+    | '/api/agents/$id'
+    | '/api/agents/search'
     | '/api/alerts/unsubscribe'
     | '/api/cron/saved-searches'
     | '/api/properties/$id'
     | '/api/properties/filters'
     | '/api/property-intelligence/details'
     | '/_authenticated/admin/'
+    | '/api/admin/agents/sync'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -437,6 +485,7 @@ export interface RootRouteChildren {
   SearchRoute: typeof SearchRoute
   SitemapRoute: typeof SitemapRoute
   UsPropertiesRoute: typeof UsPropertiesRoute
+  ApiAgentsRoute: typeof ApiAgentsRouteWithChildren
   ApiPropertiesRoute: typeof ApiPropertiesRouteWithChildren
   ApiPropertyIntelligenceRoute: typeof ApiPropertyIntelligenceRouteWithChildren
   CategorySlugRoute: typeof CategorySlugRoute
@@ -445,6 +494,7 @@ export interface RootRouteChildren {
   RegionSlugRoute: typeof RegionSlugRoute
   ApiAlertsUnsubscribeRoute: typeof ApiAlertsUnsubscribeRoute
   ApiCronSavedSearchesRoute: typeof ApiCronSavedSearchesRoute
+  ApiAdminAgentsSyncRoute: typeof ApiAdminAgentsSyncRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -568,6 +618,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UsPropertiesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/agents': {
+      id: '/api/agents'
+      path: '/api/agents'
+      fullPath: '/api/agents'
+      preLoaderRoute: typeof ApiAgentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/properties': {
       id: '/api/properties'
       path: '/api/properties'
@@ -645,6 +702,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/agents/$id': {
+      id: '/api/agents/$id'
+      path: '/$id'
+      fullPath: '/api/agents/$id'
+      preLoaderRoute: typeof ApiAgentsIdRouteImport
+      parentRoute: typeof ApiAgentsRoute
+    }
+    '/api/agents/search': {
+      id: '/api/agents/search'
+      path: '/search'
+      fullPath: '/api/agents/search'
+      preLoaderRoute: typeof ApiAgentsSearchRouteImport
+      parentRoute: typeof ApiAgentsRoute
+    }
     '/api/alerts/unsubscribe': {
       id: '/api/alerts/unsubscribe'
       path: '/api/alerts/unsubscribe'
@@ -679,6 +750,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/property-intelligence/details'
       preLoaderRoute: typeof ApiPropertyIntelligenceDetailsRouteImport
       parentRoute: typeof ApiPropertyIntelligenceRoute
+    }
+    '/api/admin/agents/sync': {
+      id: '/api/admin/agents/sync'
+      path: '/api/admin/agents/sync'
+      fullPath: '/api/admin/agents/sync'
+      preLoaderRoute: typeof ApiAdminAgentsSyncRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -720,6 +798,20 @@ const PropertyIntelligenceRouteChildren: PropertyIntelligenceRouteChildren = {
 
 const PropertyIntelligenceRouteWithChildren =
   PropertyIntelligenceRoute._addFileChildren(PropertyIntelligenceRouteChildren)
+
+interface ApiAgentsRouteChildren {
+  ApiAgentsIdRoute: typeof ApiAgentsIdRoute
+  ApiAgentsSearchRoute: typeof ApiAgentsSearchRoute
+}
+
+const ApiAgentsRouteChildren: ApiAgentsRouteChildren = {
+  ApiAgentsIdRoute: ApiAgentsIdRoute,
+  ApiAgentsSearchRoute: ApiAgentsSearchRoute,
+}
+
+const ApiAgentsRouteWithChildren = ApiAgentsRoute._addFileChildren(
+  ApiAgentsRouteChildren,
+)
 
 interface ApiPropertiesRouteChildren {
   ApiPropertiesIdRoute: typeof ApiPropertiesIdRoute
@@ -767,6 +859,7 @@ const rootRouteChildren: RootRouteChildren = {
   SearchRoute: SearchRoute,
   SitemapRoute: SitemapRoute,
   UsPropertiesRoute: UsPropertiesRoute,
+  ApiAgentsRoute: ApiAgentsRouteWithChildren,
   ApiPropertiesRoute: ApiPropertiesRouteWithChildren,
   ApiPropertyIntelligenceRoute: ApiPropertyIntelligenceRouteWithChildren,
   CategorySlugRoute: CategorySlugRoute,
@@ -775,6 +868,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegionSlugRoute: RegionSlugRoute,
   ApiAlertsUnsubscribeRoute: ApiAlertsUnsubscribeRoute,
   ApiCronSavedSearchesRoute: ApiCronSavedSearchesRoute,
+  ApiAdminAgentsSyncRoute: ApiAdminAgentsSyncRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
