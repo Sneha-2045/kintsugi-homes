@@ -5,6 +5,7 @@ import { BedDouble, Bath, Maximize2, MapPin } from "lucide-react";
 import { PageShell } from "@/components/layout/PageShell";
 import { CountrySwitcher } from "@/components/common/CountrySwitcher";
 import { SubscribeForMore } from "@/components/property/SubscribeForMore";
+import { DiscountedPrice } from "@/components/property/DiscountedPrice";
 import { CompareToggle, usePropertyComparison } from "@/components/property/PropertyComparison";
 import { usListings } from "@/data/us-listings";
 import { tranchiProperties } from "@/data/tranchi-properties";
@@ -118,6 +119,7 @@ function USPropertiesPage() {
     if (city.trim()) query.set("city", city.trim());
     if (/^[a-z]{2}$/i.test(state.trim())) query.set("state", state.trim().toUpperCase());
     else if (state.trim()) query.set("area", state.trim());
+    if (category.trim()) query.set("propertyType", category.trim());
     if (minPrice) query.set("minPrice", minPrice);
     if (maxPrice) query.set("maxPrice", maxPrice);
     if (bedrooms) query.set("minBedrooms", bedrooms);
@@ -158,7 +160,7 @@ function USPropertiesPage() {
         if (!controller.signal.aborted) setMlsBusy(false);
       });
     return () => controller.abort();
-  }, [mlsPage, city, state, minPrice, maxPrice, bedrooms]);
+  }, [mlsPage, city, state, minPrice, maxPrice, bedrooms, category]);
   const term = q?.toLowerCase() ?? "";
   const selectedStateCode = stateCodes[state] ?? state.toUpperCase();
   // Keep every US source in one searchable inventory. Tranchi opportunities and
@@ -185,7 +187,9 @@ function USPropertiesPage() {
         (!term || searchable.includes(term)) &&
         (!minPrice || (price > 0 && price >= Number(minPrice))) &&
         (!maxPrice || (price > 0 && price <= Number(maxPrice))) &&
-        (!state || getUsStateCode(p) === selectedStateCode || location.includes(state.toLowerCase())) &&
+        (!state ||
+          getUsStateCode(p) === selectedStateCode ||
+          location.includes(state.toLowerCase())) &&
         (!city || location.includes(city.toLowerCase())) &&
         (!category || p.dealCategory === category || p.tags.includes(category)) &&
         (!bedrooms || (p.bedrooms ?? 0) >= Number(bedrooms)) &&
@@ -205,7 +209,19 @@ function USPropertiesPage() {
         return (b.monthlyCashFlowEstimate ?? -Infinity) - (a.monthlyCashFlowEstimate ?? -Infinity);
       return 0;
     });
-  }, [allUsListings, term, minPrice, maxPrice, state, city, category, bedrooms, status, sort]);
+  }, [
+    allUsListings,
+    term,
+    minPrice,
+    maxPrice,
+    state,
+    selectedStateCode,
+    city,
+    category,
+    bedrooms,
+    status,
+    sort,
+  ]);
   const automationListings = prioritizePhotos(listings.filter((property) => property.isTranchi));
   const auctionListings = prioritizePhotos(listings.filter((property) => !property.isTranchi));
   const visibleMlsListings = useMemo(() => {
@@ -531,7 +547,16 @@ function MlsCard({ listing }: { listing: MlsListing }) {
           )}
         </div>
         <div className="p-5">
-          <p className="text-xl font-bold">{price > 0 ? formatUsd(price) : "Price unavailable"}</p>
+          {price > 0 ? (
+            <DiscountedPrice
+              price={price}
+              format={formatUsd}
+              originalClassName="text-sm text-muted-foreground"
+              discountedClassName="text-xl font-bold text-primary-light"
+            />
+          ) : (
+            <p className="text-xl font-bold">Price unavailable</p>
+          )}
           <h4 className="mt-2 flex items-center gap-1 text-base font-semibold text-foreground">
             <MapPin className="h-4 w-4 shrink-0" />
             {label}
@@ -608,9 +633,17 @@ function InvestmentCard({ property }: { property: Property }) {
       </Link>
       <div className="p-5">
         <p className="text-xs font-medium uppercase tracking-wide text-blue-300">Reported price</p>
-        <p className="mt-1 text-2xl font-bold text-white">
-          {property.priceUsd > 0 ? formatUsd(property.priceUsd) : "Unavailable"}
-        </p>
+        {property.priceUsd > 0 ? (
+          <DiscountedPrice
+            price={property.priceUsd}
+            format={formatUsd}
+            className="mt-1"
+            originalClassName="text-sm text-slate-300"
+            discountedClassName="text-2xl font-bold text-white"
+          />
+        ) : (
+          <p className="mt-1 text-2xl font-bold text-white">Unavailable</p>
+        )}
         <h3 className="mt-3 text-lg font-semibold leading-snug text-white">
           {property.address ?? property.title}
         </h3>

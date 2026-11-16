@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 import { Bath, BedDouble, MapPin, Search, Square } from "lucide-react";
 import { PageShell } from "@/components/layout/PageShell";
 import { CompareToggle, usePropertyComparison } from "@/components/property/PropertyComparison";
+import { DiscountedPrice } from "@/components/property/DiscountedPrice";
 import { fromMlsListing } from "@/lib/property-comparison";
 import { SaveSearchButton } from "@/components/search/SaveSearchButton";
+import { formatUsd } from "@/data/properties";
 
 type SearchState = {
   city?: string;
@@ -366,7 +368,16 @@ function PropertiesPage() {
                     )}
                   </div>
                   <div className="p-5">
-                    <p className="text-xl font-bold">{money(item.listPrice ?? item.price)}</p>
+                    {Number(item.listPrice ?? item.price) > 0 ? (
+                      <DiscountedPrice
+                        price={Number(item.listPrice ?? item.price)}
+                        format={formatUsd}
+                        originalClassName="text-sm text-muted-foreground"
+                        discountedClassName="text-xl font-bold text-primary-light"
+                      />
+                    ) : (
+                      <p className="text-xl font-bold">{money(item.listPrice ?? item.price)}</p>
+                    )}
                     <h2 className="mt-2 flex items-center gap-1 text-base font-semibold">
                       <MapPin className="h-4 w-4 shrink-0" />
                       {displayAddress}

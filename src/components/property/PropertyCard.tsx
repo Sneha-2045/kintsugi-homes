@@ -13,6 +13,7 @@ import {
 import { useState } from "react";
 import { Badge } from "@/components/common/Badge";
 import { Button } from "@/components/common/Button";
+import { DiscountedPrice } from "@/components/property/DiscountedPrice";
 import { formatJpy, formatUsd } from "@/data/properties";
 import { ReportListingIssue } from "@/components/property/ReportListingIssue";
 import { cn } from "@/lib/utils";
@@ -109,17 +110,30 @@ export function PropertyCard({ property }: { property: Property }) {
         ) : null}
 
         <div className="absolute bottom-3 left-3 rounded-md bg-background/90 px-3 py-1.5 text-foreground">
-          <p className="text-lg font-bold">
-            {property.priceJpy != null ? "Approx. " : ""}
-            {property.priceUsd > 0 ? formatUsd(property.priceUsd) : "Price unavailable"}
-          </p>
-          {property.priceJpy == null && property.priceUsd > 0 ? (
-            <p className="text-xs text-muted-foreground">
-              Target offer (30% below asking): {formatUsd(Math.round(property.priceUsd * 0.7))}
-            </p>
-          ) : null}
+          {property.priceJpy == null ? null : (
+            <p className="mb-1 text-xs text-muted-foreground">Approx. USD</p>
+          )}
+          {property.priceUsd > 0 ? (
+            <DiscountedPrice
+              price={property.priceUsd}
+              format={formatUsd}
+              originalClassName="text-xs text-muted-foreground"
+              discountedClassName="text-base font-bold text-primary-light"
+              className="gap-x-1"
+            />
+          ) : (
+            <p className="text-sm font-semibold">Price unavailable</p>
+          )}
           {property.priceJpy != null ? (
-            <p className="text-xs text-muted-foreground">Original {formatJpy(property.priceJpy)}</p>
+            <div className="mt-1 border-t border-border/70 pt-1">
+              <DiscountedPrice
+                price={property.priceJpy}
+                format={formatJpy}
+                originalClassName="text-[10px] text-muted-foreground"
+                discountedClassName="text-xs font-bold text-primary-light"
+                className="gap-x-1"
+              />
+            </div>
           ) : null}
         </div>
       </div>

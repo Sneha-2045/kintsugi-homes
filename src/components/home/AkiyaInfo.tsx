@@ -15,10 +15,13 @@ const formatPrice = (price: number) =>
     maximumFractionDigits: 0,
     notation: "compact",
   }).format(price);
+const askingRange = `${formatPrice(minPrice)} – ${formatPrice(maxPrice)}`;
+const discountedRange = `${formatPrice(Math.round(minPrice * 0.6))} – ${formatPrice(Math.round(maxPrice * 0.6))}`;
 
 const stats = [
   {
-    value: `${formatPrice(minPrice)} – ${formatPrice(maxPrice)}`,
+    value: askingRange,
+    discountedValue: discountedRange,
     label: "Asking prices shown",
     color: "text-primary-light",
     body: "Price data is shown when provided by the listing source. Confirm the current opening bid, fees and sale terms with the publisher.",
@@ -100,9 +103,21 @@ export function AkiyaInfo() {
               key={stat.label}
               className="rounded-2xl border border-border bg-card p-7 text-center transition-colors hover:border-primary/40"
             >
-              <p className={`text-2xl font-bold md:text-3xl ${stat.color}`}>
-                {stat.value ?? totalListings.toLocaleString("en-US")}
-              </p>
+              {"discountedValue" in stat ? (
+                <div className="flex flex-col items-center gap-1">
+                  <del className="text-sm text-muted-foreground">{stat.value}</del>
+                  <p className={`text-2xl font-bold md:text-3xl ${stat.color}`}>
+                    {stat.discountedValue}
+                  </p>
+                  <span className="rounded bg-success/15 px-1.5 py-0.5 text-xs font-semibold text-success">
+                    40% off · estimate
+                  </span>
+                </div>
+              ) : (
+                <p className={`text-2xl font-bold md:text-3xl ${stat.color}`}>
+                  {stat.value ?? totalListings.toLocaleString("en-US")}
+                </p>
+              )}
               <h3 className="mt-2 text-base font-semibold text-foreground">{stat.label}</h3>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{stat.body}</p>
             </li>

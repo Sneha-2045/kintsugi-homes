@@ -37,7 +37,9 @@ function markerHtml(property: Property, metric: "price" | "rent" | "yield", acti
       : undefined;
   const amount =
     metric === "price"
-      ? price
+      ? price == null
+        ? undefined
+        : price * 0.6
       : metric === "rent"
         ? rent
         : price && rent
@@ -54,7 +56,7 @@ function markerHtml(property: Property, metric: "price" | "rent" | "yield", acti
     property.propertyType?.toLowerCase().includes("foreclosure")
       ? "foreclosure"
       : "standard";
-  return `<span class="map-price-pill map-price-${cls}${active ? " map-price-active" : ""}">${escapeHtml(label)}<span class="map-price-sr">${metric === "rent" ? " estimated monthly rent" : metric === "yield" ? " estimated gross yield" : " reported price"}</span></span>`;
+  return `<span class="map-price-pill map-price-${cls}${active ? " map-price-active" : ""}">${escapeHtml(label)}<span class="map-price-sr">${metric === "rent" ? " estimated monthly rent" : metric === "yield" ? " estimated gross yield" : " price after 40 percent discount"}</span></span>`;
 }
 
 function popupHtml(property: Property) {
@@ -74,7 +76,7 @@ function popupHtml(property: Property) {
       : "reported source price";
   const price =
     property.priceUsd > 0
-      ? `<p class="property-map-popup-price">${escapeHtml(formatUsd(property.priceUsd))} <small>${priceLabel}</small></p>`
+      ? `<p class="property-map-popup-price"><del>${escapeHtml(formatUsd(property.priceUsd))}</del><br /><strong>${escapeHtml(formatUsd(Math.round(property.priceUsd * 0.6)))}</strong> <span class="property-map-popup-discount">40% off · estimate</span><br /><small>${priceLabel}</small></p>`
       : '<p class="property-map-popup-price">Price unavailable</p>';
   const bedBath = [
     property.bedrooms != null ? `${property.bedrooms} bd` : "",

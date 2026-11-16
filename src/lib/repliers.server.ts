@@ -300,7 +300,10 @@ function validateFilters(params: URLSearchParams) {
   if (params.get("type") && !["sale", "lease"].includes(params.get("type")!)) {
     throw new RepliersError(400, "INVALID_SEARCH", "Listing type must be sale or lease.");
   }
-  if (params.get("aggregates") && params.get("aggregates") !== "address.state") {
+  if (
+    params.get("aggregates") &&
+    !["address.state", "details.propertyType"].includes(params.get("aggregates")!)
+  ) {
     throw new RepliersError(400, "INVALID_SEARCH", "Unsupported aggregate field.");
   }
   if (params.get("listings") && !["true", "false"].includes(params.get("listings")!)) {

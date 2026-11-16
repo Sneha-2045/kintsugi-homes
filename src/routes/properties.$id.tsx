@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PageShell } from "@/components/layout/PageShell";
+import { DiscountedPrice } from "@/components/property/DiscountedPrice";
+import { formatUsd } from "@/data/properties";
 
 export const Route = createFileRoute("/properties/$id")({ component: PropertyDetailPage });
 type Listing = {
@@ -21,6 +23,7 @@ type Listing = {
   permissions?: { displayAddressOnInternet?: string };
   publicRemarks?: string;
   listPrice?: number | string;
+  price?: number | string;
   office?: { brokerageName?: string };
   listOfficeName?: string;
 };
@@ -88,13 +91,16 @@ function PropertyDetailPage() {
             )}
           </section>
           <aside className="h-fit rounded-2xl border border-border bg-card p-6">
-            <p className="text-2xl font-bold">
-              {new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: "USD",
-                maximumFractionDigits: 0,
-              }).format(Number(listing.listPrice ?? 0))}
-            </p>
+            {Number(listing.listPrice ?? listing.price) > 0 ? (
+              <DiscountedPrice
+                price={Number(listing.listPrice ?? listing.price)}
+                format={formatUsd}
+                originalClassName="text-base text-muted-foreground"
+                discountedClassName="text-2xl font-bold text-primary-light"
+              />
+            ) : (
+              <p className="text-2xl font-bold">Price unavailable</p>
+            )}
             <h2 className="mt-2 text-lg font-semibold">
               {listing.permissions?.displayAddressOnInternet === "N"
                 ? [address.city, address.state].filter(Boolean).join(", ") || "Address withheld"

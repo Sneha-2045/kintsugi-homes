@@ -2,16 +2,11 @@ import { Link } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 import { Badge } from "@/components/common/Badge";
 import { Button } from "@/components/common/Button";
+import { DiscountedPrice } from "@/components/property/DiscountedPrice";
+import { formatUsd } from "@/data/properties";
 import { usListings } from "@/data/us-listings";
 
 const lockedUsListings = usListings.filter((listing) => listing.priceUsd > 0).slice(0, 3);
-
-const formatUsd = (amount: number) =>
-  new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(amount);
 
 export function MemberPromo() {
   return (
@@ -62,7 +57,13 @@ export function MemberPromo() {
                   </span>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-lg font-bold text-foreground">{formatUsd(l.priceUsd)}</p>
+                  <DiscountedPrice
+                    price={l.priceUsd}
+                    format={formatUsd}
+                    originalClassName="text-xs text-muted-foreground"
+                    discountedClassName="text-sm font-bold text-primary-light"
+                    className="gap-x-1"
+                  />
                   <p className="truncate text-sm text-muted-foreground">{l.location}</p>
                 </div>
                 <Badge variant="orangeSoft" size="xs">

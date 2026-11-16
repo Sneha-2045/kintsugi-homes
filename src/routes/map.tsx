@@ -16,6 +16,7 @@ import {
 import { PageShell } from "@/components/layout/PageShell";
 import { PropertyMap } from "@/components/map/PropertyMap";
 import { CompareToggle, usePropertyComparison } from "@/components/property/PropertyComparison";
+import { DiscountedPrice } from "@/components/property/DiscountedPrice";
 import { SubscribeForMore } from "@/components/property/SubscribeForMore";
 import { properties } from "@/data/properties";
 import { regions } from "@/data/regions";
@@ -548,9 +549,19 @@ function MapPage() {
                                 .join(", ")}
                             </p>
                           </div>
-                          <span className="shrink-0 text-sm font-bold text-primary">
-                            {p.priceUsd > 0 ? money(p.priceUsd) : "Price n/a"}
-                          </span>
+                          {p.priceUsd > 0 ? (
+                            <DiscountedPrice
+                              price={p.priceUsd}
+                              format={money}
+                              className="shrink-0 flex-col items-end gap-0"
+                              originalClassName="text-[10px] text-muted-foreground"
+                              discountedClassName="text-sm font-bold text-primary"
+                            />
+                          ) : (
+                            <span className="shrink-0 text-sm font-bold text-primary">
+                              Price n/a
+                            </span>
+                          )}
                         </div>
                         <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
                           {p.bedrooms != null && (

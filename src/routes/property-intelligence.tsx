@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { PageShell } from "@/components/layout/PageShell";
 import { RentCastActions } from "@/components/property/RentCastActions";
+import { DiscountedPrice } from "@/components/property/DiscountedPrice";
 import { SubscribeForMore } from "@/components/property/SubscribeForMore";
 import {
   propertyAddress,
@@ -405,12 +406,29 @@ function ListingCard({ listing }: { listing: RentCastSearchListing }) {
           {listing.listingType === "rental" ? "For rent" : "For sale"}
           {listing.propertyType ? ` · ${listing.propertyType}` : ""}
         </p>
-        <p className="mt-2 text-3xl font-bold tracking-tight text-foreground">
-          {price}
+        <div className="mt-2">
+          {typeof listing.price === "number" &&
+          Number.isFinite(listing.price) &&
+          listing.price > 0 ? (
+            <DiscountedPrice
+              price={listing.price}
+              format={(amount) =>
+                new Intl.NumberFormat("en-US", {
+                  style: "currency",
+                  currency: "USD",
+                  maximumFractionDigits: 0,
+                }).format(amount)
+              }
+              originalClassName="text-sm text-muted-foreground"
+              discountedClassName="text-2xl font-bold text-primary-light"
+            />
+          ) : (
+            <p className="text-3xl font-bold tracking-tight text-foreground">{price}</p>
+          )}
           {listing.listingType === "rental" && typeof listing.price === "number" ? (
-            <span className="ml-1 text-sm font-medium text-muted-foreground">/ month</span>
+            <span className="text-sm font-medium text-muted-foreground">/ month</span>
           ) : null}
-        </p>
+        </div>
         <h3 className="mt-3 flex min-h-12 items-start gap-2 font-semibold leading-6 text-foreground">
           <MapPin className="mt-1 h-4 w-4 shrink-0 text-blue-300" />
           <span className="line-clamp-2">{address}</span>

@@ -4,6 +4,7 @@ import { Badge } from "@/components/common/Badge";
 import { Button } from "@/components/common/Button";
 import { PageShell } from "@/components/layout/PageShell";
 import { ReportListingIssue } from "@/components/property/ReportListingIssue";
+import { DiscountedPrice } from "@/components/property/DiscountedPrice";
 
 import { formatJpy, formatUsd, properties } from "@/data/properties";
 import { usListings } from "@/data/us-listings";
@@ -216,11 +217,23 @@ function PropertyDetails() {
                   sale price, valuation, rent, or return.
                 </p>
                 <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl bg-elevated p-4">
+                    <dt className="text-xs text-muted-foreground">Reported source price</dt>
+                    <dd className="mt-1">
+                      {property.priceUsd > 0 ? (
+                        <DiscountedPrice
+                          price={property.priceUsd}
+                          format={formatUsd}
+                          originalClassName="text-xs text-muted-foreground"
+                          discountedClassName="text-sm font-bold text-primary-light"
+                          className="gap-x-1"
+                        />
+                      ) : (
+                        "Unavailable"
+                      )}
+                    </dd>
+                  </div>
                   {[
-                    [
-                      "Reported source price",
-                      property.priceUsd > 0 ? formatUsd(property.priceUsd) : "Unavailable",
-                    ],
                     [
                       "Estimated appraised value",
                       property.estimatedAppraisedValue
@@ -355,9 +368,16 @@ function PropertyDetails() {
                 Reported source price
               </p>
             ) : null}
-            <p className="text-3xl font-bold text-foreground">
-              {property.priceUsd > 0 ? formatUsd(property.priceUsd) : "Price unavailable"}
-            </p>
+            {property.priceUsd > 0 ? (
+              <DiscountedPrice
+                price={property.priceUsd}
+                format={formatUsd}
+                originalClassName="text-sm text-muted-foreground"
+                discountedClassName="text-3xl font-bold text-primary-light"
+              />
+            ) : (
+              <p className="text-3xl font-bold text-foreground">Price unavailable</p>
+            )}
 
             {property.isTranchi ? (
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
@@ -367,9 +387,13 @@ function PropertyDetails() {
             ) : null}
 
             {property.priceJpy != null && (
-              <p className="mt-1 text-sm text-muted-foreground">
-                Original asking price: {formatJpy(property.priceJpy)}
-              </p>
+              <DiscountedPrice
+                price={property.priceJpy}
+                format={formatJpy}
+                className="mt-2"
+                originalClassName="text-xs text-muted-foreground"
+                discountedClassName="text-sm font-bold text-primary-light"
+              />
             )}
 
             {property.isTranchi && property.sourceUrl ? (
