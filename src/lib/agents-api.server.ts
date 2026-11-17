@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   getStoredAgent,
+  searchApifyAgentDirectory,
   searchStoredAgents,
   syncAgentsForLocation,
 } from "../server/agent-service.ts";
@@ -31,15 +32,47 @@ function searchArgs(url: URL, forceQuery?: string) {
     ...(query.has("location") ? { location: query.get("location")! } : {}),
     ...((forceQuery ?? query.get("q")) ? { q: forceQuery ?? query.get("q")! } : {}),
     page: Math.max(1, integer("page", 1)),
-    limit: Math.min(100, Math.max(1, integer("limit", 24))),
+    limit: Math.min(1000, Math.max(1, integer("limit", 24))),
     sortBy: query.get("sortBy") === "sales" ? ("sales" as const) : ("rating" as const),
     sortOrder: query.get("sortOrder") === "asc" ? ("asc" as const) : ("desc" as const),
   };
 }
 
+let mongoDirectoryUnavailableUntil = 0;
+const MONGO_DIRECTORY_TIMEOUT_MS = 1500;
+
 export async function listAgents(request: Request, forceQuery?: string) {
   try {
-    return Response.json(await searchStoredAgents(searchArgs(new URL(request.url), forceQuery)), {
+    const args = searchArgs(new URL(request.url), forceQuery);
+    if (Date.now() < mongoDirectoryUnavailableUntil) {
+      return Response.json(await searchApifyAgentDirectory(args), {
+        headers: { "Cache-Control": "private, no-store" },
+      });
+    }
+    try {
+      let timeoutId: ReturnType<typeof setTimeout> | undefined;
+      const stored = await Promise.race([
+        searchStoredAgents(args),
+        new Promise<never>((_resolve, reject) => {
+          timeoutId = setTimeout(
+            () => reject(new Error("MongoDB directory lookup timed out.")),
+            MONGO_DIRECTORY_TIMEOUT_MS,
+          );
+        }),
+      ]).finally(() => {
+        if (timeoutId) clearTimeout(timeoutId);
+      });
+      if (stored.total > 0) {
+        return Response.json(stored, { headers: { "Cache-Control": "private, no-store" } });
+      }
+    } catch (error) {
+      mongoDirectoryUnavailableUntil = Date.now() + 60_000;
+      console.error(
+        "[agents] MongoDB directory unavailable; using the latest Apify dataset",
+        error instanceof Error ? error.name : "UnknownError",
+      );
+    }
+    return Response.json(await searchApifyAgentDirectory(args), {
       headers: { "Cache-Control": "private, no-store" },
     });
   } catch (error) {

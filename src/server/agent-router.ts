@@ -29,7 +29,7 @@ function params(request: Request) {
     ...(typeof query["location"] === "string" ? { location: query["location"].trim() } : {}),
     ...(typeof query["q"] === "string" ? { q: query["q"].trim() } : {}),
     page: Math.max(1, number(query["page"], 1)),
-    limit: Math.min(100, Math.max(1, number(query["limit"], 24))),
+    limit: Math.min(1000, Math.max(1, number(query["limit"], 24))),
     sortBy: query["sortBy"] === "sales" ? ("sales" as const) : ("rating" as const),
     sortOrder: query["sortOrder"] === "asc" ? ("asc" as const) : ("desc" as const),
   };

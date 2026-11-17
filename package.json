@@ -4,7 +4,7 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
+    "dev": "node --env-file-if-exists=.env ./node_modules/vite/bin/vite.js dev",
     "build:node": "npm run generate-sitemaps && npm run validate-sitemaps && NITRO_PRESET=node-middleware vite build",
     "start:node": "node --env-file-if-exists=.env --experimental-strip-types --experimental-transform-types scripts/express-server.mjs",
     "build": "npm run generate-sitemaps && npm run validate-sitemaps && vite build",

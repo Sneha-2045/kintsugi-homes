@@ -1,16 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Search, Star, Users } from "lucide-react";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { Star, Users } from "lucide-react";
+import { useEffect, useState } from "react";
 import { canonicalLink } from "@/lib/seo";
 
 export const Route = createFileRoute("/find-an-agent")({
   head: () => ({
     meta: [
-      { title: "Find a Real Estate Agent in Texas City, TX | Rylestate" },
+      { title: "Real Estate Agents | Rylestate" },
       {
         name: "description",
-        content:
-          "Browse real estate agents by location. Compare agent ratings, brokerages and recent sales.",
+        content: "Browse the real estate agents available in the Rylestate directory.",
       },
     ],
     links: [canonicalLink("/find-an-agent")],
@@ -27,7 +26,6 @@ type Agent = {
   reviewCount?: number;
   salesPriceRange?: string;
   salesLast12Months?: number;
-  salesInSelectedCity?: number;
   zillowProfileUrl: string;
 };
 
@@ -53,33 +51,18 @@ function readAgentCache(key: string): AgentResponse | undefined {
   }
 }
 
-function locationTitle(location: string) {
-  const [city, state] = location.split(",").map((part) => part.trim());
-  return city && state ? `${city}, ${state}` : location || "the United States";
-}
-
 function FindAnAgentPage() {
-  const [location, setLocation] = useState("Texas City, TX");
-  const [appliedLocation, setAppliedLocation] = useState("Texas City, TX");
-  const [query, setQuery] = useState("");
-  const [appliedQuery, setAppliedQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"rating" | "sales">("rating");
   const [page, setPage] = useState(1);
   const [data, setData] = useState<AgentResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const title = useMemo(() => locationTitle(appliedLocation), [appliedLocation]);
-
   useEffect(() => {
     const controller = new AbortController();
     const search = new URLSearchParams({
-      location: appliedLocation,
       page: String(page),
-      limit: "24",
-      sortBy,
+      limit: "1000",
     });
-    if (appliedQuery) search.set("q", appliedQuery);
-    const cacheKey = `rylestate-agents:${search.toString()}`;
+    const cacheKey = `rylestate-agents-v2:${search.toString()}`;
     const cached = readAgentCache(cacheKey);
     let timedOut = false;
     if (cached) {
@@ -133,86 +116,34 @@ function FindAnAgentPage() {
       window.clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [appliedLocation, appliedQuery, page, sortBy]);
-
-  function handleSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setAppliedLocation(location.trim());
-    setAppliedQuery(query.trim());
-    setPage(1);
-  }
+  }, [page]);
 
   return (
     <div className="min-h-screen bg-background pb-20">
       <section className="border-b border-border bg-surface/70">
         <div className="container-page py-12 md:py-16">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary-light">
-            Local expertise, made easy
+            Agent directory
           </p>
           <h1 className="mt-3 text-4xl font-bold text-foreground md:text-5xl">
-            Find an agent near you
+            Browse real estate agents
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-            Search agent records by city, state, ZIP code, agent name, or brokerage.
+            Browse the agents currently available in our directory.
           </p>
-          <form
-            onSubmit={handleSearch}
-            className="mt-8 grid max-w-5xl gap-3 md:grid-cols-[1fr_1fr_auto]"
-          >
-            <label className="flex h-14 items-center gap-3 rounded-xl border border-border bg-card px-4 focus-within:ring-2 focus-within:ring-primary">
-              <Search className="h-5 w-5 shrink-0 text-subtle" aria-hidden="true" />
-              <span className="sr-only">City, state, or ZIP code</span>
-              <input
-                value={location}
-                onChange={(event) => setLocation(event.target.value)}
-                placeholder="City, state, or ZIP code"
-                className="w-full bg-transparent text-foreground outline-none placeholder:text-subtle"
-              />
-            </label>
-            <label className="flex h-14 items-center gap-3 rounded-xl border border-border bg-card px-4 focus-within:ring-2 focus-within:ring-primary">
-              <Users className="h-5 w-5 shrink-0 text-subtle" aria-hidden="true" />
-              <span className="sr-only">Agent or brokerage</span>
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Agent name or brokerage"
-                className="w-full bg-transparent text-foreground outline-none placeholder:text-subtle"
-              />
-            </label>
-            <button
-              type="submit"
-              className="inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-primary px-7 font-semibold text-primary-foreground transition hover:bg-primary-hover"
-            >
-              <Search className="h-4 w-4" aria-hidden="true" /> Search agents
-            </button>
-          </form>
         </div>
       </section>
 
       <section className="container-page py-9">
         <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Real estate agents in {title}</h2>
+            <h2 className="text-2xl font-bold text-foreground">Real estate agents</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {loading
                 ? "Loading agents from the directory…"
                 : `Showing ${data?.total ?? 0} agents from the directory`}
             </p>
           </div>
-          <label className="flex items-center gap-2 text-sm text-muted-foreground">
-            Sort by
-            <select
-              value={sortBy}
-              onChange={(event) => {
-                setSortBy(event.target.value as "rating" | "sales");
-                setPage(1);
-              }}
-              className="rounded-lg border border-border bg-card px-3 py-2 text-foreground"
-            >
-              <option value="rating">Rating</option>
-              <option value="sales">Recent sales</option>
-            </select>
-          </label>
         </div>
 
         {error ? (
@@ -233,9 +164,7 @@ function FindAnAgentPage() {
         ) : null}
         {!loading && !error && data?.agents.length === 0 ? (
           <p className="mt-7 rounded-xl border border-border bg-card p-10 text-center text-muted-foreground">
-            No agents found for {title}
-            {appliedQuery ? ` matching “${appliedQuery}”` : ""}. Try another location or search
-            term.
+            No agents are currently available in the directory.
           </p>
         ) : null}
 
@@ -296,12 +225,6 @@ function FindAnAgentPage() {
                       <p>
                         <strong className="text-foreground">{agent.salesLast12Months}</strong>
                         <span className="text-muted-foreground"> sales last 12 months</span>
-                      </p>
-                    ) : null}
-                    {agent.salesInSelectedCity !== undefined ? (
-                      <p>
-                        <strong className="text-foreground">{agent.salesInSelectedCity}</strong>
-                        <span className="text-muted-foreground"> sales in {title}</span>
                       </p>
                     ) : null}
                   </div>

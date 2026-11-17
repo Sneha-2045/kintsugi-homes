@@ -3,10 +3,23 @@ import { ApifyClient } from "apify-client";
 import { AgentSyncLog, RealEstateAgent } from "./models.ts";
 import { connectMongo } from "./mongo.ts";
 
-const ACTOR_ID = "hello.datawizards/real-estate-agents-scraper";
+const ACTOR_ID = "blackfalcondata/zillow-agent-leads-scraper";
 const PAGE_SIZE = 1000;
 type ActorItem = Record<string, unknown>;
 type AgentLocation = { city?: string; state?: string; zipCode?: string; label: string };
+type DirectoryArgs = {
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  location?: string;
+  q?: string;
+  page: number;
+  limit: number;
+  sortBy: "rating" | "sales";
+  sortOrder: "asc" | "desc";
+};
+type CachedAgentDirectory = { expiresAt: number; agents: Record<string, unknown>[] };
+let cachedAgentDirectory: CachedAgentDirectory | undefined;
 
 function textValue(value: unknown): string | undefined {
   if (typeof value !== "string" && typeof value !== "number") return undefined;
@@ -71,29 +84,50 @@ function zillowProfile(value: string | undefined) {
 }
 
 function mapActorItem(item: ActorItem, location: AgentLocation) {
-  const name = firstText(item, ["NAME", "name", "agentName", "agent_name"]);
+  const name = firstText(item, ["displayName", "agentName", "NAME", "name", "agent_name"]);
   const profileUrl = zillowProfile(
-    firstText(item, ["PROFILE_LINK", "profileLink", "profile_url", "zillowProfileUrl"]),
+    firstText(item, [
+      "profileUrl",
+      "url",
+      "PROFILE_LINK",
+      "profileLink",
+      "profile_url",
+      "zillowProfileUrl",
+    ]),
   );
   if (!name || !profileUrl) return undefined;
 
   const brokerage = firstText(item, [
+    "businessName",
+    "brokerageName",
     "AGENCY_NAME",
     "agencyName",
     "brokerage",
     "teamName",
     "TEAM_NAME",
   ]);
-  const rating = numericValue(item["REVIEW_AVERAGE"] ?? item["reviewAverage"] ?? item["rating"]);
-  const reviewCount = numericValue(item["REVIEW_COUNT"] ?? item["reviewCount"] ?? item["reviews"]);
-  const salesPriceRange = firstText(item, ["TEAM_PRICE_RANGE", "priceRange", "salesPriceRange"]);
+  const rating = numericValue(item["rating"] ?? item["reviewAverage"] ?? item["REVIEW_AVERAGE"]);
+  const reviewCount = numericValue(item["reviewCount"] ?? item["REVIEW_COUNT"] ?? item["reviews"]);
+  const salesPriceRange = firstText(item, ["salesPriceRange", "priceRange", "TEAM_PRICE_RANGE"]);
   const salesLast12Months = numericValue(
-    item["TEAM_SALES_LAST_12_MONTHS"] ?? item["salesLast12Months"] ?? item["sales_12_months"],
+    item["recentSalesCount"] ??
+      item["salesLast12Months"] ??
+      item["TEAM_SALES_LAST_12_MONTHS"] ??
+      item["sales_12_months"],
   );
   const salesInSearchedCity = numericValue(
-    item["TEAM_SALES_IN_LOCATION"] ?? item["salesInLocation"] ?? item["sales_in_location"],
+    item["salesInSearchArea"] ??
+      item["salesInLocation"] ??
+      item["TEAM_SALES_IN_LOCATION"] ??
+      item["sales_in_location"],
   );
-  const image = firstText(item, ["IMAGE_URL", "imageUrl", "profileImage", "profile_image"]);
+  const image = firstText(item, [
+    "photoUrl",
+    "imageUrl",
+    "profileImage",
+    "IMAGE_URL",
+    "profile_image",
+  ]);
   const data: Record<string, unknown> = {
     name,
     zillowProfileUrl: profileUrl,
@@ -111,11 +145,8 @@ function mapActorItem(item: ActorItem, location: AgentLocation) {
   if (location.state) data["state"] = location.state;
   if (location.zipCode) data["zipCode"] = location.zipCode;
 
-  const profileIdentity = profileUrl
-    .toLowerCase()
-    .replace(/[?#].*$/, "")
-    .replace(/\/$/, "");
-  const agentKey = `zillow:${createHash("sha256").update(profileIdentity).digest("hex")}`;
+  const profileIdentity = firstText(item, ["zuid", "username"]) ?? profileUrl;
+  const agentKey = `zillow:${createHash("sha256").update(profileIdentity.toLowerCase()).digest("hex")}`;
   return { agentKey, data, location, salesInSearchedCity };
 }
 
@@ -129,6 +160,93 @@ function mergeMappedAgents(items: ActorItem[], location: AgentLocation) {
     else mapped.set(agent.agentKey, { ...previous, data: { ...previous.data, ...agent.data } });
   }
   return [...mapped.values()];
+}
+
+async function upsertAgentItems(locationLabel: string, items: ActorItem[]) {
+  const location = normalizedLocation(locationLabel);
+  const mapped = mergeMappedAgents(items, location);
+  if (mapped.length === 0) {
+    throw new Error(
+      `The Actor returned no usable agent records for ${locationLabel}. Check its source access and output data.`,
+    );
+  }
+  const now = new Date();
+  const locationKey =
+    `${location.city ?? ""}|${location.state ?? ""}|${location.zipCode ?? ""}`.toLowerCase();
+  const operations = mapped.map((agent) => {
+    const locationEntry = {
+      locationKey,
+      ...(location.city ? { city: location.city } : {}),
+      ...(location.state ? { state: location.state } : {}),
+      ...(location.zipCode ? { zipCode: location.zipCode } : {}),
+      ...(agent.salesInSearchedCity !== undefined
+        ? { salesInLocation: agent.salesInSearchedCity }
+        : {}),
+      lastUpdatedAt: now,
+    };
+    const setValues = { ...agent.data };
+    delete setValues["lastUpdatedAt"];
+    const pipeline = [
+      { $set: { ...setValues, agentKey: agent.agentKey, lastUpdatedAt: now } },
+      ...(location.city || location.state || location.zipCode
+        ? [
+            {
+              $set: {
+                locations: {
+                  $let: {
+                    vars: {
+                      currentLocations: { $ifNull: ["$locations", []] },
+                      previousLocation: {
+                        $arrayElemAt: [
+                          {
+                            $filter: {
+                              input: { $ifNull: ["$locations", []] },
+                              as: "existing",
+                              cond: { $eq: ["$$existing.locationKey", locationKey] },
+                            },
+                          },
+                          0,
+                        ],
+                      },
+                    },
+                    in: {
+                      $concatArrays: [
+                        {
+                          $filter: {
+                            input: "$$currentLocations",
+                            as: "existing",
+                            cond: { $ne: ["$$existing.locationKey", locationKey] },
+                          },
+                        },
+                        [
+                          {
+                            $mergeObjects: [{ $ifNull: ["$$previousLocation", {}] }, locationEntry],
+                          },
+                        ],
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          ]
+        : []),
+    ];
+    return {
+      updateOne: { filter: { agentKey: agent.agentKey }, update: pipeline, upsert: true },
+    };
+  });
+  const result = await RealEstateAgent.bulkWrite(operations);
+  return {
+    recordsFetched: items.length,
+    recordsMapped: mapped.length,
+    recordsUpserted: result.upsertedCount + result.modifiedCount,
+  };
+}
+
+export async function saveAgentDataset(locationLabel: string, items: ActorItem[]) {
+  await connectMongo();
+  return upsertAgentItems(locationLabel, items);
 }
 
 export async function searchStoredAgents(args: {
@@ -199,6 +317,71 @@ export async function searchStoredAgents(args: {
   };
 }
 
+/** Read the latest completed Apify dataset as a fast fallback when MongoDB is unavailable or empty. */
+export async function searchApifyAgentDirectory(args: DirectoryArgs) {
+  const token = process.env["APIFY_TOKEN"];
+  if (!token) throw new Error("APIFY_TOKEN is not configured on this server.");
+
+  if (!cachedAgentDirectory || cachedAgentDirectory.expiresAt <= Date.now()) {
+    const client = new ApifyClient({ token });
+    const run = await client.actor(ACTOR_ID).lastRun({ status: "SUCCEEDED" }).get();
+    if (!run?.defaultDatasetId) throw new Error("No completed Zillow agent dataset is available.");
+    const items: ActorItem[] = [];
+    for (let offset = 0; ; offset += PAGE_SIZE) {
+      const result = await client.dataset(run.defaultDatasetId).listItems({
+        offset,
+        limit: PAGE_SIZE,
+      });
+      items.push(...(result.items as ActorItem[]));
+      if (result.items.length < PAGE_SIZE) break;
+    }
+    const mapped = mergeMappedAgents(items, normalizedLocation("Texas City, TX"));
+    cachedAgentDirectory = {
+      expiresAt: Date.now() + 5 * 60 * 1000,
+      agents: mapped.map((agent) => ({ ...agent.data, id: agent.agentKey })),
+    };
+  }
+
+  const location = args.location ? normalizedLocation(args.location) : undefined;
+  const city = args.city ?? location?.city;
+  const state = args.state ?? location?.state;
+  const zipCode = args.zipCode ?? location?.zipCode;
+  const query = args.q?.trim().toLowerCase();
+  let agents = cachedAgentDirectory.agents.filter((agent) => {
+    if (city && String(agent["city"] ?? "").toLowerCase() !== city.toLowerCase()) return false;
+    if (state && String(agent["state"] ?? "").toLowerCase() !== state.toLowerCase()) return false;
+    if (zipCode && String(agent["zipCode"] ?? "") !== zipCode) return false;
+    if (
+      query &&
+      !`${String(agent["name"] ?? "")} ${String(agent["brokerage"] ?? "")}`
+        .toLowerCase()
+        .includes(query)
+    ) {
+      return false;
+    }
+    return true;
+  });
+  const sortField = args.sortBy === "sales" ? "salesLast12Months" : "rating";
+  agents = agents.sort((left, right) => {
+    const leftValue = Number(left[sortField] ?? 0);
+    const rightValue = Number(right[sortField] ?? 0);
+    const direction = args.sortOrder === "asc" ? 1 : -1;
+    return (
+      (leftValue - rightValue) * direction ||
+      String(left["name"]).localeCompare(String(right["name"]))
+    );
+  });
+  const total = agents.length;
+  const offset = (args.page - 1) * args.limit;
+  return {
+    agents: agents.slice(offset, offset + args.limit),
+    total,
+    page: args.page,
+    limit: args.limit,
+    totalPages: Math.ceil(total / args.limit),
+  };
+}
+
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -233,7 +416,6 @@ export async function syncAgentsForLocation(
       .lean();
     if (recent) return { location: locationLabel, skipped: true };
   }
-  const location = normalizedLocation(locationLabel);
   const startedAt = new Date();
   const log = await AgentSyncLog.create({ location: locationLabel, status: "running", startedAt });
   let runId: string | undefined;
@@ -244,13 +426,10 @@ export async function syncAgentsForLocation(
   try {
     const client = new ApifyClient({ token });
     const run = await client.actor(ACTOR_ID).call({
-      search_query: locationLabel,
-      itemLimit: Number(process.env["AGENT_ACTOR_ITEM_LIMIT"] ?? 1000),
-      proxyConfiguration: {
-        useApifyProxy: true,
-        apifyProxyGroups: ["RESIDENTIAL"],
-        apifyProxyCountry: "US",
-      },
+      agentLocations: [locationLabel],
+      maxResults: Number(process.env["AGENT_ACTOR_ITEM_LIMIT"] ?? 0),
+      incrementalMode: false,
+      compact: false,
     });
     runId = run.id;
     datasetId = run.defaultDatasetId;
@@ -268,84 +447,9 @@ export async function syncAgentsForLocation(
       items.push(...(page.items as ActorItem[]));
       if (page.items.length < PAGE_SIZE) break;
     }
-    recordsFetched = items.length;
-    const mapped = mergeMappedAgents(items, location);
-    if (mapped.length === 0) {
-      throw new Error(
-        `The Actor returned no usable agent records for ${locationLabel}. Check its source access and output data.`,
-      );
-    }
-    const now = new Date();
-    const locationKey =
-      `${location.city ?? ""}|${location.state ?? ""}|${location.zipCode ?? ""}`.toLowerCase();
-    const operations = mapped.map((agent) => {
-      const locationEntry = {
-        locationKey,
-        ...(location.city ? { city: location.city } : {}),
-        ...(location.state ? { state: location.state } : {}),
-        ...(location.zipCode ? { zipCode: location.zipCode } : {}),
-        ...(agent.salesInSearchedCity !== undefined
-          ? { salesInLocation: agent.salesInSearchedCity }
-          : {}),
-        lastUpdatedAt: now,
-      };
-      const setValues = { ...agent.data };
-      delete setValues["lastUpdatedAt"];
-      const pipeline = [
-        { $set: { ...setValues, agentKey: agent.agentKey, lastUpdatedAt: now } },
-        ...(location.city || location.state || location.zipCode
-          ? [
-              {
-                $set: {
-                  locations: {
-                    $let: {
-                      vars: {
-                        currentLocations: { $ifNull: ["$locations", []] },
-                        previousLocation: {
-                          $arrayElemAt: [
-                            {
-                              $filter: {
-                                input: { $ifNull: ["$locations", []] },
-                                as: "existing",
-                                cond: { $eq: ["$$existing.locationKey", locationKey] },
-                              },
-                            },
-                            0,
-                          ],
-                        },
-                      },
-                      in: {
-                        $concatArrays: [
-                          {
-                            $filter: {
-                              input: "$$currentLocations",
-                              as: "existing",
-                              cond: { $ne: ["$$existing.locationKey", locationKey] },
-                            },
-                          },
-                          [
-                            {
-                              $mergeObjects: [
-                                { $ifNull: ["$$previousLocation", {}] },
-                                locationEntry,
-                              ],
-                            },
-                          ],
-                        ],
-                      },
-                    },
-                  },
-                },
-              },
-            ]
-          : []),
-      ];
-      return {
-        updateOne: { filter: { agentKey: agent.agentKey }, update: pipeline, upsert: true },
-      };
-    });
-    const result = operations.length ? await RealEstateAgent.bulkWrite(operations) : undefined;
-    const recordsUpserted = result ? result.upsertedCount + result.modifiedCount : 0;
+    const saved = await saveAgentDataset(locationLabel, items);
+    recordsFetched = saved.recordsFetched;
+    const recordsUpserted = saved.recordsUpserted;
     await AgentSyncLog.updateOne(
       { _id: log._id },
       {
