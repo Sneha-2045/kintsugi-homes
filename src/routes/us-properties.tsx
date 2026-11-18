@@ -119,7 +119,7 @@ function USPropertiesPage() {
     if (city.trim()) query.set("city", city.trim());
     if (/^[a-z]{2}$/i.test(state.trim())) query.set("state", state.trim().toUpperCase());
     else if (state.trim()) query.set("area", state.trim());
-    if (category.trim()) query.set("propertyType", category.trim());
+    if (category.trim() && category !== "Auction") query.set("propertyType", category.trim());
     if (minPrice) query.set("minPrice", minPrice);
     if (maxPrice) query.set("maxPrice", maxPrice);
     if (bedrooms) query.set("minBedrooms", bedrooms);
@@ -191,7 +191,10 @@ function USPropertiesPage() {
           getUsStateCode(p) === selectedStateCode ||
           location.includes(state.toLowerCase())) &&
         (!city || location.includes(city.toLowerCase())) &&
-        (!category || p.dealCategory === category || p.tags.includes(category)) &&
+        (!category ||
+          (category === "Auction"
+            ? Boolean(p.auctionDate)
+            : p.dealCategory === category || p.tags.includes(category))) &&
         (!bedrooms || (p.bedrooms ?? 0) >= Number(bedrooms)) &&
         (!status || p.status === status)
       );
@@ -270,20 +273,23 @@ function USPropertiesPage() {
       </div>
 
       <section aria-labelledby="investment-heading" className="mb-16">
-        <div className="rounded-3xl border border-blue-900/40 bg-gradient-to-br from-[#101d32] via-[#0d1728] to-[#111a2a] p-6 shadow-elevated md:p-10">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-300">
+        <div className="rounded-3xl border border-border bg-card p-6 shadow-elevated md:p-10">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary-light">
             Curated US opportunities
           </p>
-          <h2 id="investment-heading" className="mt-3 text-2xl font-bold text-white md:text-4xl">
+          <h2
+            id="investment-heading"
+            className="mt-3 text-2xl font-bold text-foreground md:text-4xl"
+          >
             Find Your Next <em>$99k House.</em>
           </h2>
-          <p className="mt-4 max-w-4xl text-sm leading-7 text-slate-300 md:text-base">
+          <p className="mt-4 max-w-4xl text-sm leading-7 text-muted-foreground md:text-base">
             Explore handpicked US property opportunities, from foreclosure sales to below-market
             homes, with property images and investment insights to help you make informed decisions.
           </p>
 
-          <div className="mt-8 grid gap-3 rounded-2xl border border-white/10 bg-black/10 p-4 sm:grid-cols-2 lg:grid-cols-4">
-            <label className="text-xs font-medium text-slate-300">
+          <div className="mt-8 grid gap-3 rounded-2xl border border-border bg-elevated p-4 sm:grid-cols-2 lg:grid-cols-4">
+            <label className="text-xs font-medium text-muted-foreground">
               Minimum price
               <input
                 type="number"
@@ -291,10 +297,10 @@ function USPropertiesPage() {
                 value={minPrice}
                 onChange={(e) => setMinPrice(e.target.value)}
                 placeholder="$ Min"
-                className="mt-1.5 w-full rounded-lg border border-white/15 bg-slate-950/50 px-3 py-2.5 text-sm text-white placeholder:text-slate-500"
+                className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground"
               />
             </label>
-            <label className="text-xs font-medium text-slate-300">
+            <label className="text-xs font-medium text-muted-foreground">
               Maximum price
               <input
                 type="number"
@@ -302,33 +308,33 @@ function USPropertiesPage() {
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
                 placeholder="$ Max"
-                className="mt-1.5 w-full rounded-lg border border-white/15 bg-slate-950/50 px-3 py-2.5 text-sm text-white placeholder:text-slate-500"
+                className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground"
               />
             </label>
-            <label className="text-xs font-medium text-slate-300">
+            <label className="text-xs font-medium text-muted-foreground">
               State
               <input
                 value={state}
                 onChange={(e) => setState(e.target.value)}
                 placeholder="State or code"
-                className="mt-1.5 w-full rounded-lg border border-white/15 bg-slate-950/50 px-3 py-2.5 text-sm text-white placeholder:text-slate-500"
+                className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground"
               />
             </label>
-            <label className="text-xs font-medium text-slate-300">
+            <label className="text-xs font-medium text-muted-foreground">
               City
               <input
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 placeholder="City"
-                className="mt-1.5 w-full rounded-lg border border-white/15 bg-slate-950/50 px-3 py-2.5 text-sm text-white placeholder:text-slate-500"
+                className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground"
               />
             </label>
-            <label className="text-xs font-medium text-slate-300">
+            <label className="text-xs font-medium text-muted-foreground">
               Deal category
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="mt-1.5 w-full rounded-lg border border-white/15 bg-slate-950/50 px-3 py-2.5 text-sm text-white"
+                className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground"
               >
                 <option value="">All categories</option>
                 {categories.map((v) => (
@@ -338,12 +344,12 @@ function USPropertiesPage() {
                 ))}
               </select>
             </label>
-            <label className="text-xs font-medium text-slate-300">
+            <label className="text-xs font-medium text-muted-foreground">
               Bedrooms
               <select
                 value={bedrooms}
                 onChange={(e) => setBedrooms(e.target.value)}
-                className="mt-1.5 w-full rounded-lg border border-white/15 bg-slate-950/50 px-3 py-2.5 text-sm text-white"
+                className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground"
               >
                 <option value="">Any</option>
                 {[1, 2, 3, 4, 5].map((v) => (
@@ -353,13 +359,13 @@ function USPropertiesPage() {
                 ))}
               </select>
             </label>
-            <label className="text-xs font-medium text-slate-300">
+            <label className="text-xs font-medium text-muted-foreground">
               Property status
               <select
                 disabled={!statuses.length}
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="mt-1.5 w-full rounded-lg border border-white/15 bg-slate-950/50 px-3 py-2.5 text-sm text-white disabled:opacity-60"
+                className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground disabled:opacity-60"
               >
                 <option value="">{statuses.length ? "Any status" : "Unavailable in source"}</option>
                 {statuses.map((v) => (
@@ -369,12 +375,12 @@ function USPropertiesPage() {
                 ))}
               </select>
             </label>
-            <label className="text-xs font-medium text-slate-300">
+            <label className="text-xs font-medium text-muted-foreground">
               Sort by
               <select
                 value={sort}
                 onChange={(e) => setSort(e.target.value)}
-                className="mt-1.5 w-full rounded-lg border border-white/15 bg-slate-950/50 px-3 py-2.5 text-sm text-white"
+                className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground"
               >
                 <option value="default">Recommended</option>
                 <option value="price-asc">Price: low to high</option>
@@ -398,11 +404,11 @@ function USPropertiesPage() {
                 bedrooms,
                 status,
               }}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/5 px-4 font-semibold text-white transition hover:bg-white/10"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border bg-background/70 px-4 font-semibold text-foreground transition hover:bg-elevated"
             />
           </div>
 
-          <p className="mt-5 text-sm text-slate-400">
+          <p className="mt-5 text-sm text-muted-foreground">
             {automationListings.length + visibleMlsListings.length + auctionListings.length}{" "}
             matching US listings across automation, MLS, and auction sources. Listings with photos
             appear first within each source group, ordered auction, automation, then MLS.
@@ -459,7 +465,7 @@ function USPropertiesPage() {
             </button>
           ) : null}
           {!automationListings.length && !visibleMlsListings.length && !auctionListings.length ? (
-            <div className="mt-6 rounded-2xl border border-white/10 bg-slate-950/40 p-10 text-center text-slate-300">
+            <div className="mt-6 rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">
               No opportunities match these filters. Adjust your search to see more listings.
             </div>
           ) : null}
@@ -596,7 +602,7 @@ function InvestmentCard({ property }: { property: Property }) {
   const displayedValue = property.estimatedAppraisedValue ?? property.estimatedMarketValue;
   return (
     <article
-      className={`h-full overflow-hidden rounded-2xl border bg-[#111d30] shadow-lg transition hover:-translate-y-0.5 hover:border-blue-400/40 ${comparisonSelected ? "border-blue-300 ring-2 ring-blue-400/50" : "border-white/10"}`}
+      className={`h-full overflow-hidden rounded-2xl border bg-card text-card-foreground shadow-lg transition hover:-translate-y-0.5 hover:border-primary/40 ${comparisonSelected ? "border-primary ring-2 ring-primary/40" : "border-border"}`}
     >
       <Link
         to="/property/$id"
@@ -604,7 +610,7 @@ function InvestmentCard({ property }: { property: Property }) {
         className="group block"
         aria-label={`View property: ${property.title}`}
       >
-        <div className="relative aspect-[4/3] overflow-hidden bg-slate-900">
+        <div className="relative aspect-[4/3] overflow-hidden bg-elevated">
           {image && !imageFailed ? (
             <img
               src={image}
@@ -615,43 +621,45 @@ function InvestmentCard({ property }: { property: Property }) {
               className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
             />
           ) : (
-            <div className="grid h-full place-items-center text-sm text-slate-400">
+            <div className="grid h-full place-items-center text-sm text-muted-foreground">
               Property image unavailable
             </div>
           )}
           {property.dealCategory && (
-            <span className="absolute left-3 top-3 rounded-full bg-[#101d32]/90 px-3 py-1 text-xs font-semibold text-blue-100 backdrop-blur">
+            <span className="absolute left-3 top-3 rounded-full bg-popover/90 px-3 py-1 text-xs font-semibold text-primary-light backdrop-blur">
               {property.dealCategory}
             </span>
           )}
           {property.status && (
-            <span className="absolute right-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold capitalize text-slate-900">
+            <span className="absolute right-3 top-3 rounded-full bg-elevated/95 px-3 py-1 text-xs font-semibold capitalize text-foreground">
               {property.status}
             </span>
           )}
         </div>
       </Link>
       <div className="p-5">
-        <p className="text-xs font-medium uppercase tracking-wide text-blue-300">Reported price</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-primary-light">
+          Reported price
+        </p>
         {property.priceUsd > 0 ? (
           <DiscountedPrice
             price={property.priceUsd}
             format={formatUsd}
             className="mt-1"
-            originalClassName="text-sm text-slate-300"
-            discountedClassName="text-2xl font-bold text-white"
+            originalClassName="text-sm text-muted-foreground"
+            discountedClassName="text-2xl font-bold text-foreground"
           />
         ) : (
-          <p className="mt-1 text-2xl font-bold text-white">Unavailable</p>
+          <p className="mt-1 text-2xl font-bold text-foreground">Unavailable</p>
         )}
-        <h3 className="mt-3 text-lg font-semibold leading-snug text-white">
+        <h3 className="mt-3 text-lg font-semibold leading-snug text-foreground">
           {property.address ?? property.title}
         </h3>
-        <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-300">
-          <MapPin className="h-4 w-4 shrink-0 text-blue-300" />
+        <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+          <MapPin className="h-4 w-4 shrink-0 text-primary-light" />
           {fullLocation}
         </p>
-        <dl className="mt-4 flex flex-wrap gap-x-4 gap-y-2 border-b border-white/10 pb-4 text-sm text-slate-300">
+        <dl className="mt-4 flex flex-wrap gap-x-4 gap-y-2 border-b border-border pb-4 text-sm text-muted-foreground">
           {property.bedrooms != null && (
             <Fact
               icon={<BedDouble className="h-4 w-4" />}
@@ -702,7 +710,7 @@ function InvestmentCard({ property }: { property: Property }) {
         <div className="mt-3">
           <CompareToggle property={comparisonProperty} />
         </div>
-        <p className="mt-3 text-[11px] leading-5 text-slate-400">
+        <p className="mt-3 text-[11px] leading-5 text-muted-foreground">
           Source figures may be estimates. Confirm price, availability, and terms independently.
         </p>
       </div>
@@ -724,9 +732,9 @@ function Fact({ icon, label, value }: { icon: ReactNode; label: string; value: s
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-slate-950/40 p-3">
-      <dt className="text-xs text-slate-400">{label}</dt>
-      <dd className="mt-1 font-semibold text-slate-100">{value}</dd>
+    <div className="rounded-lg bg-elevated p-3">
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="mt-1 font-semibold text-foreground">{value}</dd>
     </div>
   );
 }

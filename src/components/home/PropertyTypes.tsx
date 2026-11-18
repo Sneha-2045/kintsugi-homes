@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, ChevronRight } from "lucide-react";
 import { SectionHeader } from "@/components/common/SectionHeader";
-import { propertyCategories } from "@/data/properties";
+import { properties, propertyCategories } from "@/data/properties";
 import { usListings } from "@/data/us-listings";
 import { tranchiProperties } from "@/data/tranchi-properties";
 
 export function PropertyTypes() {
-  const [usPropertyTypes, setUsPropertyTypes] = useState<Array<{ name: string; count: number }>>([]);
+  const [usPropertyTypes, setUsPropertyTypes] = useState<Array<{ name: string; count: number }>>(
+    [],
+  );
   const [usMlsTotal, setUsMlsTotal] = useState(0);
   const [usPropertyTypeError, setUsPropertyTypeError] = useState(false);
 
@@ -18,10 +20,12 @@ export function PropertyTypes() {
     })
       .then((response) => (response.ok ? response.json() : null))
       .then(
-        (data: {
-          count?: unknown;
-          aggregates?: { details?: { propertyType?: Record<string, unknown> } };
-        } | null) => {
+        (
+          data: {
+            count?: unknown;
+            aggregates?: { details?: { propertyType?: Record<string, unknown> } };
+          } | null,
+        ) => {
           if (controller.signal.aborted) return;
           const counts = data?.aggregates?.details?.propertyType;
           if (!counts) {
@@ -35,7 +39,10 @@ export function PropertyTypes() {
               .sort((a, b) => b.count - a.count)
               .slice(0, 9),
           );
-          const typeTotal = Object.values(counts).reduce((sum, count) => sum + Number(count), 0);
+          const typeTotal = Object.values(counts).reduce<number>(
+            (sum, count) => sum + Number(count),
+            0,
+          );
           setUsMlsTotal(
             typeof data?.count === "number" && Number.isFinite(data.count) ? data.count : typeTotal,
           );
@@ -66,19 +73,36 @@ export function PropertyTypes() {
               <Link
                 to="/category/$slug"
                 params={{ slug: c.slug }}
-                className="flex items-center gap-4 rounded-xl border border-border bg-card p-6 transition-colors hover:border-primary/50 hover:bg-elevated"
+                className="group relative flex min-h-52 overflow-hidden rounded-2xl border border-border bg-card p-5 transition duration-300 hover:-translate-y-1 hover:border-primary/60 hover:shadow-elevated sm:p-6"
               >
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-lg font-bold text-foreground">{c.title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{c.description}</p>
-                  <p className="mt-3 text-sm text-muted-foreground">
-                    <span className="font-bold text-primary-light">
-                      {c.count.toLocaleString("en-US")}
-                    </span>{" "}
-                    listings
-                  </p>
-                </div>
-                <ChevronRight className="h-5 w-5 shrink-0 text-subtle" aria-hidden="true" />
+                <img
+                  src={
+                    properties.find(
+                      (property) => property.categorySlug === c.slug && property.images?.[0],
+                    )?.images[0] ?? "/images/miami-1369.avif"
+                  }
+                  alt=""
+                  aria-hidden="true"
+                  loading="lazy"
+                  className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
+                />
+                <span className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/65 to-slate-950/10 transition-colors group-hover:via-slate-950/55" />
+                <span className="relative mt-auto min-w-0 flex-1">
+                  <span className="block text-lg font-bold text-white">{c.title}</span>
+                  <span className="mt-1 block text-sm text-slate-200">{c.description}</span>
+                  <span className="mt-3 flex items-center justify-between text-sm text-white/85">
+                    <span>
+                      <span className="font-bold text-blue-200">
+                        {c.count.toLocaleString("en-US")}
+                      </span>{" "}
+                      indexed listings
+                    </span>
+                    <ChevronRight
+                      className="h-5 w-5 text-blue-200 transition-transform group-hover:translate-x-1"
+                      aria-hidden="true"
+                    />
+                  </span>
+                </span>
               </Link>
             </li>
           ))}
@@ -97,7 +121,9 @@ export function PropertyTypes() {
                 to="/us-properties"
                 className="block rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/50 hover:bg-elevated"
               >
-                <span className="block text-base font-bold text-foreground">Foreclosure listings</span>
+                <span className="block text-base font-bold text-foreground">
+                  Foreclosure listings
+                </span>
                 <span className="mt-2 block text-sm text-muted-foreground">
                   <span className="font-bold text-primary-light">
                     {usListings.length.toLocaleString("en-US")}
@@ -115,7 +141,9 @@ export function PropertyTypes() {
                 to="/us-properties"
                 className="block rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/50 hover:bg-elevated"
               >
-                <span className="block text-base font-bold text-foreground">Investment opportunities</span>
+                <span className="block text-base font-bold text-foreground">
+                  Investment opportunities
+                </span>
                 <span className="mt-2 block text-sm text-muted-foreground">
                   <span className="font-bold text-primary-light">
                     {tranchiProperties.length.toLocaleString("en-US")}

@@ -102,13 +102,13 @@ function ComparisonToolbar() {
   return (
     <aside
       aria-label="Property comparison"
-      className="fixed inset-x-3 bottom-3 z-[60] mx-auto max-w-4xl rounded-2xl border border-blue-300/20 bg-[#101d32]/95 p-3 shadow-2xl backdrop-blur-xl sm:inset-x-6 sm:bottom-5 sm:flex sm:items-center sm:justify-between sm:gap-4 sm:px-5"
+      className="fixed inset-x-3 bottom-3 z-[60] mx-auto max-w-4xl rounded-2xl border border-border bg-card/95 p-3 shadow-2xl backdrop-blur-xl sm:inset-x-6 sm:bottom-5 sm:flex sm:items-center sm:justify-between sm:gap-4 sm:px-5"
     >
       <div className="min-w-0">
-        <p className="font-semibold text-white">
+        <p className="font-semibold text-foreground">
           {comparison.properties.length} of 4 properties selected
         </p>
-        <p className="text-xs text-slate-300">
+        <p className="text-xs text-muted-foreground">
           {comparison.properties.length < 2
             ? "Select 2–4 properties to compare."
             : "Ready for a side-by-side comparison."}
@@ -119,7 +119,7 @@ function ComparisonToolbar() {
           <button
             type="button"
             disabled
-            className="inline-flex min-h-10 flex-1 items-center justify-center rounded-lg bg-slate-600 px-4 text-sm font-semibold text-slate-300 sm:flex-none"
+            className="inline-flex min-h-10 flex-1 items-center justify-center rounded-lg bg-elevated px-4 text-sm font-semibold text-muted-foreground sm:flex-none"
           >
             Compare Properties
           </button>
@@ -134,7 +134,7 @@ function ComparisonToolbar() {
         <button
           type="button"
           onClick={comparison.clear}
-          className="min-h-10 rounded-lg border border-white/20 px-3 text-sm text-white hover:bg-white/10"
+          className="min-h-10 rounded-lg border border-border px-3 text-sm text-foreground hover:bg-elevated"
         >
           Clear all
         </button>

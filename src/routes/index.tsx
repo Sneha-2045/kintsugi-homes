@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { HeroSearch } from "@/components/home/HeroSearch";
+import { HomeDiscovery } from "@/components/home/HomeDiscovery";
+import { HomeValueSections } from "@/components/home/HomeValueSections";
+import { OpportunityCategories } from "@/components/home/OpportunityCategories";
 import { FreshListings } from "@/components/home/FreshListings";
 import { MemberPromo } from "@/components/home/MemberPromo";
 import { PricingSection } from "@/components/home/PricingSection";
@@ -10,7 +13,6 @@ import { AkiyaInfo } from "@/components/home/AkiyaInfo";
 import { FAQSection } from "@/components/home/FAQSection";
 import { PropertyTypes } from "@/components/home/PropertyTypes";
 import { RegionGrid } from "@/components/home/RegionGrid";
-import { PrefectureGrid } from "@/components/home/PrefectureGrid";
 import { faqs } from "@/data/faq";
 import { canonicalLink } from "@/lib/seo";
 
@@ -49,17 +51,19 @@ function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
       <HeroSearch />
-      <PropertyTypes />
       <FreshListings />
+      <OpportunityCategories />
+      <PropertyTypes />
+      <HomeDiscovery />
       <MemberPromo />
       <PricingSection />
       <PartnersSection />
       <MembershipComparison />
       <AudioArticles />
       <AkiyaInfo />
-      <FAQSection />
       <RegionGrid />
-      <PrefectureGrid />
+      <HomeValueSections />
+      <FAQSection />
     </>
   );
 }

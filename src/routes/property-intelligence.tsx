@@ -130,23 +130,23 @@ function PropertyIntelligencePage() {
       title="Property Intelligence"
       description="Discover real US properties and analyze their investment potential."
     >
-      <section className="relative overflow-hidden rounded-3xl border border-blue-200/10 bg-[radial-gradient(ellipse_at_top_right,_rgba(59,130,246,0.19),_transparent_48%),linear-gradient(135deg,#111d30,#17263d)] px-5 py-9 sm:px-8 sm:py-12">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-300">
+      <section className="relative overflow-hidden rounded-3xl border border-border bg-card px-5 py-9 sm:px-8 sm:py-12">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary-light">
           RentCast property data
         </p>
-        <h1 className="mt-3 max-w-4xl text-3xl font-bold leading-tight text-white sm:text-4xl lg:text-5xl">
+        <h1 className="mt-3 max-w-4xl text-3xl font-bold leading-tight text-foreground sm:text-4xl lg:text-5xl">
           Discover Properties. Analyze Investments. Make Smarter Decisions.
         </h1>
-        <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
+        <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
           Search active US sale and long-term rental listings, then review provider estimates and
           comparable properties.
         </p>
         <form
           onSubmit={search}
-          className="mt-8 rounded-2xl border border-white/10 bg-slate-950/35 p-4 sm:p-6"
+          className="mt-8 rounded-2xl border border-border bg-elevated p-4 sm:p-6"
         >
-          <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-200">
-            <SlidersHorizontal className="h-4 w-4 text-blue-300" /> Search filters
+          <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
+            <SlidersHorizontal className="h-4 w-4 text-primary-light" /> Search filters
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Field label="City">
@@ -279,14 +279,14 @@ function PropertyIntelligencePage() {
             <div className="flex items-end">
               <button
                 disabled={busy}
-                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-500 px-5 font-bold text-white transition hover:bg-blue-400 disabled:cursor-wait disabled:opacity-60"
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 font-bold text-primary-foreground transition hover:bg-primary-hover disabled:cursor-wait disabled:opacity-60"
               >
                 <Search className="h-4 w-4" />
                 {busy && !listings.length ? "Searching…" : "Search Properties"}
               </button>
             </div>
           </div>
-          <p className="mt-4 text-xs leading-5 text-slate-400">
+          <p className="mt-4 text-xs leading-5 text-muted-foreground">
             Enter a city or ZIP code and a state. Listings and estimates are provided by RentCast;
             availability and property facts can change.
           </p>
@@ -341,10 +341,10 @@ function PropertyIntelligencePage() {
 }
 
 const inputClass =
-  "mt-1.5 h-11 w-full rounded-lg border border-white/15 bg-[#101a2b] px-3 text-sm text-white outline-none focus:border-blue-400";
+  "mt-1.5 h-11 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none focus:border-ring";
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <label className="block text-xs font-medium text-slate-300">
+    <label className="block text-xs font-medium text-muted-foreground">
       {label}
       {children}
     </label>

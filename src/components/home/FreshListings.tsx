@@ -32,19 +32,11 @@ export function FreshListings() {
               US &amp; Japan inventory
             </Badge>
           }
-          title={
-            <span className="inline-flex items-center gap-3">
-              <span aria-hidden="true" className="inline-flex items-center gap-2 text-[0.72em]">
-                <span>🇺🇸</span>
-                <span>🇯🇵</span>
-              </span>
-              <span>Browse US &amp; Japan listings</span>
-            </span>
-          }
+          title="Homes Worth Discovering."
           subtitle={
             isJapan
-              ? "A small selection to start your search. Sources and checked dates may be unavailable; confirm current price and availability with the publisher."
-              : "Browse US foreclosure properties with upcoming auction dates. Confirm current details with the listing source."
+              ? "Handpicked homes and distinctive properties from across Japan. Confirm current price and availability with the listing publisher."
+              : "Explore U.S. foreclosure homes and opportunities. Check each listing source for current details and sale terms."
           }
           action={
             <Link
@@ -67,7 +59,7 @@ export function FreshListings() {
           <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
             <div>
               <h3 className="text-2xl font-semibold text-foreground">
-                {isJapan ? "Japan Listings" : "US Listings"}
+                {isJapan ? "Explore Japan" : "Explore U.S. opportunities"}
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 {isJapan
