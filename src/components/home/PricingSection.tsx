@@ -12,7 +12,7 @@ const plans = [
     name: "Monthly",
     badge: "Most popular",
     badgeVariant: "blue" as const,
-    price: "$5.00",
+    price: "$49.00",
     period: "/month",
     note: "Free trial · cancel anytime",
     noteClass: "text-muted-foreground",
@@ -23,9 +23,9 @@ const plans = [
     name: "Yearly",
     badge: "Best value",
     badgeVariant: "green" as const,
-    price: "$50.00",
+    price: "$490.00",
     period: "/year",
-    note: "Save $10 — 2 months free",
+    note: "Save $98 — 2 months free",
     noteClass: "text-success",
     cardVariant: "success" as const,
   },
@@ -88,7 +88,7 @@ export function PricingSection() {
         </div>
 
         <p className="mt-8 text-center text-sm text-muted-foreground">
-          Full plan comparison and Premium tier on the{" "}
+          Compare free and member plans on the{" "}
           <Link to="/pricing" className="text-primary-light underline underline-offset-4">
             pricing page
           </Link>

@@ -1,8 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Play, Volume2 } from "lucide-react";
 import { PageShell } from "@/components/layout/PageShell";
+import { PropertyCard } from "@/components/property/PropertyCard";
 import { articles } from "@/data/articles";
+import { usListings } from "@/data/us-listings";
+import { apifyForeclosures } from "@/data/apify-foreclosures";
+import { tranchiProperties } from "@/data/tranchi-properties";
 import { canonicalLink } from "@/lib/seo";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/articles")({
   head: () => ({
@@ -26,6 +31,12 @@ export const Route = createFileRoute("/articles")({
 });
 
 function ArticlesPage() {
+  const featuredUsListings = [
+    usListings.find((listing) => listing.sourceUrl?.includes("auction.com")),
+    apifyForeclosures[0],
+    tranchiProperties[0],
+  ].filter((listing): listing is (typeof usListings)[number] => Boolean(listing));
+
   return (
     <PageShell
       title="Guides you can listen to"
@@ -65,6 +76,35 @@ function ArticlesPage() {
           </li>
         ))}
       </ul>
+      <section className="mt-16" aria-labelledby="us-property-guides-heading">
+        <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary-light">
+              From the US market
+            </p>
+            <h2 id="us-property-guides-heading" className="mt-2 text-3xl font-bold text-foreground">
+              Explore US property opportunities
+            </h2>
+            <p className="mt-2 max-w-2xl text-muted-foreground">
+              Browse auction, foreclosure, and investment listings alongside our property guides.
+              Estimates are labeled where source pricing is unavailable.
+            </p>
+          </div>
+          <Link
+            to="/us-properties"
+            className="inline-flex min-h-11 items-center rounded-lg bg-primary px-5 font-semibold text-primary-foreground transition hover:bg-primary/90"
+          >
+            Browse all US listings
+          </Link>
+        </div>
+        <ul className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {featuredUsListings.map((property) => (
+            <li key={property.id}>
+              <PropertyCard property={property} />
+            </li>
+          ))}
+        </ul>
+      </section>
     </PageShell>
   );
 }

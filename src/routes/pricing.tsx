@@ -14,13 +14,13 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "Browsing is free forever. Membership costs $5/month or $50/year and unlocks new listings 24 hours early.",
+          "Browsing is free forever. Membership is $49 per month and unlocks early access, property insights, and buyer tools.",
       },
       { property: "og:title", content: "Pricing — Real Estate Membership" },
       {
         property: "og:description",
         content:
-          "Browsing is free forever. Membership costs $5/month or $50/year and unlocks new listings 24 hours early.",
+          "Browsing is free forever. Membership is $49 per month and unlocks early access, property insights, and buyer tools.",
       },
     ],
   }),
@@ -44,7 +44,7 @@ const tiers = [
   },
   {
     name: "Member",
-    price: "$5",
+    price: "$49",
     period: "per month",
     badge: "Most popular",
     features: [
@@ -54,17 +54,6 @@ const tiers = [
       "Hazard, cost & population data",
       "Comparable sales",
       "CSV export",
-    ],
-    cta: "Start free trial",
-    variant: "primary" as const,
-  },
-  {
-    name: "Premium",
-    price: "$19",
-    period: "per month",
-    badge: "For buyers in progress",
-    features: [
-      "Everything in Member",
       "Priority partner introductions",
       "Two survey report reviews",
       "Renovation cost modelling",
@@ -83,7 +72,7 @@ function PricingPage() {
       title="Simple pricing"
       description="Browsing stays free forever. Membership is the head start. No hidden fees, no lock in."
     >
-      <ul className="grid gap-6 lg:grid-cols-3">
+      <ul className="mx-auto grid max-w-5xl gap-6 md:grid-cols-2">
         {tiers.map((tier) => (
           <li
             key={tier.name}
