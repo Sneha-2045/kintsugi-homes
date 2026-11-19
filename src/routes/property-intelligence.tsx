@@ -12,6 +12,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { PageShell } from "@/components/layout/PageShell";
+import { estimateBasisLabel, estimateMissingPrice } from "@/lib/property-price-estimate";
 import { RentCastActions } from "@/components/property/RentCastActions";
 import { DiscountedPrice } from "@/components/property/DiscountedPrice";
 import { SubscribeForMore } from "@/components/property/SubscribeForMore";
@@ -328,7 +329,7 @@ function PropertyIntelligencePage() {
             <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {listings.map((listing) => (
                 <li key={`${listing.listingType}:${listing.id}`}>
-                  <ListingCard listing={listing} />
+                  <ListingCard listing={listing} comparables={listings} />
                 </li>
               ))}
             </ul>
@@ -350,8 +351,32 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
     </label>
   );
 }
-function ListingCard({ listing }: { listing: RentCastSearchListing }) {
+function ListingCard({
+  listing,
+  comparables,
+}: {
+  listing: RentCastSearchListing;
+  comparables: RentCastSearchListing[];
+}) {
   const address = propertyAddress(listing) || "Address unavailable";
+  const priceEstimate = estimateMissingPrice(
+    {
+      price: listing.price,
+      region: listing.state,
+      city: listing.city,
+      area: listing.squareFootage,
+      bedrooms: listing.bedrooms,
+    },
+    comparables
+      .filter((item) => item.listingType === listing.listingType)
+      .map((item) => ({
+        price: item.price,
+        region: item.state,
+        city: item.city,
+        area: item.squareFootage,
+        bedrooms: item.bedrooms,
+      })),
+  );
   const price =
     typeof listing.price === "number" && Number.isFinite(listing.price)
       ? new Intl.NumberFormat("en-US", {
@@ -359,7 +384,9 @@ function ListingCard({ listing }: { listing: RentCastSearchListing }) {
           currency: "USD",
           maximumFractionDigits: 0,
         }).format(listing.price)
-      : "Price unavailable";
+      : priceEstimate
+        ? `Est. ${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(priceEstimate.amount)}`
+        : "Price unavailable";
   const facts = [
     listing.bedrooms != null
       ? { label: "Beds", value: listing.bedrooms.toLocaleString(), icon: BedDouble }
@@ -423,7 +450,14 @@ function ListingCard({ listing }: { listing: RentCastSearchListing }) {
               discountedClassName="text-2xl font-bold text-primary-light"
             />
           ) : (
-            <p className="text-3xl font-bold tracking-tight text-foreground">{price}</p>
+            <>
+              <p className="text-3xl font-bold tracking-tight text-foreground">{price}</p>
+              {priceEstimate ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {estimateBasisLabel(priceEstimate.basis)} · not source-listed
+                </p>
+              ) : null}
+            </>
           )}
           {listing.listingType === "rental" && typeof listing.price === "number" ? (
             <span className="text-sm font-medium text-muted-foreground">/ month</span>

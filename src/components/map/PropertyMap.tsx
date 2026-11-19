@@ -5,6 +5,10 @@ import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { JAPAN_CENTER } from "@/data/place-coordinates";
 import { formatUsd } from "@/data/properties";
+import { properties as japanListings } from "@/data/properties";
+import { usListings } from "@/data/us-listings";
+import { tranchiProperties } from "@/data/tranchi-properties";
+import { estimateBasisLabel, estimateMissingPrice } from "@/lib/property-price-estimate";
 import { explicitCoordinates } from "@/lib/map-coordinates";
 import { cn } from "@/lib/utils";
 import type { Property } from "@/types/property";
@@ -12,6 +16,13 @@ import type { Property } from "@/types/property";
 const FOCUS_ZOOM = 14;
 const OVERVIEW_ZOOM = 5;
 const US_CENTER = { latitude: 39.5, longitude: -98.35 };
+const mapPriceComps = [...japanListings, ...usListings, ...tranchiProperties].map((item) => ({
+  price: item.priceUsd,
+  region: item.state || item.prefecture,
+  city: item.city ?? item.location,
+  area: item.floorArea,
+  bedrooms: item.bedrooms,
+}));
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, "&amp;")
@@ -31,6 +42,21 @@ const compactUsd = (amount: number) =>
 
 function markerHtml(property: Property, metric: "price" | "rent" | "yield", active: boolean) {
   const price = property.priceUsd > 0 ? property.priceUsd : undefined;
+  const estimate =
+    price == null
+      ? estimateMissingPrice(
+          {
+            price: property.priceUsd,
+            marketValue: property.estimatedMarketValue,
+            appraisedValue: property.estimatedAppraisedValue,
+            region: property.state || property.prefecture,
+            city: property.city ?? property.location,
+            area: property.floorArea,
+            bedrooms: property.bedrooms,
+          },
+          mapPriceComps,
+        )
+      : undefined;
   const rent =
     property.monthlyRentEstimate && property.monthlyRentEstimate > 0
       ? property.monthlyRentEstimate
@@ -38,7 +64,7 @@ function markerHtml(property: Property, metric: "price" | "rent" | "yield", acti
   const amount =
     metric === "price"
       ? price == null
-        ? undefined
+        ? estimate?.amount
         : price * 0.6
       : metric === "rent"
         ? rent
@@ -50,7 +76,7 @@ function markerHtml(property: Property, metric: "price" | "rent" | "yield", acti
       ? "N/A"
       : metric === "yield"
         ? `${amount.toFixed(1)}%`
-        : compactUsd(amount);
+        : `${metric === "price" && estimate ? "Est. " : ""}${compactUsd(amount)}`;
   const cls =
     property.dealCategory?.toLowerCase().includes("foreclosure") ||
     property.propertyType?.toLowerCase().includes("foreclosure")
@@ -74,10 +100,24 @@ function popupHtml(property: Property) {
     : property.sourceDetails?.["sourceProvider"] === "Repliers"
       ? "MLS asking price"
       : "reported source price";
+  const estimate = estimateMissingPrice(
+    {
+      price: property.priceUsd,
+      marketValue: property.estimatedMarketValue,
+      appraisedValue: property.estimatedAppraisedValue,
+      region: property.state || property.prefecture,
+      city: property.city ?? property.location,
+      area: property.floorArea,
+      bedrooms: property.bedrooms,
+    },
+    mapPriceComps,
+  );
   const price =
     property.priceUsd > 0
       ? `<p class="property-map-popup-price"><del>${escapeHtml(formatUsd(property.priceUsd))}</del><br /><strong>${escapeHtml(formatUsd(Math.round(property.priceUsd * 0.6)))}</strong> <span class="property-map-popup-discount">40% off · estimate</span><br /><small>${priceLabel}</small></p>`
-      : '<p class="property-map-popup-price">Price unavailable</p>';
+      : estimate
+        ? `<p class="property-map-popup-price">Est. ${escapeHtml(formatUsd(estimate.amount))}<br /><small>${escapeHtml(estimateBasisLabel(estimate.basis))} · not source-listed</small></p>`
+        : '<p class="property-map-popup-price">Price unavailable</p>';
   const bedBath = [
     property.bedrooms != null ? `${property.bedrooms} bd` : "",
     property.bathrooms != null ? `${property.bathrooms} ba` : "",

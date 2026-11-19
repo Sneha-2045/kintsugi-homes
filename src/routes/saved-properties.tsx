@@ -10,6 +10,7 @@ import {
   type SavedProperty,
 } from "@/lib/saved-properties";
 import { toRentCastComparison } from "@/lib/rentcast-property";
+import { estimateBasisLabel, estimateMissingPrice } from "@/lib/property-price-estimate";
 
 export const Route = createFileRoute("/saved-properties")({
   head: () => ({
@@ -64,6 +65,7 @@ function SavedPropertiesPage() {
             <li key={`${property.listingType}:${property.id}`}>
               <SavedPropertyCard
                 property={property}
+                comparables={properties}
                 onRemove={() =>
                   setProperties(removeSavedProperty(property.id, property.listingType))
                 }
@@ -78,9 +80,11 @@ function SavedPropertiesPage() {
 
 function SavedPropertyCard({
   property,
+  comparables,
   onRemove,
 }: {
   property: SavedProperty;
+  comparables: SavedProperty[];
   onRemove: () => void;
 }) {
   const listing = {
@@ -94,6 +98,24 @@ function SavedPropertyCard({
       currency: "USD",
       maximumFractionDigits: 0,
     }).format(amount);
+  const priceEstimate = estimateMissingPrice(
+    {
+      price: property.price,
+      region: property.state,
+      city: property.city,
+      area: property.squareFootage,
+      bedrooms: property.bedrooms,
+    },
+    comparables
+      .filter((item) => item.listingType === property.listingType)
+      .map((item) => ({
+        price: item.price,
+        region: item.state,
+        city: item.city,
+        area: item.squareFootage,
+        bedrooms: item.bedrooms,
+      })),
+  );
   return (
     <article className="rounded-2xl border border-border bg-card p-5">
       {typeof property.price === "number" && property.price > 0 ? (
@@ -102,6 +124,13 @@ function SavedPropertyCard({
           format={formatUsd}
           discountedClassName="text-xl font-bold text-primary-light"
         />
+      ) : priceEstimate ? (
+        <div>
+          <p className="text-xl font-bold">Est. {formatUsd(priceEstimate.amount)}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {estimateBasisLabel(priceEstimate.basis)} · saved-listing comparables
+          </p>
+        </div>
       ) : (
         <p className="text-xl font-bold">Price unavailable</p>
       )}

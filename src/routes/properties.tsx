@@ -7,6 +7,7 @@ import { DiscountedPrice } from "@/components/property/DiscountedPrice";
 import { fromMlsListing } from "@/lib/property-comparison";
 import { SaveSearchButton } from "@/components/search/SaveSearchButton";
 import { formatUsd } from "@/data/properties";
+import { estimateBasisLabel, estimateMissingPrice } from "@/lib/property-price-estimate";
 
 type SearchState = {
   city?: string;
@@ -352,6 +353,22 @@ function PropertiesPage() {
             const listingId = item.boardId ? `${item.boardId}~${mls}` : String(mls);
             const comparisonProperty = fromMlsListing(item);
             const comparisonSelected = comparison.selected(comparisonProperty.key);
+            const priceEstimate = estimateMissingPrice(
+              {
+                price: item.listPrice ?? item.price,
+                region: address.state,
+                city: address.city ?? item.city,
+                area: item.details?.sqft,
+                bedrooms: item.details?.numBedrooms,
+              },
+              listings.map((comp) => ({
+                price: comp.listPrice ?? comp.price,
+                region: comp.address?.state,
+                city: comp.address?.city ?? comp.city,
+                area: comp.details?.sqft,
+                bedrooms: comp.details?.numBedrooms,
+              })),
+            );
             return (
               <article
                 key={mls}
@@ -375,6 +392,13 @@ function PropertiesPage() {
                         originalClassName="text-sm text-muted-foreground"
                         discountedClassName="text-xl font-bold text-primary-light"
                       />
+                    ) : priceEstimate ? (
+                      <div>
+                        <p className="text-xl font-bold">Est. {formatUsd(priceEstimate.amount)}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {estimateBasisLabel(priceEstimate.basis)} · not source-listed
+                        </p>
+                      </div>
                     ) : (
                       <p className="text-xl font-bold">{money(item.listPrice ?? item.price)}</p>
                     )}

@@ -14,12 +14,24 @@ import { useState } from "react";
 import { Badge } from "@/components/common/Badge";
 import { Button } from "@/components/common/Button";
 import { DiscountedPrice } from "@/components/property/DiscountedPrice";
-import { formatJpy, formatUsd } from "@/data/properties";
+import { formatJpy, formatUsd, properties as japanListings } from "@/data/properties";
 import { ReportListingIssue } from "@/components/property/ReportListingIssue";
 import { cn } from "@/lib/utils";
 import { CompareToggle, usePropertyComparison } from "@/components/property/PropertyComparison";
 import { fromProperty } from "@/lib/property-comparison";
+import { estimateBasisLabel, estimateMissingPrice } from "@/lib/property-price-estimate";
+import { usListings } from "@/data/us-listings";
+import { tranchiProperties } from "@/data/tranchi-properties";
 import type { Property } from "@/types/property";
+
+const comparableProperties = [...japanListings, ...usListings, ...tranchiProperties];
+const comparablePriceSignals = comparableProperties.map((item) => ({
+  price: item.priceUsd,
+  region: item.state || item.prefecture,
+  city: item.city ?? item.location,
+  area: item.floorArea,
+  bedrooms: item.bedrooms,
+}));
 
 export function PropertyCard({ property }: { property: Property }) {
   const [index, setIndex] = useState(0);
@@ -27,6 +39,18 @@ export function PropertyCard({ property }: { property: Property }) {
   const comparison = usePropertyComparison();
   const comparisonProperty = fromProperty(property);
   const comparisonSelected = comparison.selected(comparisonProperty.key);
+  const priceEstimate = estimateMissingPrice(
+    {
+      price: property.priceUsd,
+      marketValue: property.estimatedMarketValue,
+      appraisedValue: property.estimatedAppraisedValue,
+      region: property.state || property.prefecture,
+      city: property.city ?? property.location,
+      area: property.floorArea,
+      bedrooms: property.bedrooms,
+    },
+    comparablePriceSignals,
+  );
   const images = Array.isArray(property.images) ? property.images : [];
   const total = images.length;
   const tags = property.tags.filter(
@@ -121,6 +145,13 @@ export function PropertyCard({ property }: { property: Property }) {
               discountedClassName="text-base font-bold text-primary-light"
               className="gap-x-1"
             />
+          ) : priceEstimate ? (
+            <div>
+              <p className="text-sm font-bold">Est. {formatUsd(priceEstimate.amount)}</p>
+              <p className="mt-0.5 max-w-52 text-[10px] leading-4 text-muted-foreground">
+                {estimateBasisLabel(priceEstimate.basis)} · not source-listed
+              </p>
+            </div>
           ) : (
             <p className="text-sm font-semibold">Price unavailable</p>
           )}

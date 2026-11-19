@@ -9,6 +9,11 @@ import { DiscountedPrice } from "@/components/property/DiscountedPrice";
 import { CompareToggle, usePropertyComparison } from "@/components/property/PropertyComparison";
 import { usListings } from "@/data/us-listings";
 import { tranchiProperties } from "@/data/tranchi-properties";
+import {
+  estimateBasisLabel,
+  estimateMissingPrice,
+  type PriceSignal,
+} from "@/lib/property-price-estimate";
 import { formatUsd } from "@/data/properties";
 import { canonicalLink } from "@/lib/seo";
 import { fromMlsListing, fromProperty } from "@/lib/property-comparison";
@@ -429,14 +434,14 @@ function USPropertiesPage() {
           {auctionListings.length ? (
             <ListingGroup title="Auction.com listings" count={auctionListings.length}>
               {auctionListings.map((property) => (
-                <InvestmentCard key={property.id} property={property} />
+                <InvestmentCard key={property.id} property={property} comparables={allUsListings} />
               ))}
             </ListingGroup>
           ) : null}
           {zillowListings.length ? (
             <ListingGroup title="Zillow foreclosure listings" count={zillowListings.length}>
               {zillowListings.slice(0, zillowVisibleCount).map((property) => (
-                <InvestmentCard key={property.id} property={property} />
+                <InvestmentCard key={property.id} property={property} comparables={allUsListings} />
               ))}
               {zillowListings.length > zillowVisibleCount ? (
                 <button
@@ -450,9 +455,12 @@ function USPropertiesPage() {
             </ListingGroup>
           ) : null}
           {automationListings.length ? (
-            <ListingGroup title="Automation listings · featured 8" count={automationListings.length}>
+            <ListingGroup
+              title="Automation listings · featured 8"
+              count={automationListings.length}
+            >
               {automationListings.map((property) => (
-                <InvestmentCard key={property.id} property={property} />
+                <InvestmentCard key={property.id} property={property} comparables={allUsListings} />
               ))}
             </ListingGroup>
           ) : null}
@@ -462,6 +470,22 @@ function USPropertiesPage() {
                 <MlsCard
                   key={`${item.boardId ?? ""}-${item.mlsNumber ?? item.id ?? index}`}
                   listing={item}
+                  comparables={[
+                    ...visibleMlsListings.map((comp) => ({
+                      price: comp.listPrice ?? comp.price,
+                      region: comp.address?.state,
+                      city: comp.address?.city ?? comp.city,
+                      area: comp.details?.sqft,
+                      bedrooms: comp.details?.numBedrooms,
+                    })),
+                    ...allUsListings.map((comp) => ({
+                      price: comp.priceUsd,
+                      region: comp.state,
+                      city: comp.city,
+                      area: comp.floorArea,
+                      bedrooms: comp.bedrooms,
+                    })),
+                  ]}
                 />
               ))}
             </ListingGroup>
@@ -565,7 +589,7 @@ function ListingGroup({
   );
 }
 
-function MlsCard({ listing }: { listing: MlsListing }) {
+function MlsCard({ listing, comparables }: { listing: MlsListing; comparables: PriceSignal[] }) {
   const comparison = usePropertyComparison();
   const comparisonProperty = fromMlsListing(listing);
   const comparisonSelected = comparison.selected(comparisonProperty.key);
@@ -588,6 +612,16 @@ function MlsCard({ listing }: { listing: MlsListing }) {
   const identifier = listing.mlsNumber ?? listing.id;
   const hrefId = `${listing.boardId ? `${listing.boardId}~` : ""}${identifier}`;
   const price = Number(listing.listPrice ?? listing.price);
+  const estimate = estimateMissingPrice(
+    {
+      price,
+      region: address.state,
+      city: address.city ?? listing.city,
+      area: listing.details?.sqft,
+      bedrooms: listing.details?.numBedrooms,
+    },
+    comparables,
+  );
   return (
     <article
       className={`overflow-hidden rounded-2xl border bg-card shadow-card ${comparisonSelected ? "border-primary ring-2 ring-primary/40" : "border-border"}`}
@@ -615,6 +649,13 @@ function MlsCard({ listing }: { listing: MlsListing }) {
               originalClassName="text-sm text-muted-foreground"
               discountedClassName="text-xl font-bold text-primary-light"
             />
+          ) : estimate ? (
+            <div>
+              <p className="text-xl font-bold">Est. {formatUsd(estimate.amount)}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {estimateBasisLabel(estimate.basis)} · not source-listed
+              </p>
+            </div>
           ) : (
             <p className="text-xl font-bold">Price unavailable</p>
           )}
@@ -645,7 +686,13 @@ function MlsCard({ listing }: { listing: MlsListing }) {
   );
 }
 
-function InvestmentCard({ property }: { property: Property }) {
+function InvestmentCard({
+  property,
+  comparables,
+}: {
+  property: Property;
+  comparables: Property[];
+}) {
   const [imageFailed, setImageFailed] = useState(false);
   const image = Array.isArray(property.images) ? property.images[0] : undefined;
   const comparison = usePropertyComparison();
@@ -655,6 +702,24 @@ function InvestmentCard({ property }: { property: Property }) {
   const fullLocation =
     [cityState, property.zipCode].filter(Boolean).join(" ") || "Location unavailable";
   const displayedValue = property.estimatedAppraisedValue ?? property.estimatedMarketValue;
+  const estimate = estimateMissingPrice(
+    {
+      price: property.priceUsd,
+      appraisedValue: property.estimatedAppraisedValue,
+      marketValue: property.estimatedMarketValue,
+      region: property.state,
+      city: property.city,
+      area: property.floorArea,
+      bedrooms: property.bedrooms,
+    },
+    comparables.map((item) => ({
+      price: item.priceUsd,
+      region: item.state,
+      city: item.city,
+      area: item.floorArea,
+      bedrooms: item.bedrooms,
+    })),
+  );
   return (
     <article
       className={`h-full overflow-hidden rounded-2xl border bg-card text-card-foreground shadow-lg transition hover:-translate-y-0.5 hover:border-primary/40 ${comparisonSelected ? "border-primary ring-2 ring-primary/40" : "border-border"}`}
@@ -694,7 +759,7 @@ function InvestmentCard({ property }: { property: Property }) {
       </Link>
       <div className="p-5">
         <p className="text-xs font-medium uppercase tracking-wide text-primary-light">
-          Reported price
+          {property.priceUsd > 0 ? "Reported price" : estimate ? "Estimated price" : "Price"}
         </p>
         {property.priceUsd > 0 ? (
           <DiscountedPrice
@@ -704,6 +769,15 @@ function InvestmentCard({ property }: { property: Property }) {
             originalClassName="text-sm text-muted-foreground"
             discountedClassName="text-2xl font-bold text-foreground"
           />
+        ) : estimate ? (
+          <div>
+            <p className="mt-1 text-2xl font-bold text-foreground">
+              Est. {formatUsd(estimate.amount)}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {estimateBasisLabel(estimate.basis)} · not source-listed
+            </p>
+          </div>
         ) : (
           <p className="mt-1 text-2xl font-bold text-foreground">Unavailable</p>
         )}
