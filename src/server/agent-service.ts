@@ -278,14 +278,24 @@ export async function searchStoredAgents(args: {
     clauses.push({ $or: [{ name: expression }, { brokerage: expression }] });
   }
   const filter = clauses.length ? { $and: clauses } : {};
-  const sortField = args.sortBy === "sales" ? "salesLast12Months" : "rating";
+  const direction = args.sortOrder === "asc" ? 1 : -1;
+  const sort =
+    args.sortBy === "sales"
+      ? {
+          salesLast12Months: direction,
+          rating: direction,
+          reviewCount: direction,
+          name: 1 as const,
+        }
+      : {
+          rating: direction,
+          reviewCount: direction,
+          salesLast12Months: direction,
+          name: 1 as const,
+        };
   const skip = (args.page - 1) * args.limit;
   const [agents, total] = await Promise.all([
-    RealEstateAgent.find(filter)
-      .sort({ [sortField]: args.sortOrder === "asc" ? 1 : -1, name: 1 })
-      .skip(skip)
-      .limit(args.limit)
-      .lean(),
+    RealEstateAgent.find(filter).sort(sort).skip(skip).limit(args.limit).lean(),
     RealEstateAgent.countDocuments(filter),
   ]);
   const selectedLocationKey =
@@ -361,15 +371,19 @@ export async function searchApifyAgentDirectory(args: DirectoryArgs) {
     }
     return true;
   });
-  const sortField = args.sortBy === "sales" ? "salesLast12Months" : "rating";
   agents = agents.sort((left, right) => {
-    const leftValue = Number(left[sortField] ?? 0);
-    const rightValue = Number(right[sortField] ?? 0);
-    const direction = args.sortOrder === "asc" ? 1 : -1;
-    return (
-      (leftValue - rightValue) * direction ||
-      String(left["name"]).localeCompare(String(right["name"]))
-    );
+    const fields =
+      args.sortBy === "sales"
+        ? ["salesLast12Months", "rating", "reviewCount"]
+        : ["rating", "reviewCount", "salesLast12Months"];
+    for (const field of fields) {
+      const leftValue = Number(left[field] ?? 0);
+      const rightValue = Number(right[field] ?? 0);
+      if (leftValue !== rightValue) {
+        return (leftValue - rightValue) * (args.sortOrder === "asc" ? 1 : -1);
+      }
+    }
+    return String(left["name"] ?? "").localeCompare(String(right["name"] ?? ""));
   });
   const total = agents.length;
   const offset = (args.page - 1) * args.limit;

@@ -6,6 +6,29 @@ import { properties, propertyCategories } from "@/data/properties";
 import { usListings } from "@/data/us-listings";
 import { tranchiProperties } from "@/data/tranchi-properties";
 
+const categoryPhoto = (photoId: string) =>
+  `https://images.unsplash.com/${photoId}?auto=format&fit=crop&w=1200&q=80`;
+
+const japanTypePhotos: Record<string, string> = {
+  house: categoryPhoto("photo-1570129477492-45c003edd2be"),
+  apartment: categoryPhoto("photo-1502672260266-1c1ef2d93688"),
+  land: categoryPhoto("photo-1746787510909-92956787bb5f"),
+  "traditional-house": categoryPhoto("photo-1493976040374-85c8e12f0c0e"),
+  farmhouse: categoryPhoto("photo-1570459027562-4a916cc6113f"),
+};
+
+const usMlsTypePhotos = [
+  categoryPhoto("photo-1564013799919-ab600027ffc6"),
+  categoryPhoto("photo-1605146769289-440113cc3d00"),
+  categoryPhoto("photo-1583608205776-bfd35f0d9f83"),
+  categoryPhoto("photo-1560448204-e02f11c3d0e2"),
+  categoryPhoto("photo-1582268611958-ebfd161ef9cf"),
+  categoryPhoto("photo-1600566753086-00f18fb6b3ea"),
+  categoryPhoto("photo-1512917774080-9991f1c4c750"),
+  categoryPhoto("photo-1493809842364-78817add7ffb"),
+  categoryPhoto("photo-1600607687644-c7171b42498f"),
+];
+
 export function PropertyTypes() {
   const [usPropertyTypes, setUsPropertyTypes] = useState<Array<{ name: string; count: number }>>(
     [],
@@ -76,11 +99,7 @@ export function PropertyTypes() {
                 className="group relative flex min-h-52 overflow-hidden rounded-2xl border border-border bg-card p-5 transition duration-300 hover:-translate-y-1 hover:border-primary/60 hover:shadow-elevated sm:p-6"
               >
                 <img
-                  src={
-                    properties.find(
-                      (property) => property.categorySlug === c.slug && property.images?.[0],
-                    )?.images[0] ?? "/images/miami-1369.avif"
-                  }
+                  src={japanTypePhotos[c.slug] ?? japanTypePhotos["house"]}
                   alt=""
                   aria-hidden="true"
                   loading="lazy"
@@ -159,22 +178,30 @@ export function PropertyTypes() {
           </ul>
           {usPropertyTypes.length ? (
             <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {usPropertyTypes.map((type) => (
+              {usPropertyTypes.map((type, index) => (
                 <li key={type.name}>
                   <Link
                     to="/us-properties"
                     search={{ category: type.name }}
-                    className="flex items-center gap-4 rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/50 hover:bg-elevated"
+                    className="group relative flex items-center gap-4 overflow-hidden rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/50 hover:bg-elevated"
                   >
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-base font-bold text-foreground">{type.name}</span>
-                      <span className="mt-2 block text-sm text-muted-foreground">
-                        <span className="font-bold text-primary-light">
+                    <img
+                      src={usMlsTypePhotos[index % usMlsTypePhotos.length]}
+                      alt=""
+                      aria-hidden="true"
+                      loading="lazy"
+                      className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
+                    />
+                    <span className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/80 to-slate-950/55 transition-colors group-hover:from-slate-950/90 group-hover:via-slate-950/70" />
+                    <span className="relative z-10 min-w-0 flex-1">
+                      <span className="block text-base font-bold text-white">{type.name}</span>
+                      <span className="mt-2 block text-sm text-slate-200">
+                        <span className="font-bold text-blue-200">
                           {type.count.toLocaleString("en-US")}
                         </span>{" "}
                         listings
                       </span>
-                      <span className="mt-4 inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-primary/40 px-3 py-2 text-sm font-semibold text-primary-light transition-colors hover:border-primary/70 hover:bg-primary/10">
+                        <span className="mt-4 inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-white/35 bg-slate-950/30 px-3 py-2 text-sm font-semibold text-white transition-colors group-hover:border-white/60 group-hover:bg-slate-950/50">
                         See listings
                         <ArrowRight className="h-4 w-4" />
                       </span>

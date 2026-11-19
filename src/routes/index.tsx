@@ -4,6 +4,7 @@ import { HomeDiscovery } from "@/components/home/HomeDiscovery";
 import { HomeValueSections } from "@/components/home/HomeValueSections";
 import { OpportunityCategories } from "@/components/home/OpportunityCategories";
 import { FreshListings } from "@/components/home/FreshListings";
+import { AgentSpotlight } from "@/components/home/AgentSpotlight";
 import { MemberPromo } from "@/components/home/MemberPromo";
 import { PricingSection } from "@/components/home/PricingSection";
 import { PartnersSection } from "@/components/home/PartnersSection";
@@ -52,6 +53,7 @@ function Home() {
       />
       <HeroSearch />
       <FreshListings />
+      <AgentSpotlight />
       <OpportunityCategories />
       <PropertyTypes />
       <HomeDiscovery />

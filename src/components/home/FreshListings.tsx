@@ -11,9 +11,47 @@ import { usListings } from "@/data/us-listings";
 import { tranchiProperties } from "@/data/tranchi-properties";
 
 const allUsListings = [...usListings, ...tranchiProperties];
-const featuredUsListings = [...allUsListings]
-  .sort((a, b) => Number(hasListingPhoto(b)) - Number(hasListingPhoto(a)))
-  .slice(0, 20);
+const apifyListings = allUsListings.filter(
+  (property) => property.sourceDetails?.["foreclosureType"],
+);
+const existingUsListings = allUsListings.filter(
+  (property) => !property.sourceDetails?.["foreclosureType"],
+);
+
+function selectAcrossStates(listings: typeof allUsListings, limit: number) {
+  const buckets = new Map<string, typeof allUsListings>();
+  for (const listing of listings) {
+    const state = listing.state ?? listing.prefecture ?? listing.location;
+    const bucket = buckets.get(state) ?? [];
+    bucket.push(listing);
+    buckets.set(state, bucket);
+  }
+  for (const bucket of buckets.values()) {
+    bucket.sort((a, b) => Number(hasListingPhoto(b)) - Number(hasListingPhoto(a)));
+  }
+
+  const selected = [];
+  while (selected.length < limit) {
+    let added = false;
+    for (const bucket of buckets.values()) {
+      const listing = bucket.shift();
+      if (listing) {
+        selected.push(listing);
+        added = true;
+        if (selected.length === limit) break;
+      }
+    }
+    if (!added) break;
+  }
+  return selected;
+}
+
+const featuredUsListings = [
+  ...selectAcrossStates(apifyListings, 14),
+  ...[...existingUsListings].sort(
+    (a, b) => Number(hasListingPhoto(b)) - Number(hasListingPhoto(a)),
+  ),
+].slice(0, 20);
 
 function hasListingPhoto(property: (typeof allUsListings)[number]) {
   return Array.isArray(property.images) && property.images.some((image) => Boolean(image?.trim()));
@@ -64,7 +102,7 @@ export function FreshListings() {
               <p className="mt-1 text-sm text-muted-foreground">
                 {isJapan
                   ? "Japanese homes, akiya, land and apartments"
-                  : "US foreclosure properties with upcoming auction dates"}
+                  : "Foreclosures, auctions, and bank-owned homes across U.S. markets"}
               </p>
             </div>
 
@@ -106,8 +144,8 @@ export function FreshListings() {
             <>
               <PropertyCarousel properties={featuredUsListings} label="US listings" />
               <p className="mt-4 text-sm text-muted-foreground">
-                Showing 20 featured properties from {allUsListings.length} US listings across our
-                auction and investment sources.
+                Showing 20 featured properties from {allUsListings.length} U.S. listings, including
+                Zillow foreclosure, auction, and bank-owned inventory.
               </p>
             </>
           ) : (

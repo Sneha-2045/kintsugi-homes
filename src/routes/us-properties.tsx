@@ -88,6 +88,7 @@ function USPropertiesPage() {
   const [bedrooms, setBedrooms] = useState(search.bedrooms ?? "");
   const [status, setStatus] = useState(search.status ?? "");
   const [sort, setSort] = useState("default");
+  const [zillowVisibleCount, setZillowVisibleCount] = useState(60);
   const [mlsPage, setMlsPage] = useState(1);
   const [mlsListings, setMlsListings] = useState<MlsListing[]>([]);
   const [mlsPages, setMlsPages] = useState(1);
@@ -193,7 +194,7 @@ function USPropertiesPage() {
         (!city || location.includes(city.toLowerCase())) &&
         (!category ||
           (category === "Auction"
-            ? Boolean(p.auctionDate)
+            ? Boolean(p.auctionDate) || p.tags.includes("Auction")
             : p.dealCategory === category || p.tags.includes(category))) &&
         (!bedrooms || (p.bedrooms ?? 0) >= Number(bedrooms)) &&
         (!status || p.status === status)
@@ -225,8 +226,17 @@ function USPropertiesPage() {
     status,
     sort,
   ]);
-  const automationListings = prioritizePhotos(listings.filter((property) => property.isTranchi));
-  const auctionListings = prioritizePhotos(listings.filter((property) => !property.isTranchi));
+  const auctionListings = prioritizePhotos(
+    listings.filter(
+      (property) => !property.isTranchi && !property.sourceDetails?.["foreclosureType"],
+    ),
+  );
+  const zillowListings = spreadAcrossStates(
+    listings.filter((property) => Boolean(property.sourceDetails?.["foreclosureType"])),
+  );
+  const automationListings = prioritizePhotos(
+    listings.filter((property) => property.isTranchi),
+  ).slice(0, 8);
   const visibleMlsListings = useMemo(() => {
     const filtered = mlsListings.filter((item) => {
       const address = item.address ?? {};
@@ -409,26 +419,45 @@ function USPropertiesPage() {
           </div>
 
           <p className="mt-5 text-sm text-muted-foreground">
-            {automationListings.length + visibleMlsListings.length + auctionListings.length}{" "}
-            matching US listings across automation, MLS, and auction sources. Listings with photos
-            appear first within each source group, ordered auction, automation, then MLS.
+            {auctionListings.length +
+              zillowListings.length +
+              automationListings.length +
+              visibleMlsListings.length}{" "}
+            matching US listings across Auction.com, Zillow, automation, and Repliers. Showing
+            auctions first, followed by Zillow, up to 8 automation listings, then Repliers.
           </p>
           {auctionListings.length ? (
-            <ListingGroup title="Auction listings" count={auctionListings.length}>
+            <ListingGroup title="Auction.com listings" count={auctionListings.length}>
               {auctionListings.map((property) => (
                 <InvestmentCard key={property.id} property={property} />
               ))}
             </ListingGroup>
           ) : null}
+          {zillowListings.length ? (
+            <ListingGroup title="Zillow foreclosure listings" count={zillowListings.length}>
+              {zillowListings.slice(0, zillowVisibleCount).map((property) => (
+                <InvestmentCard key={property.id} property={property} />
+              ))}
+              {zillowListings.length > zillowVisibleCount ? (
+                <button
+                  type="button"
+                  onClick={() => setZillowVisibleCount((count) => count + 60)}
+                  className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-elevated md:col-span-2 lg:col-span-3"
+                >
+                  Load more Zillow listings ({zillowListings.length - zillowVisibleCount} remaining)
+                </button>
+              ) : null}
+            </ListingGroup>
+          ) : null}
           {automationListings.length ? (
-            <ListingGroup title="Automation opportunities" count={automationListings.length}>
+            <ListingGroup title="Automation listings · featured 8" count={automationListings.length}>
               {automationListings.map((property) => (
                 <InvestmentCard key={property.id} property={property} />
               ))}
             </ListingGroup>
           ) : null}
           {visibleMlsListings.length ? (
-            <ListingGroup title="MLS listings" count={visibleMlsListings.length}>
+            <ListingGroup title="Repliers MLS listings" count={visibleMlsListings.length}>
               {visibleMlsListings.map((item, index) => (
                 <MlsCard
                   key={`${item.boardId ?? ""}-${item.mlsNumber ?? item.id ?? index}`}
@@ -464,7 +493,10 @@ function USPropertiesPage() {
               Load more MLS listings
             </button>
           ) : null}
-          {!automationListings.length && !visibleMlsListings.length && !auctionListings.length ? (
+          {!automationListings.length &&
+          !visibleMlsListings.length &&
+          !zillowListings.length &&
+          !auctionListings.length ? (
             <div className="mt-6 rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">
               No opportunities match these filters. Adjust your search to see more listings.
             </div>
@@ -489,6 +521,29 @@ function hasPhotos(value: { images?: unknown }) {
 
 function prioritizePhotos<T extends { images?: unknown }>(items: T[]) {
   return [...items].sort((a, b) => Number(hasPhotos(b)) - Number(hasPhotos(a)));
+}
+
+function spreadAcrossStates(items: Property[]) {
+  const buckets = new Map<string, Property[]>();
+  for (const item of prioritizePhotos(items)) {
+    const key = item.state ?? item.prefecture ?? item.location;
+    const bucket = buckets.get(key) ?? [];
+    bucket.push(item);
+    buckets.set(key, bucket);
+  }
+
+  const spread: Property[] = [];
+  while (true) {
+    let added = false;
+    for (const bucket of buckets.values()) {
+      const item = bucket.shift();
+      if (item) {
+        spread.push(item);
+        added = true;
+      }
+    }
+    if (!added) return spread;
+  }
 }
 
 function ListingGroup({

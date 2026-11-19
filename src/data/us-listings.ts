@@ -1,4 +1,5 @@
 import type { Property } from "@/types/property";
+import { apifyForeclosures } from "@/data/apify-foreclosures";
 
 export const usListings: Property[] = [
   {
@@ -1607,4 +1608,5 @@ export const usListings: Property[] = [
     auctionDate: "Dec 03, 2026",
     propertyType: "Foreclosure Sale",
   },
+  ...apifyForeclosures,
 ];
