@@ -49,7 +49,28 @@ export function MembershipComparison() {
           Free versus member comparison
         </h2>
 
-        <div className="mx-auto max-w-5xl overflow-x-auto rounded-2xl border border-border bg-card">
+        <div className="space-y-3 md:hidden">
+          {rows.map((row) => (
+            <article key={row.feature} className="rounded-xl border border-border bg-card p-4">
+              <h3 className="text-sm font-semibold text-foreground">{row.feature}</h3>
+              <div className="mt-3 grid grid-cols-2 gap-3 text-center">
+                <div className="rounded-lg bg-elevated p-3">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Free
+                  </p>
+                  <CellValue value={row.free} />
+                </div>
+                <div className="rounded-lg bg-elevated p-3">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-primary-light">
+                    Member
+                  </p>
+                  <CellValue value={row.member} />
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="mx-auto hidden max-w-5xl overflow-x-auto rounded-2xl border border-border bg-card md:block">
           <table className="w-full min-w-150 border-collapse text-left">
             <caption className="sr-only">What you get on the free and member plans</caption>
             <thead>
@@ -57,10 +78,16 @@ export function MembershipComparison() {
                 <th scope="col" className="px-6 py-5 text-sm font-semibold text-muted-foreground">
                   What you get
                 </th>
-                <th scope="col" className="w-32 px-4 py-5 text-center text-sm font-semibold text-muted-foreground">
+                <th
+                  scope="col"
+                  className="w-32 px-4 py-5 text-center text-sm font-semibold text-muted-foreground"
+                >
                   Free
                 </th>
-                <th scope="col" className="w-32 px-4 py-5 text-center text-sm font-semibold text-primary-light">
+                <th
+                  scope="col"
+                  className="w-32 px-4 py-5 text-center text-sm font-semibold text-primary-light"
+                >
                   Member
                 </th>
               </tr>

@@ -37,7 +37,7 @@ export function ThemeToggle() {
       aria-label={label}
       title={label}
       aria-pressed={theme === "light"}
-      className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border bg-elevated text-foreground transition-colors hover:border-primary/50 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-border bg-elevated text-foreground transition-colors hover:border-primary/50 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       {theme === "dark" ? (
         <Sun className="theme-toggle-icon h-4.5 w-4.5" aria-hidden="true" />

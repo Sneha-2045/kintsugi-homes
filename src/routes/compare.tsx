@@ -259,13 +259,13 @@ function ComparePage() {
                       ? "MLS asking price"
                       : p.priceBasis === "rentcast-listing"
                         ? "RentCast listed price or rent"
-                      : p.priceBasis === "auction-listed"
-                        ? "Auction/source-listed price"
-                        : p.priceBasis === "japan-listed"
-                          ? "Japan source-listed price"
-                          : p.priceBasis === "tranchi-reported"
-                            ? "Tranchi source-reported price"
-                            : "Source-reported price",
+                        : p.priceBasis === "auction-listed"
+                          ? "Auction/source-listed price"
+                          : p.priceBasis === "japan-listed"
+                            ? "Japan source-listed price"
+                            : p.priceBasis === "tranchi-reported"
+                              ? "Tranchi source-reported price"
+                              : "Source-reported price",
                   )}
                 />
                 <CompareRow
@@ -308,7 +308,7 @@ function ComparePage() {
                     const date = new Date(p.lastCheckedAt);
                     return Number.isNaN(date.getTime())
                       ? "Not recorded"
-                      : date.toLocaleDateString(undefined, {
+                      : date.toLocaleDateString("en-US", {
                           year: "numeric",
                           month: "short",
                           day: "numeric",

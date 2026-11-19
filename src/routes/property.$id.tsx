@@ -316,7 +316,7 @@ function PropertyDetails() {
                   <dt className="text-muted-foreground">Last checked by Real Estate</dt>
                   <dd className="mt-1 font-medium text-foreground">
                     {property.lastCheckedAt
-                      ? new Date(`${property.lastCheckedAt}T00:00:00`).toLocaleDateString()
+                      ? new Date(`${property.lastCheckedAt}T00:00:00`).toLocaleDateString("en-US")
                       : "Not recorded; freshness unverified"}
                   </dd>
                 </div>

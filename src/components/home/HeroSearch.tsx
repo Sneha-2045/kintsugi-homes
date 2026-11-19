@@ -62,8 +62,8 @@ export function HeroSearch() {
       <div className="absolute inset-0 z-[1] bg-[radial-gradient(ellipse_at_78%_10%,rgba(42,91,157,.24),transparent_42%),linear-gradient(0deg,rgba(5,12,23,.45),transparent_48%)]" />
 
       <div className="container-page relative z-10 py-12 sm:py-16 lg:py-20">
-        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(340px,.72fr)] lg:gap-14">
-          <div className="hero-enter max-w-3xl">
+        <div className="grid min-w-0 items-center gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(340px,.72fr)] lg:gap-14">
+          <div className="hero-enter min-w-0 max-w-3xl">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs font-semibold tracking-wide text-slate-200">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
@@ -73,7 +73,7 @@ export function HeroSearch() {
             </div>
             <h1
               id="hero-title"
-              className="max-w-3xl text-4xl font-bold leading-[1.04] tracking-tight text-white sm:text-5xl lg:text-[68px]"
+              className="max-w-3xl break-words text-[clamp(2rem,8.5vw,3rem)] font-bold leading-[1.04] tracking-tight text-white sm:text-5xl lg:text-[68px]"
             >
               More than a property.{" "}
               <span className="text-primary-light">Your next opportunity.</span>
@@ -165,17 +165,19 @@ export function HeroSearch() {
           </div>
 
           <aside
-            className="hero-enter relative mx-auto w-full max-w-md [animation-delay:140ms] lg:mx-0 lg:justify-self-end"
+            className="hero-enter relative mx-auto w-full min-w-0 max-w-md [animation-delay:140ms] lg:mx-0 lg:justify-self-end"
             aria-label="Home affordability planner"
           >
             <div className="absolute -inset-3 rounded-[2rem] bg-primary/20 blur-2xl" />
-            <div className="relative rounded-[1.5rem] border border-white/15 bg-[#111e30] p-6 shadow-2xl sm:p-7">
-              <div className="flex items-start justify-between gap-4">
+            <div className="relative rounded-[1.5rem] border border-white/15 bg-[#111e30] p-4 shadow-2xl sm:p-7">
+              <div className="flex flex-col items-start gap-3 sm:flex-row sm:justify-between sm:gap-4">
                 <div>
                   <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[.14em] text-primary-light">
                     <Sparkles className="h-4 w-4" /> Smart home finder
                   </div>
-                  <h2 className="mt-3 text-2xl font-bold text-white">Set your comfort zone</h2>
+                  <h2 className="mt-3 text-[clamp(1.25rem,6vw,1.5rem)] font-bold text-white">
+                    Set your comfort zone
+                  </h2>
                 </div>
                 <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-200">
                   QUICK ESTIMATE

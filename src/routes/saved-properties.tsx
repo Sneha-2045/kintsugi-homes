@@ -115,7 +115,7 @@ function SavedPropertyCard({
       <p className="mt-2 text-xs text-subtle">
         {property.status ?? "Status unavailable"}
         {property.listedDate
-          ? ` · Listed ${new Date(property.listedDate).toLocaleDateString()}`
+          ? ` · Listed ${new Date(property.listedDate).toLocaleDateString("en-US")}`
           : ""}
       </p>
       <div className="mt-4 flex flex-wrap gap-2">

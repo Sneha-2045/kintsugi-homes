@@ -10,9 +10,11 @@ export function PageShell({
   children?: ReactNode;
 }) {
   return (
-    <div className="bg-background py-14 md:py-20">
+    <div className="min-w-0 bg-background py-8 sm:py-12 md:py-20">
       <div className="container-page">
-        <h1 className="text-3xl font-bold text-foreground md:text-[44px]">{title}</h1>
+        <h1 className="break-words text-[clamp(1.75rem,5vw,2.75rem)] font-bold text-foreground">
+          {title}
+        </h1>
         {description ? (
           <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">{description}</p>
         ) : null}

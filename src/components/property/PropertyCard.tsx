@@ -59,7 +59,7 @@ export function PropertyCard({ property }: { property: Property }) {
         <div className="absolute left-3 top-3">
           <Badge variant="solidBlue" size="sm">
             {property.lastCheckedAt
-              ? `Checked ${new Date(`${property.lastCheckedAt}T00:00:00`).toLocaleDateString()}`
+              ? `Checked ${new Date(`${property.lastCheckedAt}T00:00:00`).toLocaleDateString("en-US")}`
               : "Freshness unverified"}
           </Badge>
         </div>
@@ -228,7 +228,7 @@ export function PropertyCard({ property }: { property: Property }) {
               <dt className="text-xs text-muted-foreground">Last checked</dt>
               <dd className="mt-1 font-medium text-foreground">
                 {property.lastCheckedAt
-                  ? new Date(`${property.lastCheckedAt}T00:00:00`).toLocaleDateString(undefined, {
+                  ? new Date(`${property.lastCheckedAt}T00:00:00`).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "short",
                       day: "numeric",

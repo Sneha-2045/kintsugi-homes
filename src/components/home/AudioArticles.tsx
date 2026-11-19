@@ -1,20 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Music, Play, Volume2 } from "lucide-react";
-import { useRef } from "react";
 import { Badge } from "@/components/common/Badge";
-import { CarouselControls } from "@/components/common/CarouselControls";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import { articles } from "@/data/articles";
 
 export function AudioArticles() {
-  const trackRef = useRef<HTMLUListElement>(null);
-
-  const scrollBy = (dir: 1 | -1) => {
-    const el = trackRef.current;
-    if (!el) return;
-    el.scrollBy({ left: (el.clientWidth > 900 ? 660 : el.clientWidth * 0.9) * dir, behavior: "smooth" });
-  };
-
   return (
     <section className="bg-background py-16 md:py-24" aria-labelledby="listen-title">
       <div className="container-page">
@@ -43,17 +33,11 @@ export function AudioArticles() {
           Articles you can listen to
         </h2>
 
-        <ul
-          ref={trackRef}
-          className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-6 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0"
-        >
+        <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {articles.map((article) => (
-            <li
-              key={article.id}
-              className="w-[88vw] max-w-160 shrink-0 snap-start lg:w-[calc((100%-1.5rem)/2)]"
-            >
-              <article className="group flex h-full overflow-hidden rounded-2xl border border-border bg-card transition-colors hover:border-primary/40">
-                <div className="relative w-2/5 shrink-0 overflow-hidden bg-elevated">
+            <li key={article.id} className="min-w-0">
+              <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card transition-colors hover:border-primary/40 sm:flex-row">
+                <div className="relative h-44 shrink-0 overflow-hidden bg-elevated sm:h-auto sm:w-2/5">
                   <img
                     src={article.image}
                     alt={article.title}
@@ -65,7 +49,7 @@ export function AudioArticles() {
                     Audio
                   </span>
                 </div>
-                <div className="flex min-w-0 flex-1 flex-col p-5 md:p-6">
+                <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5 md:p-6">
                   <p className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-destructive">
                     {article.category}
                     <span className="text-subtle">·</span>
@@ -73,10 +57,12 @@ export function AudioArticles() {
                       {article.readMinutes} min read
                     </span>
                   </p>
-                  <h3 className="mt-3 font-serif text-2xl leading-snug text-foreground">
+                  <h3 className="mt-3 font-serif text-xl leading-snug text-foreground sm:text-2xl">
                     {article.title}
                   </h3>
-                  <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{article.excerpt}</p>
+                  <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
+                    {article.excerpt}
+                  </p>
                   <Link
                     to="/articles"
                     className="mt-auto inline-flex items-center gap-2 pt-5 text-sm font-semibold text-primary-light hover:text-primary"
@@ -90,13 +76,6 @@ export function AudioArticles() {
             </li>
           ))}
         </ul>
-
-        <CarouselControls
-          label="articles"
-          onPrev={() => scrollBy(-1)}
-          onNext={() => scrollBy(1)}
-          className="mt-6 justify-end"
-        />
       </div>
     </section>
   );

@@ -139,12 +139,12 @@ export function FreshListings() {
           </div>
 
           {isJapan ? (
-            <PropertyCarousel properties={properties.slice(0, 6)} label="Japan listings" />
+            <PropertyCarousel properties={properties.slice(0, 6)} />
           ) : allUsListings.length > 0 ? (
             <>
-              <PropertyCarousel properties={featuredUsListings} label="US listings" />
+              <PropertyCarousel properties={featuredUsListings} />
               <p className="mt-4 text-sm text-muted-foreground">
-                Showing 20 featured properties from {allUsListings.length} U.S. listings, including
+                Showing 6 featured properties from {allUsListings.length} U.S. listings, including
                 Zillow foreclosure, auction, and bank-owned inventory.
               </p>
             </>

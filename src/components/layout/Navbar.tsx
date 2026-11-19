@@ -36,7 +36,7 @@ function Brand() {
       className="flex shrink-0 items-center leading-none"
       aria-label="Rylestate.com — home"
     >
-      <BrandMark className="h-auto w-32 min-[400px]:w-40 md:w-48" />
+      <BrandMark className="h-auto w-28 min-[360px]:w-32 sm:w-40 md:w-48" />
     </Link>
   );
 }
@@ -48,7 +48,7 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-surface/95 backdrop-blur">
       <nav
         aria-label="Main"
-        className="container-page flex h-18 items-center gap-2 py-3 sm:gap-4 xl:gap-6"
+        className="container-page flex h-16 min-w-0 items-center gap-2 py-2 sm:h-18 sm:gap-4 sm:py-3 xl:gap-6"
       >
         <Brand />
 
@@ -90,7 +90,7 @@ export function Navbar() {
           <ThemeToggle />
           <a
             href="tel:+18886933908"
-            className="inline-flex min-h-10 items-center gap-1.5 rounded-md px-2 text-sm font-semibold text-foreground hover:bg-elevated"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm font-semibold text-foreground hover:bg-elevated"
             aria-label="Call +1 (888) 693-3908"
           >
             <Phone className="h-4 w-4" aria-hidden="true" />
@@ -105,7 +105,7 @@ export function Navbar() {
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
-            className="grid h-10 w-10 place-items-center rounded-md border border-border text-foreground"
+            className="grid h-11 w-11 place-items-center rounded-md border border-border text-foreground"
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
