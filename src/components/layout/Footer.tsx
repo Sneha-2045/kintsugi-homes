@@ -19,6 +19,7 @@ const regionLinks = [
 
 const companyLinks = [
   { label: "US Property Listings", to: "/us-properties" },
+  { label: "Live Intelligence", to: "/live-intelligence" },
   { label: "Auction Listing FAQs", to: "/" },
   { label: "About Us", to: "/consult" },
   { label: "FAQ", to: "/" },
@@ -35,8 +36,7 @@ const popularSearches = [
   { label: "Georgia Foreclosures", query: "Georgia" },
 ];
 
-const linkClass =
-  "text-sm text-muted-foreground transition-colors hover:text-primary-light";
+const linkClass = "text-sm text-muted-foreground transition-colors hover:text-primary-light";
 
 function ColumnTitle({ children }: { children: string }) {
   return (

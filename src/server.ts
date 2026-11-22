@@ -49,8 +49,13 @@ export default {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
+      // A browser navigation or fetch timeout can close the socket while SSR or
+      // a server route is still resolving. Do not turn that expected disconnect
+      // into a second, misleading 500 response in the server logs.
+      if (request.signal.aborted) return new Response(null, { status: 499 });
       return await normalizeCatastrophicSsrResponse(response);
     } catch (error) {
+      if (request.signal.aborted) return new Response(null, { status: 499 });
       console.error(error);
       return new Response(renderErrorPage(), {
         status: 500,

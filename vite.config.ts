@@ -30,6 +30,10 @@ const savedSearchCron = {
 
 export default defineConfig({
   plugins: [savedSearchCron as never],
+  vite: {
+    optimizeDeps: { exclude: ["maplibre-gl"] },
+    ssr: { noExternal: ["maplibre-gl"] },
+  },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this

@@ -6,16 +6,13 @@ import {
   syncAgentsForLocation,
 } from "../server/agent-service.ts";
 import { resolveAuthUser } from "../server/auth-router.ts";
-import { connectMongo } from "../server/mongo.ts";
+import { connectMongo, safeMongoError } from "../server/mongo.ts";
 
 // Start the first Atlas connection while the server is initializing so a page
 // visit does not pay the cold-connection cost.
 if (process.env["MONGODB_URI"]) {
   void connectMongo().catch((error: unknown) => {
-    console.error(
-      "[agents] MongoDB warm-up failed",
-      error instanceof Error ? error.name : "UnknownError",
-    );
+    console.error("[agents] MongoDB warm-up failed", safeMongoError(error));
   });
 }
 
@@ -43,9 +40,12 @@ const MONGO_DIRECTORY_TIMEOUT_MS = 1500;
 
 export async function listAgents(request: Request, forceQuery?: string) {
   try {
+    if (request.signal.aborted) return new Response(null, { status: 499 });
     const args = searchArgs(new URL(request.url), forceQuery);
     if (Date.now() < mongoDirectoryUnavailableUntil) {
-      return Response.json(await searchApifyAgentDirectory(args), {
+      const fallback = await searchApifyAgentDirectory(args);
+      if (request.signal.aborted) return new Response(null, { status: 499 });
+      return Response.json(fallback, {
         headers: { "Cache-Control": "private, no-store" },
       });
     }
@@ -62,20 +62,25 @@ export async function listAgents(request: Request, forceQuery?: string) {
       ]).finally(() => {
         if (timeoutId) clearTimeout(timeoutId);
       });
+      if (request.signal.aborted) return new Response(null, { status: 499 });
       if (stored.total > 0) {
         return Response.json(stored, { headers: { "Cache-Control": "private, no-store" } });
       }
     } catch (error) {
+      if (request.signal.aborted) return new Response(null, { status: 499 });
       mongoDirectoryUnavailableUntil = Date.now() + 60_000;
       console.error(
         "[agents] MongoDB directory unavailable; using the latest Apify dataset",
-        error instanceof Error ? error.name : "UnknownError",
+        safeMongoError(error),
       );
     }
-    return Response.json(await searchApifyAgentDirectory(args), {
+    const fallback = await searchApifyAgentDirectory(args);
+    if (request.signal.aborted) return new Response(null, { status: 499 });
+    return Response.json(fallback, {
       headers: { "Cache-Control": "private, no-store" },
     });
   } catch (error) {
+    if (request.signal.aborted) return new Response(null, { status: 499 });
     console.error(
       "[agents] Directory request failed",
       error instanceof Error ? error.name : "UnknownError",
@@ -89,8 +94,15 @@ export async function readAgent(id: string) {
     const agent = await getStoredAgent(id);
     if (!agent) return Response.json({ error: "Agent not found." }, { status: 404 });
     return Response.json({ agent }, { headers: { "Cache-Control": "private, no-store" } });
-  } catch {
-    return Response.json({ error: "Agent search is temporarily unavailable." }, { status: 503 });
+  } catch (error) {
+    console.error("[agents] Agent lookup failed", safeMongoError(error));
+    return Response.json(
+      {
+        error: "The agent database is temporarily unavailable. Please retry shortly.",
+        code: "DATABASE_UNAVAILABLE",
+      },
+      { status: 503 },
+    );
   }
 }
 

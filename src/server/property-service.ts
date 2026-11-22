@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { connectMongo } from "./mongo.ts";
-import { Favorite, PropertyModel, SearchCache } from "./models.ts";
+import { Favorite, PropertyModel, SavedSearchEvent, SearchCache } from "./models.ts";
 
 export const PropertySearchArgs = z.object({
   city: z.string().trim().min(1).max(80).optional(),
@@ -125,6 +125,118 @@ function getQuery(args: PropertySearchArgs) {
   if (args.auctionOnly)
     query["auctionDate"] = { $gte: new Date(new Date().toISOString().slice(0, 10)) };
   return query;
+}
+
+const IntelligenceQuery = z
+  .object({
+    west: z.number().finite().min(-180).max(180),
+    south: z.number().finite().min(-90).max(90),
+    east: z.number().finite().min(-180).max(180),
+    north: z.number().finite().min(-90).max(90),
+    minPrice: z.number().finite().min(0).max(100_000_000).optional(),
+    maxPrice: z.number().finite().min(0).max(100_000_000).optional(),
+    propertyType: z.string().trim().min(1).max(60).optional(),
+    q: z.string().trim().max(120).optional(),
+    limit: z.number().int().min(1).max(5000).default(1200),
+    offset: z.number().int().min(0).max(50000).default(0),
+  })
+  .refine((value) => value.south < value.north, {
+    message: "Map bounds must have south below north.",
+  })
+  .refine(
+    (value) =>
+      value.minPrice === undefined || value.maxPrice === undefined || value.minPrice <= value.maxPrice,
+    { message: "Minimum price cannot exceed maximum price." },
+  );
+
+export type IntelligenceQuery = z.input<typeof IntelligenceQuery>;
+
+/** Public, viewport-bounded inventory for the property intelligence map. */
+export async function getIntelligenceInventory(input: IntelligenceQuery) {
+  const args = IntelligenceQuery.parse(input);
+  await connectMongo();
+  const query: Record<string, unknown> = {
+    country: "United States",
+    status: { $in: ["published", "active", "pending", "sold"] },
+    latitude: { $gte: args.south, $lte: args.north },
+  };
+  if (args.west <= args.east) {
+    query["longitude"] = { $gte: args.west, $lte: args.east };
+  } else {
+    query["$or"] = [
+      { longitude: { $gte: args.west, $lte: 180 } },
+      { longitude: { $gte: -180, $lte: args.east } },
+    ];
+  }
+  if (args.minPrice !== undefined || args.maxPrice !== undefined) {
+    query["price"] = {
+      ...(args.minPrice !== undefined ? { $gte: args.minPrice } : {}),
+      ...(args.maxPrice !== undefined ? { $lte: args.maxPrice } : {}),
+    };
+  }
+  if (args.propertyType) query["propertyType"] = args.propertyType;
+  if (args.q) query["$text"] = { $search: args.q };
+
+  const [total, records, activityEvents] = await Promise.all([
+    PropertyModel.countDocuments(query),
+    PropertyModel.find(query)
+      .sort({ updatedAt: -1, _id: -1 })
+      .skip(args.offset)
+      .limit(args.limit)
+      .lean(),
+    SavedSearchEvent.find({
+      eventType: { $in: ["new", "price_changed", "status_changed", "auction_changed"] },
+      createdAt: { $gte: new Date(Date.now() - 7 * 86400000) },
+    })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .lean(),
+  ]);
+  const matchingEvents = activityEvents.filter((event) =>
+    records.some(
+      (property) =>
+        property.source === event.source && property.sourceListingId === event.listingId,
+    ),
+  );
+  const activity = matchingEvents.slice(0, 12).map((event) => {
+    const property = records.find(
+      (candidate) =>
+        candidate.source === event.source && candidate.sourceListingId === event.listingId,
+    )!;
+    return {
+      id: String(event._id),
+      propertyId: String(property._id),
+      title: property.address || property.title,
+      eventType: event.eventType,
+      changedAt: event.createdAt,
+      data_source: event.source,
+    };
+  });
+  return {
+    properties: records.map((record) => {
+      const metadata = (record.metadata ?? {}) as Record<string, unknown>;
+      return {
+        ...propertyDto(record),
+        createdAt: metadata["listedAt"] ?? null,
+        updatedAt: record.updatedAt ?? null,
+        listingType: record.listingType ?? null,
+        previousPrice:
+          typeof metadata["previousPrice"] === "number" ? metadata["previousPrice"] : null,
+        last_verified_at: record.lastCheckedAt ?? null,
+        data_source: record.source,
+        source: record.source,
+        areaSqft: record.buildingArea ?? null,
+        sourceDetails: metadata,
+      };
+    }),
+    total,
+    offset: args.offset,
+    limit: args.limit,
+    hasMore: args.offset + records.length < total,
+    activity,
+    fetchedAt: new Date().toISOString(),
+    dataSource: "mongodb" as const,
+  };
 }
 
 const STATE_NAMES: Record<string, string> = {
@@ -260,7 +372,7 @@ export async function getProperty(id: string) {
   if (/^[a-f\d]{24}$/i.test(id)) clauses.push({ _id: id });
   const property = await PropertyModel.findOne({
     $or: clauses,
-    status: { $in: ["published", "active"] },
+    status: { $in: ["published", "active", "pending", "sold"] },
   }).lean();
   return property ? propertyDto(property) : null;
 }

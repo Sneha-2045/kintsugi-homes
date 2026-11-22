@@ -16,6 +16,7 @@ import { Route as CompareRouteImport } from './routes/compare'
 import { Route as ConsultRouteImport } from './routes/consult'
 import { Route as FindAnAgentRouteImport } from './routes/find-an-agent'
 import { Route as JapanPropertiesRouteImport } from './routes/japan-properties'
+import { Route as LiveIntelligenceRouteImport } from './routes/live-intelligence'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as PricingRouteImport } from './routes/pricing'
@@ -27,6 +28,7 @@ import { Route as SearchRouteImport } from './routes/search'
 import { Route as SitemapRouteImport } from './routes/sitemap'
 import { Route as UsPropertiesRouteImport } from './routes/us-properties'
 import { Route as ApiAgentsRouteImport } from './routes/api.agents'
+import { Route as ApiLiveIntelligenceRouteImport } from './routes/api.live-intelligence'
 import { Route as ApiPropertiesRouteImport } from './routes/api.properties'
 import { Route as ApiPropertyIntelligenceRouteImport } from './routes/api.property-intelligence'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
@@ -79,6 +81,11 @@ const FindAnAgentRoute = FindAnAgentRouteImport.update({
 const JapanPropertiesRoute = JapanPropertiesRouteImport.update({
   id: '/japan-properties',
   path: '/japan-properties',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LiveIntelligenceRoute = LiveIntelligenceRouteImport.update({
+  id: '/live-intelligence',
+  path: '/live-intelligence',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -134,6 +141,11 @@ const UsPropertiesRoute = UsPropertiesRouteImport.update({
 const ApiAgentsRoute = ApiAgentsRouteImport.update({
   id: '/api/agents',
   path: '/api/agents',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiLiveIntelligenceRoute = ApiLiveIntelligenceRouteImport.update({
+  id: '/api/live-intelligence',
+  path: '/api/live-intelligence',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPropertiesRoute = ApiPropertiesRouteImport.update({
@@ -240,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/consult': typeof ConsultRoute
   '/find-an-agent': typeof FindAnAgentRoute
   '/japan-properties': typeof JapanPropertiesRoute
+  '/live-intelligence': typeof LiveIntelligenceRoute
   '/login': typeof LoginRoute
   '/map': typeof MapRoute
   '/pricing': typeof PricingRoute
@@ -251,6 +264,7 @@ export interface FileRoutesByFullPath {
   '/sitemap': typeof SitemapRoute
   '/us-properties': typeof UsPropertiesRoute
   '/api/agents': typeof ApiAgentsRouteWithChildren
+  '/api/live-intelligence': typeof ApiLiveIntelligenceRoute
   '/api/properties': typeof ApiPropertiesRouteWithChildren
   '/api/property-intelligence': typeof ApiPropertyIntelligenceRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
@@ -278,6 +292,7 @@ export interface FileRoutesByTo {
   '/consult': typeof ConsultRoute
   '/find-an-agent': typeof FindAnAgentRoute
   '/japan-properties': typeof JapanPropertiesRoute
+  '/live-intelligence': typeof LiveIntelligenceRoute
   '/login': typeof LoginRoute
   '/map': typeof MapRoute
   '/pricing': typeof PricingRoute
@@ -289,6 +304,7 @@ export interface FileRoutesByTo {
   '/sitemap': typeof SitemapRoute
   '/us-properties': typeof UsPropertiesRoute
   '/api/agents': typeof ApiAgentsRouteWithChildren
+  '/api/live-intelligence': typeof ApiLiveIntelligenceRoute
   '/api/properties': typeof ApiPropertiesRouteWithChildren
   '/api/property-intelligence': typeof ApiPropertyIntelligenceRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
@@ -318,6 +334,7 @@ export interface FileRoutesById {
   '/consult': typeof ConsultRoute
   '/find-an-agent': typeof FindAnAgentRoute
   '/japan-properties': typeof JapanPropertiesRoute
+  '/live-intelligence': typeof LiveIntelligenceRoute
   '/login': typeof LoginRoute
   '/map': typeof MapRoute
   '/pricing': typeof PricingRoute
@@ -329,6 +346,7 @@ export interface FileRoutesById {
   '/sitemap': typeof SitemapRoute
   '/us-properties': typeof UsPropertiesRoute
   '/api/agents': typeof ApiAgentsRouteWithChildren
+  '/api/live-intelligence': typeof ApiLiveIntelligenceRoute
   '/api/properties': typeof ApiPropertiesRouteWithChildren
   '/api/property-intelligence': typeof ApiPropertyIntelligenceRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
@@ -358,6 +376,7 @@ export interface FileRouteTypes {
     | '/consult'
     | '/find-an-agent'
     | '/japan-properties'
+    | '/live-intelligence'
     | '/login'
     | '/map'
     | '/pricing'
@@ -369,6 +388,7 @@ export interface FileRouteTypes {
     | '/sitemap'
     | '/us-properties'
     | '/api/agents'
+    | '/api/live-intelligence'
     | '/api/properties'
     | '/api/property-intelligence'
     | '/category/$slug'
@@ -396,6 +416,7 @@ export interface FileRouteTypes {
     | '/consult'
     | '/find-an-agent'
     | '/japan-properties'
+    | '/live-intelligence'
     | '/login'
     | '/map'
     | '/pricing'
@@ -407,6 +428,7 @@ export interface FileRouteTypes {
     | '/sitemap'
     | '/us-properties'
     | '/api/agents'
+    | '/api/live-intelligence'
     | '/api/properties'
     | '/api/property-intelligence'
     | '/category/$slug'
@@ -435,6 +457,7 @@ export interface FileRouteTypes {
     | '/consult'
     | '/find-an-agent'
     | '/japan-properties'
+    | '/live-intelligence'
     | '/login'
     | '/map'
     | '/pricing'
@@ -446,6 +469,7 @@ export interface FileRouteTypes {
     | '/sitemap'
     | '/us-properties'
     | '/api/agents'
+    | '/api/live-intelligence'
     | '/api/properties'
     | '/api/property-intelligence'
     | '/category/$slug'
@@ -475,6 +499,7 @@ export interface RootRouteChildren {
   ConsultRoute: typeof ConsultRoute
   FindAnAgentRoute: typeof FindAnAgentRoute
   JapanPropertiesRoute: typeof JapanPropertiesRoute
+  LiveIntelligenceRoute: typeof LiveIntelligenceRoute
   LoginRoute: typeof LoginRoute
   MapRoute: typeof MapRoute
   PricingRoute: typeof PricingRoute
@@ -486,6 +511,7 @@ export interface RootRouteChildren {
   SitemapRoute: typeof SitemapRoute
   UsPropertiesRoute: typeof UsPropertiesRoute
   ApiAgentsRoute: typeof ApiAgentsRouteWithChildren
+  ApiLiveIntelligenceRoute: typeof ApiLiveIntelligenceRoute
   ApiPropertiesRoute: typeof ApiPropertiesRouteWithChildren
   ApiPropertyIntelligenceRoute: typeof ApiPropertyIntelligenceRouteWithChildren
   CategorySlugRoute: typeof CategorySlugRoute
@@ -546,6 +572,13 @@ declare module '@tanstack/react-router' {
       path: '/japan-properties'
       fullPath: '/japan-properties'
       preLoaderRoute: typeof JapanPropertiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/live-intelligence': {
+      id: '/live-intelligence'
+      path: '/live-intelligence'
+      fullPath: '/live-intelligence'
+      preLoaderRoute: typeof LiveIntelligenceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -623,6 +656,13 @@ declare module '@tanstack/react-router' {
       path: '/api/agents'
       fullPath: '/api/agents'
       preLoaderRoute: typeof ApiAgentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/live-intelligence': {
+      id: '/api/live-intelligence'
+      path: '/api/live-intelligence'
+      fullPath: '/api/live-intelligence'
+      preLoaderRoute: typeof ApiLiveIntelligenceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/properties': {
@@ -849,6 +889,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConsultRoute: ConsultRoute,
   FindAnAgentRoute: FindAnAgentRoute,
   JapanPropertiesRoute: JapanPropertiesRoute,
+  LiveIntelligenceRoute: LiveIntelligenceRoute,
   LoginRoute: LoginRoute,
   MapRoute: MapRoute,
   PricingRoute: PricingRoute,
@@ -860,6 +901,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapRoute: SitemapRoute,
   UsPropertiesRoute: UsPropertiesRoute,
   ApiAgentsRoute: ApiAgentsRouteWithChildren,
+  ApiLiveIntelligenceRoute: ApiLiveIntelligenceRoute,
   ApiPropertiesRoute: ApiPropertiesRouteWithChildren,
   ApiPropertyIntelligenceRoute: ApiPropertyIntelligenceRouteWithChildren,
   CategorySlugRoute: CategorySlugRoute,

@@ -82,6 +82,7 @@ propertySchema.index(
 );
 propertySchema.index({ postalCode: 1, status: 1, price: 1 });
 propertySchema.index({ geoPoint: "2dsphere" }, { sparse: true });
+propertySchema.index({ country: 1, status: 1, longitude: 1, latitude: 1 });
 propertySchema.index({ auctionDate: 1, status: 1 });
 propertySchema.index({
   title: "text",

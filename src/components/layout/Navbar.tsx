@@ -27,6 +27,7 @@ const primaryNavItems = [
   { label: "Auctions", href: "/us-properties?category=Auction" },
   { label: "Investment", href: "/us-properties?category=Investment" },
   { label: "Explore markets", href: "/map" },
+  { label: "Live Intelligence", href: "/live-intelligence" },
 ] as const;
 
 function Brand() {

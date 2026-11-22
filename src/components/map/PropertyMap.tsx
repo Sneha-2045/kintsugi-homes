@@ -40,7 +40,27 @@ const compactUsd = (amount: number) =>
     maximumFractionDigits: 0,
   }).format(amount);
 
-function markerHtml(property: Property, metric: "price" | "rent" | "yield", active: boolean) {
+function markerHtml(
+  property: Property,
+  metric: "price" | "rent" | "yield",
+  active: boolean,
+  markerStyle: "price" | "intelligence",
+) {
+  if (markerStyle === "intelligence") {
+    const status = `${property.status ?? ""} ${property.dealCategory ?? ""}`.toLowerCase();
+    const color = /auction/.test(status)
+      ? "#ff8d76"
+      : /pending/.test(status)
+        ? "#f6c66a"
+        : /under contract|contract/.test(status)
+          ? "#75b9ff"
+          : /sold/.test(status)
+            ? "#b19aff"
+            : /for sale|active|published/.test(status)
+              ? "#65e6b5"
+              : "#8fe5ee";
+    return `<span class="property-intel-marker${active ? " is-active" : ""}" style="--marker-color:${color}"></span>`;
+  }
   const price = property.priceUsd > 0 ? property.priceUsd : undefined;
   const estimate =
     price == null
@@ -85,7 +105,7 @@ function markerHtml(property: Property, metric: "price" | "rent" | "yield", acti
   return `<span class="map-price-pill map-price-${cls}${active ? " map-price-active" : ""}">${escapeHtml(label)}<span class="map-price-sr">${metric === "rent" ? " estimated monthly rent" : metric === "yield" ? " estimated gross yield" : " price after 40 percent discount"}</span></span>`;
 }
 
-function popupHtml(property: Property) {
+function popupHtml(property: Property, sourcePriceOnly = false) {
   const address = property.address || property.title;
   const place = [
     property.city || property.location,
@@ -113,11 +133,15 @@ function popupHtml(property: Property) {
     mapPriceComps,
   );
   const price =
-    property.priceUsd > 0
-      ? `<p class="property-map-popup-price"><del>${escapeHtml(formatUsd(property.priceUsd))}</del><br /><strong>${escapeHtml(formatUsd(Math.round(property.priceUsd * 0.6)))}</strong> <span class="property-map-popup-discount">40% off · estimate</span><br /><small>${priceLabel}</small></p>`
-      : estimate
-        ? `<p class="property-map-popup-price">Est. ${escapeHtml(formatUsd(estimate.amount))}<br /><small>${escapeHtml(estimateBasisLabel(estimate.basis))} · not source-listed</small></p>`
-        : '<p class="property-map-popup-price">Price unavailable</p>';
+    property.priceUsd > 0 && sourcePriceOnly
+      ? `<p class="property-map-popup-price"><strong>${escapeHtml(formatUsd(property.priceUsd))}</strong><br /><small>Reported source price</small></p>`
+      : property.priceUsd > 0
+        ? `<p class="property-map-popup-price"><del>${escapeHtml(formatUsd(property.priceUsd))}</del><br /><strong>${escapeHtml(formatUsd(Math.round(property.priceUsd * 0.6)))}</strong> <span class="property-map-popup-discount">40% off · estimate</span><br /><small>${priceLabel}</small></p>`
+        : sourcePriceOnly
+          ? '<p class="property-map-popup-price">Price not reported</p>'
+          : estimate
+            ? `<p class="property-map-popup-price">Est. ${escapeHtml(formatUsd(estimate.amount))}<br /><small>${escapeHtml(estimateBasisLabel(estimate.basis))} · not source-listed</small></p>`
+            : '<p class="property-map-popup-price">Price unavailable</p>';
   const bedBath = [
     property.bedrooms != null ? `${property.bedrooms} bd` : "",
     property.bathrooms != null ? `${property.bathrooms} ba` : "",
@@ -149,28 +173,34 @@ export function PropertyMap({
   market = "japan",
   className,
   metric = "price",
+  markerStyle = "price",
   onSelect,
   onCompare,
   onMapReady,
+  darkTiles = false,
 }: {
   properties: Property[];
   focusId?: string | undefined;
   market?: "japan" | "us";
   className?: string | undefined;
   metric?: "price" | "rent" | "yield" | undefined;
+  markerStyle?: "price" | "intelligence" | undefined;
   onSelect?: ((id: string) => void) | undefined;
   onCompare?: ((property: Property) => void) | undefined;
   onMapReady?: ((map: LeafletMap | null) => void) | undefined;
+  darkTiles?: boolean | undefined;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const selectedRef = useRef(focusId);
   const propertiesRef = useRef(properties);
   const metricRef = useRef(metric);
+  const markerStyleRef = useRef(markerStyle);
   const callbacksRef = useRef({ onSelect, onCompare, onMapReady });
   selectedRef.current = focusId;
   propertiesRef.current = properties;
   metricRef.current = metric;
+  markerStyleRef.current = markerStyle;
   callbacksRef.current = { onSelect, onCompare, onMapReady };
 
   useEffect(() => {
@@ -191,10 +221,17 @@ export function PropertyMap({
         [start.latitude, start.longitude],
         OVERVIEW_ZOOM,
       );
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      }).addTo(map);
+      L.tileLayer(
+        darkTiles
+          ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+          maxZoom: 19,
+          attribution: darkTiles
+            ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        },
+      ).addTo(map);
       const group =
         typeof L.markerClusterGroup === "function"
           ? L.markerClusterGroup({
@@ -208,10 +245,10 @@ export function PropertyMap({
       const icon = (property: Property, active: boolean) =>
         L.divIcon({
           className: "property-marker",
-          html: markerHtml(property, metricRef.current, active),
-          iconSize: [86, 34],
-          iconAnchor: [43, 31],
-          popupAnchor: [0, -28],
+          html: markerHtml(property, metricRef.current, active, markerStyleRef.current),
+          iconSize: markerStyleRef.current === "intelligence" ? [18, 18] : [86, 34],
+          iconAnchor: markerStyleRef.current === "intelligence" ? [9, 9] : [43, 31],
+          popupAnchor: markerStyleRef.current === "intelligence" ? [0, -9] : [0, -28],
         });
       for (const property of propertiesRef.current) {
         const coords = explicitCoordinates(property);
@@ -221,7 +258,10 @@ export function PropertyMap({
           title: property.title,
           riseOnHover: true,
         });
-        marker.bindPopup(popupHtml(property), { maxWidth: 320, closeButton: true });
+        marker.bindPopup(popupHtml(property, markerStyle === "intelligence"), {
+          maxWidth: 320,
+          closeButton: true,
+        });
         marker.on("click", () => callbacksRef.current.onSelect?.(property.id));
         marker.on("popupopen", (event) => {
           const button = event.popup
@@ -290,7 +330,7 @@ export function PropertyMap({
       mapRef.current = null;
       map = null;
     };
-  }, [market, properties, metric]);
+  }, [market, properties, metric, markerStyle, darkTiles]);
 
   useEffect(() => {
     const map = mapRef.current;

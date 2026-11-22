@@ -56,10 +56,9 @@ export function AgentSpotlight() {
 
   useEffect(() => {
     const controller = new AbortController();
-    let timedOut = false;
     const timeout = window.setTimeout(() => {
-      timedOut = true;
-      controller.abort();
+      setError(true);
+      setLoading(false);
     }, 10000);
     fetch("/api/agents?page=1&limit=6&sortBy=sales&sortOrder=desc", {
       signal: controller.signal,
@@ -69,15 +68,16 @@ export function AgentSpotlight() {
         return (await response.json()) as AgentResponse;
       })
       .then((result) => {
+        setError(false);
         setAgents(Array.isArray(result.agents) ? result.agents : []);
         setTotal(Number.isFinite(result.total) ? result.total : 0);
       })
       .catch(() => {
-        if (!controller.signal.aborted || timedOut) setError(true);
+        if (!controller.signal.aborted) setError(true);
       })
       .finally(() => {
         window.clearTimeout(timeout);
-        if (!controller.signal.aborted || timedOut) setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       });
     return () => {
       window.clearTimeout(timeout);

@@ -3,7 +3,7 @@ import { Router, type Request, type Response, type NextFunction } from "express"
 import { z } from "zod";
 import { resolveAuthUser } from "./auth-router.ts";
 import { answerWithGemini } from "./gemini-service.ts";
-import { connectMongo } from "./mongo.ts";
+import { connectMongo, isMongoConnectivityError, safeMongoError } from "./mongo.ts";
 import { ApiRateLimit, ChatMessage, ChatSession } from "./models.ts";
 
 const router = Router();
@@ -282,22 +282,33 @@ export function apiErrorHandler(
   response: Response,
   _next: NextFunction,
 ) {
+  const databaseUnavailable = isMongoConnectivityError(error);
   const errorStatus =
     error && typeof error === "object" && "status" in error ? error.status : undefined;
-  const status =
-    typeof errorStatus === "number" && Number.isInteger(errorStatus)
+  const status = databaseUnavailable
+    ? 503
+    : typeof errorStatus === "number" && Number.isInteger(errorStatus)
       ? errorStatus
       : error instanceof z.ZodError
         ? 400
         : 500;
-  if (status >= 500) console.error("[API] request failed", { route: _request.path, status });
+  if (databaseUnavailable) {
+    console.error("[API] database connection unavailable", {
+      route: _request.path,
+      ...safeMongoError(error),
+    });
+  } else if (status >= 500) {
+    console.error("[API] request failed", { route: _request.path, status });
+  }
   return response.status(status).json({
-    error:
-      status >= 500
+    error: databaseUnavailable
+      ? "The database is temporarily unavailable. Please retry shortly."
+      : status >= 500
         ? "The service is temporarily unavailable."
         : error instanceof Error
           ? error.message
           : "Invalid request.",
+    ...(databaseUnavailable ? { code: "DATABASE_UNAVAILABLE" } : {}),
   });
 }
 

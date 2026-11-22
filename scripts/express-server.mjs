@@ -4,7 +4,7 @@ import { authRouter } from "../src/server/auth-router.ts";
 import { chatRouter, mongoRateLimit } from "../src/server/chat-router.ts";
 import { propertyRouter } from "../src/server/property-router.ts";
 import { adminAgentRouter, agentRouter } from "../src/server/agent-router.ts";
-import { initializeMongo } from "../src/server/mongo.ts";
+import { initializeMongo, isMongoConnectivityError, safeMongoError } from "../src/server/mongo.ts";
 import { seedKnowledgeBase } from "../src/server/knowledge-base.ts";
 import { configuredAgentLocations, syncAgentsForLocation } from "../src/server/agent-service.ts";
 import mongoose from "mongoose";
@@ -14,8 +14,16 @@ const app = express();
 const port = Number.parseInt(process.env["PORT"] ?? "3000", 10);
 const host = process.env["HOST"] ?? "0.0.0.0";
 
-await initializeMongo();
-await seedKnowledgeBase();
+try {
+  await initializeMongo();
+  await seedKnowledgeBase();
+} catch (error) {
+  console.error(
+    "[startup] MongoDB initialization failed; the API server was not started.",
+    safeMongoError(error),
+  );
+  process.exit(1);
+}
 
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
@@ -68,6 +76,16 @@ if (Number.isFinite(agentSyncDays) && agentSyncDays >= 1) {
 app.use((error, request, response, next) => {
   if (!request.path.startsWith("/api/")) return next(error);
   if (!request.path.startsWith("/api/auth")) return apiErrorHandler(error, request, response, next);
+  if (isMongoConnectivityError(error)) {
+    console.error("[API] database connection unavailable", {
+      route: request.path,
+      ...safeMongoError(error),
+    });
+    return response.status(503).json({
+      error: "The database is temporarily unavailable. Please retry shortly.",
+      code: "DATABASE_UNAVAILABLE",
+    });
+  }
   const status =
     Number.isInteger(error?.status) && error.status >= 400 && error.status < 600
       ? error.status
