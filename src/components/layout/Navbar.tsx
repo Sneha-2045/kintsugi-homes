@@ -9,6 +9,7 @@ const navItems = [
   { label: "US Properties", to: "/us-properties", icon: "🇺🇸" },
   { label: "MLS Listings", to: "/properties" },
   { label: "Property Intelligence", to: "/property-intelligence" },
+  { label: "Live Intelligence", to: "/live-intelligence" },
   { label: "Japan Properties", to: "/japan-properties", icon: "🇯🇵" },
   { label: "Search", to: "/search" },
   { label: "Find an Agent", to: "/find-an-agent" },
@@ -65,6 +66,14 @@ export function Navbar() {
             </li>
           ))}
         </ul>
+
+        <Link
+          to="/live-intelligence"
+          className="hidden rounded-lg px-3 py-2 text-sm font-semibold text-muted-foreground transition-all hover:bg-elevated hover:text-foreground xl:inline-flex 2xl:hidden"
+          activeProps={{ className: "!bg-elevated !text-foreground" }}
+        >
+          Live Intelligence
+        </Link>
 
         <div className="ml-auto hidden items-center gap-3 2xl:flex">
           <a
