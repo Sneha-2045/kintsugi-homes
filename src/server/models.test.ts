@@ -15,6 +15,7 @@ import {
   NewsletterSubscription,
   PasswordResetToken,
   PropertyComparison,
+  PropertyGeocodeCache,
   PropertyModel,
   PropertySyncLog,
   RealEstateAgent,
@@ -47,6 +48,7 @@ test("all application collections are registered as Mongoose models", () => {
       "newsletterSubscriptions",
       "passwordResetTokens",
       "properties",
+      "propertyGeocodeCache",
       "propertyComparisons",
       "propertySyncLogs",
       "savedSearches",
@@ -76,6 +78,8 @@ test("properties have unique source IDs, searchable text and bounded coordinates
   assert.ok(PropertyModel.schema.path("auctionDate"));
   assert.ok(PropertyModel.schema.path("foreclosureStatus"));
   assert.ok(PropertyModel.schema.indexes().some(([keys]) => keys["geoPoint"] === "2dsphere"));
+  assert.ok(PropertyModel.schema.path("geocoding"));
+  assert.ok(PropertyGeocodeCache.schema.indexes().some(([keys, options]) => keys["addressKey"] === 1 && options.unique));
 });
 
 test("user identity, roles, hashed sessions and reset tokens have uniqueness and expiry indexes", () => {

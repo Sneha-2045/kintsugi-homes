@@ -60,7 +60,7 @@ const SATELLITE_STYLE = {
       paint: { "raster-opacity": 0.82, "raster-fade-duration": 250 },
     },
   ],
-};
+} as unknown as NonNullable<maplibregl.MapOptions["style"]>;
 
 const EMPTY_FEATURES: GeoJSON.FeatureCollection<GeoJSON.Point> = {
   type: "FeatureCollection",
@@ -95,7 +95,11 @@ function toFeatureCollection(properties: MapProperty[], selectedId?: string) {
         !Number.isFinite(latitude) ||
         !Number.isFinite(longitude) ||
         latitude == null ||
-        longitude == null
+        longitude == null ||
+        latitude < -90 ||
+        latitude > 90 ||
+        longitude < -180 ||
+        longitude > 180
       )
         return [];
       return [

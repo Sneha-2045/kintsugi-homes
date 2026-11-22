@@ -1,7 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getIntelligenceInventory } from "@/server/property-service";
+import { getIntelligenceInventoryPage } from "@/server/property-service";
 import { safeMongoError } from "@/server/mongo";
 import { apifyForeclosures } from "@/data/apify-foreclosures";
+
+const MAX_PAGE_SIZE = 1000;
+
+function pageArgs(url: URL) {
+  const requested = Number(url.searchParams.get("pageSize") ?? 500);
+  if (!Number.isInteger(requested) || requested < 1 || requested > MAX_PAGE_SIZE)
+    throw new Error(`pageSize must be between 1 and ${MAX_PAGE_SIZE}.`);
+  const cursor = url.searchParams.get("cursor") || undefined;
+  return { pageSize: requested, ...(cursor ? { cursor } : {}) };
+}
 
 function getRecordedListingSnapshot() {
   const seen = new Set<string>();
@@ -11,7 +21,11 @@ function getRecordedListingSnapshot() {
       !id ||
       seen.has(id) ||
       !Number.isFinite(listing.latitude) ||
-      !Number.isFinite(listing.longitude)
+      !Number.isFinite(listing.longitude) ||
+      listing.latitude! < -90 ||
+      listing.latitude! > 90 ||
+      listing.longitude! < -180 ||
+      listing.longitude! > 180
     )
       return [];
     seen.add(id);
@@ -33,21 +47,37 @@ function getRecordedListingSnapshot() {
         foreclosureStatus: listing.dealCategory ?? null,
         listingType: auction ? "auction" : null,
         auctionDate: listing.auctionDate ?? null,
-        description: listing.description,
-        images: listing.images,
         lastCheckedAt: listing.lastCheckedAt ?? null,
         sourceUrl: listing.sourceUrl ?? null,
+        propertyType: listing.propertyType ?? null,
+        bedrooms: listing.bedrooms ?? null,
+        bathrooms: listing.bathrooms ?? null,
+        buildingArea: listing.floorArea ?? null,
+        landArea: listing.landArea ?? null,
+        yearBuilt: listing.yearBuilt ?? null,
+        previousPrice: null,
+        createdAt: null,
+        updatedAt: null,
       },
     ];
   });
   return properties;
 }
 
-function snapshotResponse() {
+function snapshotResponse(args: { cursor?: string; pageSize: number }) {
   const properties = getRecordedListingSnapshot();
+  const offset = args.cursor?.startsWith("snapshot:")
+    ? Number(args.cursor.slice("snapshot:".length))
+    : 0;
+  if (!Number.isInteger(offset) || offset < 0 || offset > properties.length)
+    throw new Error("Invalid recorded inventory cursor.");
+  const page = properties.slice(offset, offset + args.pageSize);
+  const hasMore = offset + page.length < properties.length;
   return Response.json(
     {
-      properties,
+      properties: page,
+      total: properties.length,
+      nextCursor: hasMore ? `snapshot:${offset + page.length}` : null,
       fetchedAt: new Date().toISOString(),
       dataSource: "recorded-snapshot",
     },
@@ -63,19 +93,23 @@ function snapshotResponse() {
 export const Route = createFileRoute("/api/live-intelligence")({
   server: {
     handlers: {
-      GET: async () => {
+      GET: async ({ request }) => {
+        let args: ReturnType<typeof pageArgs>;
         try {
-          const data = await getIntelligenceInventory({
-            west: -180,
-            south: -90,
-            east: 180,
-            north: 90,
-            limit: 5000,
-          });
+          args = pageArgs(new URL(request.url));
+        } catch (error) {
+          return Response.json(
+            { error: error instanceof Error ? error.message : "Invalid inventory page." },
+            { status: 400 },
+          );
+        }
+        try {
+          if (args.cursor?.startsWith("snapshot:")) return snapshotResponse(args);
+          const data = await getIntelligenceInventoryPage(args);
           // Keep the map useful when Mongo is healthy but has no imported rows.
-          // These listings are an existing Rylestate snapshot, not live Mongo data.
-          const snapshot = data.properties.length ? [] : getRecordedListingSnapshot();
-          if (snapshot.length) return snapshotResponse();
+          // The snapshot is recorded application data and is clearly labeled below.
+          if (data.total === 0 && !args.cursor && getRecordedListingSnapshot().length)
+            return snapshotResponse(args);
           return Response.json(
             {
               ...data,
@@ -95,7 +129,7 @@ export const Route = createFileRoute("/api/live-intelligence")({
           );
           // The page can still show geolocated listings already bundled with the app.
           // This keeps the map available during a database outage or an empty import.
-          if (getRecordedListingSnapshot().length) return snapshotResponse();
+          if (getRecordedListingSnapshot().length) return snapshotResponse(args);
           return Response.json(
             {
               error: "The property database is temporarily unavailable. Please retry shortly.",

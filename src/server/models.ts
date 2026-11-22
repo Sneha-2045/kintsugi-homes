@@ -16,6 +16,18 @@ const imageSchema = new Schema(
   { _id: true },
 );
 
+const geocodingSchema = new Schema(
+  {
+    status: { type: String, enum: ["pending", "geocoded", "failed"], index: true },
+    provider: { type: String, trim: true },
+    precision: { type: String, trim: true },
+    addressKey: { type: String, trim: true, index: true },
+    attemptedAt: { type: Date },
+    error: { type: String, trim: true, maxlength: 300 },
+  },
+  { _id: false },
+);
+
 const propertySchema = new Schema(
   {
     source: {
@@ -45,6 +57,7 @@ const propertySchema = new Schema(
         validate: (coordinates: number[]) => coordinates.length === 2,
       },
     },
+    geocoding: { type: geocodingSchema },
     propertyType: { type: String, trim: true },
     foreclosureStatus: { type: String, trim: true, index: true },
     listingType: { type: String, enum: ["sale", "rent", "auction", "unknown"], default: "unknown" },
@@ -83,6 +96,8 @@ propertySchema.index(
 propertySchema.index({ postalCode: 1, status: 1, price: 1 });
 propertySchema.index({ geoPoint: "2dsphere" }, { sparse: true });
 propertySchema.index({ country: 1, status: 1, longitude: 1, latitude: 1 });
+propertySchema.index({ country: 1, status: 1, "geocoding.status": 1, _id: 1 });
+propertySchema.index({ country: 1, status: 1, _id: 1 });
 propertySchema.index({ auctionDate: 1, status: 1 });
 propertySchema.index({
   title: "text",
@@ -423,6 +438,22 @@ agentSyncLogSchema.index({ location: 1, createdAt: -1 });
 
 export const User = model("User", userSchema);
 export const PropertyModel = model("Property", propertySchema);
+const geocodeCacheSchema = new Schema(
+  {
+    addressKey: { type: String, required: true },
+    normalizedAddress: { type: String, required: true },
+    provider: { type: String, required: true },
+    status: { type: String, enum: ["geocoded", "failed"], required: true },
+    latitude: { type: Number, min: -90, max: 90 },
+    longitude: { type: Number, min: -180, max: 180 },
+    precision: { type: String },
+    error: { type: String, maxlength: 300 },
+    attemptedAt: { type: Date, required: true },
+  },
+  { timestamps: true, collection: "propertyGeocodeCache" },
+);
+geocodeCacheSchema.index({ addressKey: 1 }, { unique: true });
+export const PropertyGeocodeCache = model("PropertyGeocodeCache", geocodeCacheSchema);
 export const AuthSession = model("AuthSession", refreshSessionSchema);
 export const PasswordResetToken = model("PasswordResetToken", passwordResetSchema);
 export const EmailVerificationToken = model("EmailVerificationToken", emailVerificationSchema);
@@ -449,6 +480,7 @@ export const AgentSyncLog = model("AgentSyncLog", agentSyncLogSchema);
 export const mongoModels: mongoose.Model<unknown>[] = [
   User,
   PropertyModel,
+  PropertyGeocodeCache,
   AuthSession,
   PasswordResetToken,
   EmailVerificationToken,

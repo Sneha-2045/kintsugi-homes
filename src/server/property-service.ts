@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
+import { Types } from "mongoose";
 import { z } from "zod";
 import { connectMongo } from "./mongo.ts";
-import { Favorite, PropertyModel, SavedSearchEvent, SearchCache } from "./models.ts";
+import { Favorite, PropertyModel, SavedSearchEvent, SavedSearchMatch, SearchCache } from "./models.ts";
 
 export const PropertySearchArgs = z.object({
   city: z.string().trim().min(1).max(80).optional(),
@@ -150,6 +151,191 @@ const IntelligenceQuery = z
   );
 
 export type IntelligenceQuery = z.input<typeof IntelligenceQuery>;
+
+const IntelligencePageArgs = z.object({
+  cursor: z.string().regex(/^[a-f\d]{24}$/i).optional(),
+  pageSize: z.number().int().min(1).max(1000).default(500),
+});
+
+/** Lightweight, cursor-paginated US inventory for the map and listings panel. */
+export async function getIntelligenceInventoryPage(input: unknown) {
+  const args = IntelligencePageArgs.parse(input);
+  await connectMongo();
+  const query: Record<string, unknown> = {
+    country: "United States",
+    status: { $ne: "draft" },
+  };
+  if (args.cursor) query["_id"] = { $gt: new Types.ObjectId(args.cursor) };
+
+  const projection = [
+    "_id", "sourceListingId", "legacyId", "title", "price", "currency", "country",
+    "state", "city", "address", "postalCode", "location", "latitude", "longitude",
+    "geoPoint", "propertyType", "foreclosureStatus", "listingType", "bedrooms",
+    "bathrooms", "status", "auctionDate", "lastCheckedAt", "source", "sourceUrl",
+    "createdAt", "updatedAt", "metadata.previousPrice", "metadata.listedAt",
+  ].join(" ");
+  const [total, records] = await Promise.all([
+    PropertyModel.countDocuments({ country: "United States", status: { $ne: "draft" } }),
+    PropertyModel.find(query).select(projection).sort({ _id: 1 }).limit(args.pageSize + 1).lean(),
+  ]);
+  const hasMore = records.length > args.pageSize;
+  if (hasMore) records.pop();
+  const properties = records.map((record) => {
+    const metadata = (record.metadata ?? {}) as Record<string, unknown>;
+    const geoCoordinates = Array.isArray(record.geoPoint?.coordinates)
+      ? record.geoPoint.coordinates
+      : [];
+    const geoLongitude = geoCoordinates[0];
+    const geoLatitude = geoCoordinates[1];
+    const storedLatValid = typeof record.latitude === "number" && record.latitude >= -90 && record.latitude <= 90;
+    const storedLngValid = typeof record.longitude === "number" && record.longitude >= -180 && record.longitude <= 180;
+    const geoLatValid = typeof geoLatitude === "number" && geoLatitude >= -90 && geoLatitude <= 90;
+    const geoLngValid = typeof geoLongitude === "number" && geoLongitude >= -180 && geoLongitude <= 180;
+    const latitude = storedLatValid && storedLngValid ? record.latitude : geoLatValid && geoLngValid ? geoLatitude : null;
+    const longitude = storedLatValid && storedLngValid ? record.longitude : geoLatValid && geoLngValid ? geoLongitude : null;
+    return {
+      id: String(record._id),
+      sourceId: record.sourceListingId,
+      legacyId: record.legacyId ?? null,
+      title: record.title,
+      price: record.price ?? null,
+      currency: record.currency ?? "USD",
+      country: record.country,
+      state: record.state ?? null,
+      city: record.city ?? null,
+      address: record.address ?? null,
+      zipCode: record.postalCode ?? null,
+      location: record.location ?? null,
+      latitude: typeof latitude === "number" && Number.isFinite(latitude) ? latitude : null,
+      longitude: typeof longitude === "number" && Number.isFinite(longitude) ? longitude : null,
+      propertyType: record.propertyType ?? null,
+      foreclosureStatus: record.foreclosureStatus ?? null,
+      listingType: record.listingType ?? null,
+      bedrooms: record.bedrooms ?? null,
+      bathrooms: record.bathrooms ?? null,
+      status: record.status ?? null,
+      auctionDate: record.auctionDate ?? null,
+      lastCheckedAt: record.lastCheckedAt ?? null,
+      source: record.source ?? null,
+      sourceUrl: record.sourceUrl ?? null,
+      createdAt: metadata["listedAt"] ?? null,
+      updatedAt: record.updatedAt ?? null,
+      recordCreatedAt: record.createdAt ?? null,
+      previousPrice: typeof metadata["previousPrice"] === "number" ? metadata["previousPrice"] : null,
+      geocodingStatus: record.geocoding?.status ?? null,
+      geocodingPrecision: record.geocoding?.precision ?? null,
+    };
+  });
+  const geolocated = properties.reduce(
+    (count, property) => count + (property.latitude != null && property.longitude != null ? 1 : 0),
+    0,
+  );
+  return {
+    properties,
+    total,
+    geolocatedInPage: geolocated,
+    nextCursor: hasMore ? String(records[records.length - 1]?._id ?? "") : null,
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
+/** Full MongoDB record for the selected map marker. */
+export async function getIntelligencePropertyDetail(id: string) {
+  if (typeof id !== "string" || id.length < 1 || id.length > 120)
+    throw new Error("Enter a valid property ID.");
+  await connectMongo();
+  const clauses: Record<string, unknown>[] = [
+    { legacyId: id },
+    { sourceListingId: id },
+  ];
+  if (/^[a-f\d]{24}$/i.test(id)) clauses.push({ _id: new Types.ObjectId(id) });
+  const property = await PropertyModel.findOne({
+    $or: clauses,
+    country: "United States",
+    status: { $ne: "draft" },
+  }).lean();
+  if (!property) return null;
+  const metadata = (property.metadata ?? {}) as Record<string, unknown>;
+  const coordinates = Array.isArray(property.geoPoint?.coordinates) ? property.geoPoint.coordinates : [];
+  const [matches, events] = await Promise.all([
+    SavedSearchMatch.find({ source: property.source, listingId: property.sourceListingId })
+      .select("firstSeenAt lastSeenAt updatedAt")
+      .sort({ lastSeenAt: -1 })
+      .limit(20)
+      .lean(),
+    SavedSearchEvent.find({ source: property.source, listingId: property.sourceListingId })
+      .select("eventType createdAt previousValue currentValue")
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .lean(),
+  ]);
+  return {
+    id: String(property._id),
+    sourceId: property.sourceListingId,
+    title: property.title,
+    address: property.address ?? null,
+    city: property.city ?? null,
+    state: property.state ?? null,
+    zipCode: property.postalCode ?? null,
+    country: property.country,
+    location: property.location ?? null,
+    propertyType: property.propertyType ?? null,
+    status: property.status ?? null,
+    price: property.price ?? null,
+    currency: property.currency ?? "USD",
+    bedrooms: property.bedrooms ?? null,
+    bathrooms: property.bathrooms ?? null,
+    buildingArea: property.buildingArea ?? null,
+    landArea: property.landArea ?? null,
+    yearBuilt: property.yearBuilt ?? null,
+    description: property.description ?? null,
+    features: property.features ?? [],
+    nearbyPlaces: property.nearbyPlaces ?? [],
+    amenities: Array.isArray(metadata["amenities"]) ? metadata["amenities"] : [],
+    garage: metadata["garage"] ?? null,
+    parking: metadata["parking"] ?? null,
+    condition: metadata["condition"] ?? metadata["propertyCondition"] ?? null,
+    construction: metadata["construction"] ?? metadata["constructionType"] ?? null,
+    images: (property.images ?? []).map((image: {
+      url?: string;
+      altText?: string;
+      sortOrder?: number;
+      width?: number;
+      height?: number;
+    }) => ({
+      url: image.url,
+      altText: image.altText ?? null,
+      sortOrder: image.sortOrder ?? 0,
+      width: image.width ?? null,
+      height: image.height ?? null,
+    })),
+    source: property.source,
+    sourceUrl: property.sourceUrl ?? null,
+    listingType: property.listingType ?? null,
+    foreclosureStatus: property.foreclosureStatus ?? null,
+    auctionDate: property.auctionDate ?? null,
+    createdAt: metadata["listedAt"] ?? null,
+    recordCreatedAt: property.createdAt ?? null,
+    listingDate: metadata["listedAt"] ?? null,
+    updatedAt: property.updatedAt ?? null,
+    lastCheckedAt: property.lastCheckedAt ?? null,
+    recordedAvailabilityChecks: matches.map((match) => ({
+      firstSeenAt: match.firstSeenAt,
+      lastSeenAt: match.lastSeenAt,
+      updatedAt: match.updatedAt,
+    })),
+    recordedAvailabilityEvents: events.map((event) => ({
+      type: event.eventType,
+      date: event.createdAt,
+      previousValue: event.previousValue ?? null,
+      currentValue: event.currentValue ?? null,
+    })),
+    latitude: property.latitude ?? coordinates[1] ?? null,
+    longitude: property.longitude ?? coordinates[0] ?? null,
+    previousPrice: typeof metadata["previousPrice"] === "number" ? metadata["previousPrice"] : null,
+    geocoding: property.geocoding ?? metadata["geocoding"] ?? null,
+  };
+}
 
 /** Public, viewport-bounded inventory for the property intelligence map. */
 export async function getIntelligenceInventory(input: IntelligenceQuery) {

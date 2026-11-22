@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "generate-listings": "node scripts/generate-bulk-listings.mjs",
+    "geocode:properties": "node --env-file-if-exists=.env --experimental-strip-types scripts/geocode-properties.mjs",
     "export:supabase-migration": "node scripts/export-supabase-migration.mjs",
     "generate-sitemaps": "node scripts/generate-sitemap.mjs",
     "validate-sitemaps": "node scripts/validate-sitemaps.mjs",

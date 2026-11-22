@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
   ArrowUpRight,
@@ -16,8 +16,10 @@ import {
 import { OsirisPropertyMap, type BaseStyle } from "@/components/map/OsirisPropertyMap";
 import type { Property } from "@/types/property";
 
-type IntelligenceProperty = Pick<Property, "id" | "title" | "latitude" | "longitude"> &
-  Partial<Omit<Property, "id" | "title" | "latitude" | "longitude">> & {
+type IntelligenceProperty = Pick<Property, "id" | "title"> &
+  Partial<Omit<Property, "id" | "title">> & {
+    latitude?: number | null;
+    longitude?: number | null;
     price?: number | null;
     currency?: string;
     status?: string | null;
@@ -26,12 +28,38 @@ type IntelligenceProperty = Pick<Property, "id" | "title" | "latitude" | "longit
     updatedAt?: string | null;
     listingType?: string | null;
     previousPrice?: number | null;
+    source?: string | null;
+    geocodingStatus?: string | null;
+    geocodingPrecision?: string | null;
   };
 type ApiResponse = {
   properties?: IntelligenceProperty[];
+  total?: number;
+  nextCursor?: string | null;
   fetchedAt?: string;
   dataSource?: "mongodb" | "recorded-snapshot";
   error?: string;
+};
+type IntelligenceDetail = Omit<IntelligenceProperty, "images"> & {
+  features?: string[];
+  nearbyPlaces?: string[];
+  amenities?: string[];
+  garage?: string | number | boolean | null;
+  parking?: string | number | boolean | null;
+  condition?: string | null;
+  construction?: string | null;
+  yearBuilt?: number | null;
+  landArea?: number | null;
+  buildingArea?: number | null;
+  images?: Array<string | { url: string; altText?: string | null; sortOrder?: number }>;
+  description?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  recordCreatedAt?: string | null;
+  lastCheckedAt?: string | null;
+  geocoding?: { status?: string; provider?: string; precision?: string; attemptedAt?: string; error?: string } | null;
+  recordedAvailabilityChecks?: Array<{ firstSeenAt?: string; lastSeenAt?: string; updatedAt?: string }>;
+  recordedAvailabilityEvents?: Array<{ type: string; date?: string; previousValue?: unknown; currentValue?: unknown }>;
 };
 type Layer = {
   id: string;
@@ -47,6 +75,33 @@ const isRecent = (value?: string | null) => {
 };
 const includes = (value: unknown, pattern: RegExp) =>
   typeof value === "string" && pattern.test(value);
+const hasCoordinates = (
+  property: IntelligenceProperty,
+): property is IntelligenceProperty & { latitude: number; longitude: number } =>
+  typeof property.latitude === "number" &&
+  Number.isFinite(property.latitude) &&
+  property.latitude >= -90 &&
+  property.latitude <= 90 &&
+  typeof property.longitude === "number" &&
+  Number.isFinite(property.longitude) &&
+  property.longitude >= -180 &&
+  property.longitude <= 180;
+const isOtherStatus = (property: IntelligenceProperty) => {
+  const status = (property.status ?? "").toLowerCase();
+  return ![
+    "published",
+    "active",
+    "for sale",
+    "pending",
+    "sold",
+    "under contract",
+    "contract",
+  ].includes(status) &&
+    !includes(status, /under contract|contract/i) &&
+    !property.auctionDate &&
+    property.listingType?.toLowerCase() !== "auction" &&
+    !includes(property.foreclosureStatus, /auction/i);
+};
 const layers: Layer[] = [
   {
     id: "available",
@@ -95,6 +150,12 @@ const layers: Layer[] = [
     label: "Recently Listed",
     color: "#8fe5ee",
     matches: (p) => isRecent(p.createdAt),
+  },
+  {
+    id: "other",
+    label: "Other / Inactive",
+    color: "#a9b7be",
+    matches: isOtherStatus,
   },
 ];
 
@@ -165,53 +226,156 @@ function LiveIntelligencePage() {
   const [mode, setMode] = useState<"3D" | "2D">("3D");
   const [baseStyle, setBaseStyle] = useState<BaseStyle>("satellite");
   const [query, setQuery] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [propertyTypeFilter, setPropertyTypeFilter] = useState("");
+  const [bedroomsFilter, setBedroomsFilter] = useState("");
+  const [bathroomsFilter, setBathroomsFilter] = useState("");
+  const [foreclosureOnly, setForeclosureOnly] = useState(false);
+  const [listingPage, setListingPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [fetchedAt, setFetchedAt] = useState<string>();
   const [dataSource, setDataSource] = useState<ApiResponse["dataSource"]>("mongodb");
   const [map, setMap] = useState<import("maplibre-gl").Map | null>(null);
+  const [totalInventory, setTotalInventory] = useState(0);
+  const [selectedDetail, setSelectedDetail] = useState<IntelligenceDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState("");
+  const selectedPanelRef = useRef<HTMLDivElement>(null);
+  const selectedIdRef = useRef(selectedId);
+  const inventoryRequestRef = useRef<AbortController | null>(null);
+  selectedIdRef.current = selectedId;
 
   const refresh = useCallback(async () => {
+    inventoryRequestRef.current?.abort();
+    const controller = new AbortController();
+    inventoryRequestRef.current = controller;
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/live-intelligence", {
-        headers: { Accept: "application/json" },
-      });
-      const body = (await response.json()) as ApiResponse;
-      if (!response.ok) throw new Error(body.error || "Property inventory could not be loaded.");
-      const rows = (body.properties ?? []).filter(
-        (p) => Number.isFinite(p.latitude) && Number.isFinite(p.longitude),
-      );
+      const rows: IntelligenceProperty[] = [];
+      let cursor: string | undefined;
+      let source: ApiResponse["dataSource"] = "mongodb";
+      let fetchedAt: string | undefined;
+      let total = 0;
+      do {
+        const url = new URL("/api/live-intelligence", window.location.origin);
+        url.searchParams.set("pageSize", "500");
+        if (cursor) url.searchParams.set("cursor", cursor);
+        const response = await fetch(url, {
+          headers: { Accept: "application/json" },
+          signal: controller.signal,
+        });
+        const body = (await response.json()) as ApiResponse;
+        if (!response.ok) throw new Error(body.error || "Property inventory could not be loaded.");
+        rows.push(...(body.properties ?? []));
+        source = body.dataSource ?? source;
+        fetchedAt = body.fetchedAt ?? fetchedAt;
+        total = body.total ?? rows.length;
+        cursor = body.nextCursor ?? undefined;
+      } while (cursor);
+      if (controller.signal.aborted) return;
       setProperties(rows);
-      setFetchedAt(body.fetchedAt);
-      setDataSource(body.dataSource ?? "mongodb");
-      if (selectedId && !rows.some((p) => p.id === selectedId)) setSelectedId(undefined);
+      setTotalInventory(total);
+      setFetchedAt(fetchedAt);
+      setDataSource(source);
+      setListingPage(0);
+      if (selectedIdRef.current && !rows.some((p) => p.id === selectedIdRef.current))
+        setSelectedId(undefined);
     } catch (cause) {
+      if (controller.signal.aborted) return;
       setError(cause instanceof Error ? cause.message : "Property inventory could not be loaded.");
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
-  }, [selectedId]);
+  }, []);
   useEffect(() => {
     void refresh();
+    const timer = window.setInterval(() => void refresh(), 5 * 60 * 1000);
+    return () => {
+      window.clearInterval(timer);
+      inventoryRequestRef.current?.abort();
+    };
   }, [refresh]);
+
+  useEffect(() => {
+    if (!selectedId) {
+      setSelectedDetail(null);
+      setDetailError("");
+      return;
+    }
+    const controller = new AbortController();
+    setSelectedDetail(null);
+    setDetailLoading(true);
+    setDetailError("");
+    void fetch(`/api/live-intelligence/${encodeURIComponent(selectedId)}`, {
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const body = (await response.json()) as { property?: IntelligenceDetail; error?: string };
+        if (!response.ok || !body.property)
+          throw new Error(body.error || "Full property details could not be loaded.");
+        setSelectedDetail(body.property);
+      })
+      .catch((cause: unknown) => {
+        if (!controller.signal.aborted)
+          setDetailError(cause instanceof Error ? cause.message : "Property details could not be loaded.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setDetailLoading(false);
+      });
+    return () => controller.abort();
+  }, [selectedId]);
+
+  useEffect(() => {
+    if (!selectedId || !panelOpen) return;
+    const frame = window.requestAnimationFrame(() => {
+      selectedPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [selectedId, panelOpen]);
+
+  useEffect(() => {
+    setListingPage(0);
+  }, [query, minPrice, maxPrice, propertyTypeFilter, bedroomsFilter, bathroomsFilter, foreclosureOnly, enabled]);
 
   const visible = useMemo(
     () =>
       properties.filter((p) => {
-        const text = [p.title, p.address, p.city, p.state, p.zipCode]
+        const text = [p.title, p.address, p.city, p.state, p.zipCode, p.location]
           .filter(Boolean)
           .join(" ")
           .toLowerCase();
+        const minimum = minPrice ? Number(minPrice) : undefined;
+        const maximum = maxPrice ? Number(maxPrice) : undefined;
+        const beds = bedroomsFilter ? Number(bedroomsFilter) : undefined;
+        const baths = bathroomsFilter ? Number(bathroomsFilter) : undefined;
         return (
           (!query.trim() || text.includes(query.trim().toLowerCase())) &&
-          layers.some((layer) => enabled[layer.id] && layer.matches(p))
+          layers.some((layer) => enabled[layer.id] && layer.matches(p)) &&
+          (minimum === undefined || (p.price ?? 0) >= minimum) &&
+          (maximum === undefined || (p.price ?? 0) <= maximum) &&
+          (!propertyTypeFilter || p.propertyType?.toLowerCase().includes(propertyTypeFilter.toLowerCase())) &&
+          (beds === undefined || (p.bedrooms ?? -1) >= beds) &&
+          (baths === undefined || (p.bathrooms ?? -1) >= baths) &&
+          (!foreclosureOnly || Boolean(p.auctionDate || includes(p.foreclosureStatus, /foreclos|auction/i)))
         );
       }),
-    [properties, enabled, query],
+    [properties, enabled, query, minPrice, maxPrice, propertyTypeFilter, bedroomsFilter, bathroomsFilter, foreclosureOnly],
   );
+  const geolocatedCount = properties.filter(hasCoordinates).length;
+  const visibleOnMap = visible.filter(hasCoordinates);
   const selected = properties.find((p) => p.id === selectedId);
+  const selectedProperty = selected ? { ...selected, ...selectedDetail } : undefined;
+  const listingPageSize = 80;
+  const pageCount = Math.max(1, Math.ceil(visible.length / listingPageSize));
+  const pageListings = visible.slice(listingPage * listingPageSize, (listingPage + 1) * listingPageSize);
+  const layerCount = (id: string) => {
+    const layer = layers.find((candidate) => candidate.id === id);
+    return layer ? properties.filter(layer.matches).length : 0;
+  };
   const events = useMemo(
     () =>
       properties
@@ -225,7 +389,7 @@ function LiveIntelligencePage() {
     : "—";
   const focus = (property: IntelligenceProperty) => {
     setSelectedId(property.id);
-    if (map && property.latitude != null && property.longitude != null)
+    if (map && hasCoordinates(property))
       map.easeTo({ center: [property.longitude, property.latitude], zoom: 13, duration: 850 });
   };
 
@@ -271,11 +435,15 @@ function LiveIntelligencePage() {
         </div>
         <div className="intel-heading-stats">
           <div>
-            <b>{properties.length.toLocaleString()}</b>
+            <b>{totalInventory.toLocaleString()}</b>
+            <span>INVENTORY</span>
+          </div>
+          <div>
+            <b>{geolocatedCount.toLocaleString()}</b>
             <span>GEOLOCATED</span>
           </div>
           <div>
-            <b>{visible.length.toLocaleString()}</b>
+            <b>{visibleOnMap.length.toLocaleString()}</b>
             <span>ON MAP</span>
           </div>
           <div>
@@ -300,9 +468,20 @@ function LiveIntelligencePage() {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search address or market"
+                placeholder="Search address, city, or ZIP"
               />
             </label>
+            <details className="intel-advanced-filters">
+              <summary>PRICE, TYPE &amp; PROPERTY FILTERS</summary>
+              <div className="intel-filter-grid">
+                <label>Min price<input inputMode="numeric" value={minPrice} onChange={(event) => setMinPrice(event.target.value)} placeholder="$0" /></label>
+                <label>Max price<input inputMode="numeric" value={maxPrice} onChange={(event) => setMaxPrice(event.target.value)} placeholder="No max" /></label>
+                <label>Property type<input value={propertyTypeFilter} onChange={(event) => setPropertyTypeFilter(event.target.value)} placeholder="Any type" /></label>
+                <label>Bedrooms<input inputMode="numeric" value={bedroomsFilter} onChange={(event) => setBedroomsFilter(event.target.value)} placeholder="Any" /></label>
+                <label>Bathrooms<input inputMode="numeric" value={bathroomsFilter} onChange={(event) => setBathroomsFilter(event.target.value)} placeholder="Any" /></label>
+                <label className="intel-filter-check"><input type="checkbox" checked={foreclosureOnly} onChange={(event) => setForeclosureOnly(event.target.checked)} /> Auction / foreclosure</label>
+              </div>
+            </details>
             <div className="intel-layer-list">
               {layers.map((layer) => (
                 <label key={layer.id} className="intel-layer">
@@ -324,11 +503,21 @@ function LiveIntelligencePage() {
                 </label>
               ))}
             </div>
+            <div className="intel-inventory-stats" aria-label="Inventory status counts">
+              <span>All <b>{totalInventory.toLocaleString()}</b></span>
+              <span>Available <b>{layerCount("available").toLocaleString()}</b></span>
+              <span>Pending <b>{layerCount("pending").toLocaleString()}</b></span>
+              <span>Auctions <b>{layerCount("auctions").toLocaleString()}</b></span>
+              <span>Sold <b>{layerCount("sold").toLocaleString()}</b></span>
+              <span>Recent <b>{layerCount("recent").toLocaleString()}</b></span>
+              <span>Reduced <b>{layerCount("reduced").toLocaleString()}</b></span>
+              <span>Unmapped <b>{(properties.length - geolocatedCount).toLocaleString()}</b></span>
+            </div>
             <div className="intel-side-note">
               <Signal size={14} />
               <span>
                 {dataSource === "recorded-snapshot"
-                  ? "MongoDB has no mapped listings yet. Showing Rylestate's recorded property snapshot; check dates are listed per property."
+                  ? "Showing Rylestate's recorded inventory snapshot because live MongoDB data is empty or unavailable. Snapshot data does not update until MongoDB reconnects."
                   : "Layer counts reflect stored property fields. An empty layer means no matching verified records are available."}
               </span>
             </div>
@@ -338,7 +527,7 @@ function LiveIntelligencePage() {
                 <span>{visible.length}</span>
               </div>
               {visible.length ? (
-                visible.slice(0, 80).map((property) => (
+                pageListings.map((property) => (
                   <button
                     key={property.id}
                     className={`intel-listing-row ${selectedId === property.id ? "selected" : ""}`}
@@ -358,6 +547,16 @@ function LiveIntelligencePage() {
                         {property.lastCheckedAt &&
                           ` · checked ${new Date(property.lastCheckedAt).toLocaleDateString()}`}
                       </small>
+                      {!hasCoordinates(property) && (
+                        <small className="intel-no-location">
+                          {property.geocodingStatus === "failed"
+                            ? "Map location unavailable · geocoding failed"
+                            : "Map location unavailable"}
+                        </small>
+                      )}
+                      {hasCoordinates(property) && property.geocodingPrecision === "RANGE_INTERPOLATED" && (
+                        <small className="intel-no-location">Approximate map location · interpolated address</small>
+                      )}
                     </span>
                     <span className="intel-listing-price">
                       {property.price && property.price > 0
@@ -375,48 +574,108 @@ function LiveIntelligencePage() {
                   {loading ? "Loading listings…" : "No listings in the selected layers."}
                 </p>
               )}
-              {visible.length > 80 && (
-                <small className="intel-listing-limit">
-                  Showing 80 of {visible.length.toLocaleString()} mapped listings. Use search to
-                  narrow results.
-                </small>
+              {visible.length > listingPageSize && (
+                <div className="intel-listing-pagination">
+                  <button type="button" onClick={() => setListingPage((page) => Math.max(0, page - 1))} disabled={listingPage === 0}>Previous</button>
+                  <span>{listingPage + 1} / {pageCount}</span>
+                  <button type="button" onClick={() => setListingPage((page) => Math.min(pageCount - 1, page + 1))} disabled={listingPage + 1 >= pageCount}>Next</button>
+                </div>
               )}
             </div>
-            <div className="intel-selected-panel">
+            <div className="intel-selected-panel" ref={selectedPanelRef} aria-live="polite">
               <div className="intel-side-title">
                 <div>
                   <MapPin size={15} /> SELECTED PROPERTY
                 </div>
               </div>
-              {selected ? (
+              {selectedProperty ? (
                 <>
-                  <h3>{selected.address || selected.title}</h3>
+                  <h3>{selectedProperty.title}</h3>
                   <p>
-                    {[selected.city, selected.state, selected.zipCode].filter(Boolean).join(", ")}
+                    {[selectedProperty.address, selectedProperty.city, selectedProperty.state, selectedProperty.zipCode].filter(Boolean).join(", ")}
                   </p>
                   <div className="intel-property-meta">
-                    <span>{selected.status || "Status not recorded"}</span>
-                    {selected.price != null && selected.price > 0 && (
+                    <span>{selectedProperty.status || "Status not recorded"}</span>
+                    {selectedProperty.price != null && selectedProperty.price > 0 && (
                       <b>
                         {new Intl.NumberFormat("en-US", {
                           style: "currency",
-                          currency: selected.currency || "USD",
+                          currency: selectedProperty.currency || "USD",
                           maximumFractionDigits: 0,
-                        }).format(selected.price)}
+                        }).format(selectedProperty.price)}
                       </b>
                     )}
                   </div>
-                  {selected.lastCheckedAt && (
+                  {detailLoading && <small className="intel-detail-loading">Loading full listing record…</small>}
+                  {detailError && <small className="intel-detail-error">{detailError}</small>}
+                  <dl className="intel-detail-grid">
+                    {[
+                      ["Property type", selectedProperty.propertyType],
+                      ["Bedrooms", selectedProperty.bedrooms],
+                      ["Bathrooms", selectedProperty.bathrooms],
+                      ["Building area", selectedProperty.buildingArea ?? selectedProperty.floorArea],
+                      ["Lot size", selectedProperty.landArea],
+                      ["Year built", selectedProperty.yearBuilt],
+                      ["Garage", selectedProperty.garage],
+                      ["Parking", selectedProperty.parking],
+                      ["Condition", selectedProperty.condition],
+                      ["Construction", selectedProperty.construction],
+                      ["Listing type", selectedProperty.listingType],
+                      ["Auction date", selectedProperty.auctionDate],
+                      ["Original source", selectedProperty.source],
+                      ["Listed", selectedProperty.createdAt],
+                      ["Updated", selectedProperty.updatedAt],
+                      ["Record created", selectedProperty.recordCreatedAt],
+                    ].filter(([, value]) => value != null && value !== "").map(([label, value]) => (
+                      <div key={String(label)}><dt>{label}</dt><dd>{String(value)}</dd></div>
+                    ))}
+                  </dl>
+                  {selectedDetail?.images?.length ? (
+                    <div className="intel-property-gallery" aria-label="Property photographs">
+                      {selectedDetail.images.map((image, index) => {
+                        const imageUrl = typeof image === "string" ? image : image.url;
+                        return <img key={`${imageUrl}-${index}`} src={imageUrl} alt={typeof image === "string" ? `${selectedProperty.title} photograph ${index + 1}` : image.altText || `${selectedProperty.title} photograph ${index + 1}`} loading="lazy" />;
+                      })}
+                    </div>
+                  ) : null}
+                  {selectedDetail?.description && <p className="intel-property-description">{selectedDetail.description}</p>}
+                  {selectedDetail?.features?.length ? <p className="intel-property-features"><b>Features:</b> {selectedDetail.features.join(" · ")}</p> : null}
+                  {selectedDetail?.amenities?.length ? <p className="intel-property-features"><b>Amenities:</b> {selectedDetail.amenities.join(" · ")}</p> : null}
+                  {selectedDetail?.nearbyPlaces?.length ? <p className="intel-property-features"><b>Nearby:</b> {selectedDetail.nearbyPlaces.join(" · ")}</p> : null}
+                  {selectedProperty.sourceUrl && <a className="intel-source-link" href={selectedProperty.sourceUrl} target="_blank" rel="noreferrer">Original listing source ↗</a>}
+                  {selectedDetail?.recordedAvailabilityChecks?.length ? (
+                    <div className="intel-recorded-checks">
+                      <b>RECORDED SOURCE CHECKS</b>
+                      {selectedDetail.recordedAvailabilityChecks.map((check, index) => (
+                        <span key={`${check.lastSeenAt ?? check.updatedAt ?? index}`}>
+                          {check.lastSeenAt ? `Last seen ${new Date(check.lastSeenAt).toLocaleString()}` : "Check recorded"}
+                          {check.firstSeenAt ? ` · first seen ${new Date(check.firstSeenAt).toLocaleDateString()}` : ""}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                  {selectedDetail?.recordedAvailabilityEvents?.length ? (
+                    <div className="intel-recorded-checks">
+                      <b>RECORDED LISTING CHANGES</b>
+                      {selectedDetail.recordedAvailabilityEvents.map((event, index) => (
+                        <span key={`${event.type}-${event.date ?? index}`}>
+                          {event.type.replaceAll("_", " ")} {event.date ? `· ${new Date(event.date).toLocaleString()}` : ""}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                  {(selectedProperty.lastCheckedAt || selectedDetail?.geocoding?.status) && (
                     <small>
-                      LAST SOURCE CHECK · {new Date(selected.lastCheckedAt).toLocaleString()}
+                      {selectedProperty.lastCheckedAt && `LAST SOURCE CHECK · ${new Date(selectedProperty.lastCheckedAt).toLocaleString()}`}
+                      {selectedDetail?.geocoding?.status && ` · ${selectedDetail.geocoding.precision === "RANGE_INTERPOLATED" ? "APPROXIMATE MAP LOCATION" : "GEOCODING"} ${selectedDetail.geocoding.status.toUpperCase()}${selectedDetail.geocoding.precision ? ` (${selectedDetail.geocoding.precision})` : ""}`}
                     </small>
                   )}
                   <Link
                     className="intel-details-link"
                     to="/property/$id"
-                    params={{ id: selected.id }}
+                    params={{ id: selectedProperty.id }}
                   >
-                    Open property details <ArrowUpRight size={15} />
+                    View Full Listing <ArrowUpRight size={15} />
                   </Link>
                 </>
               ) : (
@@ -457,16 +716,21 @@ function LiveIntelligencePage() {
               </button>
             </div>
             <div className="intel-map-status">
-              <Radio size={14} /> {visible.length} mapped records <span>·</span> {baseStyle === "satellite" ? "ESRI" : "CARTO"}
+              <Radio size={14} /> {visibleOnMap.length} mapped / {visible.length} matching <span>·</span> {baseStyle === "satellite" ? "ESRI" : "CARTO"}
             </div>
           </div>
           <div className="intel-map-frame">
             <OsirisPropertyMap
-              properties={visible.map(asProperty)}
+              properties={visibleOnMap.map(asProperty)}
               selectedId={selectedId}
               mode={mode}
               baseStyle={baseStyle}
-              onSelect={setSelectedId}
+              onSelect={(id) => {
+                setSelectedId(id);
+                setPanelOpen(true);
+                const index = visible.findIndex((property) => property.id === id);
+                if (index >= 0) setListingPage(Math.floor(index / listingPageSize));
+              }}
               onMapReady={setMap}
             />
             {loading && properties.length === 0 ? (
@@ -478,10 +742,12 @@ function LiveIntelligencePage() {
                 <p>{error}</p>
                 <button onClick={() => void refresh()}>Retry</button>
               </div>
-            ) : !visible.length ? (
+            ) : !visibleOnMap.length ? (
               <div className="intel-map-message intel-map-status-overlay">
                 <MapPin />
-                No properties match the selected layers with recorded coordinates.
+                {visible.length
+                  ? "Matching listings have no recorded coordinates and remain available in the property list."
+                  : "No properties match the selected filters."}
               </div>
             ) : null}
             <div className="intel-map-crosshair" aria-hidden="true">

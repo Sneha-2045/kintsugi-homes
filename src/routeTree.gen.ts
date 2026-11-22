@@ -44,6 +44,7 @@ import { Route as ApiAgentsIdRouteImport } from './routes/api.agents.$id'
 import { Route as ApiAgentsSearchRouteImport } from './routes/api.agents.search'
 import { Route as ApiAlertsUnsubscribeRouteImport } from './routes/api.alerts.unsubscribe'
 import { Route as ApiCronSavedSearchesRouteImport } from './routes/api.cron.saved-searches'
+import { Route as ApiLiveIntelligenceIdRouteImport } from './routes/api.live-intelligence.$id'
 import { Route as ApiPropertiesIdRouteImport } from './routes/api.properties.$id'
 import { Route as ApiPropertiesFiltersRouteImport } from './routes/api.properties.filters'
 import { Route as ApiPropertyIntelligenceDetailsRouteImport } from './routes/api.property-intelligence.details'
@@ -223,6 +224,11 @@ const ApiCronSavedSearchesRoute = ApiCronSavedSearchesRouteImport.update({
   path: '/api/cron/saved-searches',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiLiveIntelligenceIdRoute = ApiLiveIntelligenceIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiLiveIntelligenceRoute,
+} as any)
 const ApiPropertiesIdRoute = ApiPropertiesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -264,7 +270,7 @@ export interface FileRoutesByFullPath {
   '/sitemap': typeof SitemapRoute
   '/us-properties': typeof UsPropertiesRoute
   '/api/agents': typeof ApiAgentsRouteWithChildren
-  '/api/live-intelligence': typeof ApiLiveIntelligenceRoute
+  '/api/live-intelligence': typeof ApiLiveIntelligenceRouteWithChildren
   '/api/properties': typeof ApiPropertiesRouteWithChildren
   '/api/property-intelligence': typeof ApiPropertyIntelligenceRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
@@ -279,6 +285,7 @@ export interface FileRoutesByFullPath {
   '/api/agents/search': typeof ApiAgentsSearchRoute
   '/api/alerts/unsubscribe': typeof ApiAlertsUnsubscribeRoute
   '/api/cron/saved-searches': typeof ApiCronSavedSearchesRoute
+  '/api/live-intelligence/$id': typeof ApiLiveIntelligenceIdRoute
   '/api/properties/$id': typeof ApiPropertiesIdRoute
   '/api/properties/filters': typeof ApiPropertiesFiltersRoute
   '/api/property-intelligence/details': typeof ApiPropertyIntelligenceDetailsRoute
@@ -304,7 +311,7 @@ export interface FileRoutesByTo {
   '/sitemap': typeof SitemapRoute
   '/us-properties': typeof UsPropertiesRoute
   '/api/agents': typeof ApiAgentsRouteWithChildren
-  '/api/live-intelligence': typeof ApiLiveIntelligenceRoute
+  '/api/live-intelligence': typeof ApiLiveIntelligenceRouteWithChildren
   '/api/properties': typeof ApiPropertiesRouteWithChildren
   '/api/property-intelligence': typeof ApiPropertyIntelligenceRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
@@ -319,6 +326,7 @@ export interface FileRoutesByTo {
   '/api/agents/search': typeof ApiAgentsSearchRoute
   '/api/alerts/unsubscribe': typeof ApiAlertsUnsubscribeRoute
   '/api/cron/saved-searches': typeof ApiCronSavedSearchesRoute
+  '/api/live-intelligence/$id': typeof ApiLiveIntelligenceIdRoute
   '/api/properties/$id': typeof ApiPropertiesIdRoute
   '/api/properties/filters': typeof ApiPropertiesFiltersRoute
   '/api/property-intelligence/details': typeof ApiPropertyIntelligenceDetailsRoute
@@ -346,7 +354,7 @@ export interface FileRoutesById {
   '/sitemap': typeof SitemapRoute
   '/us-properties': typeof UsPropertiesRoute
   '/api/agents': typeof ApiAgentsRouteWithChildren
-  '/api/live-intelligence': typeof ApiLiveIntelligenceRoute
+  '/api/live-intelligence': typeof ApiLiveIntelligenceRouteWithChildren
   '/api/properties': typeof ApiPropertiesRouteWithChildren
   '/api/property-intelligence': typeof ApiPropertyIntelligenceRouteWithChildren
   '/category/$slug': typeof CategorySlugRoute
@@ -361,6 +369,7 @@ export interface FileRoutesById {
   '/api/agents/search': typeof ApiAgentsSearchRoute
   '/api/alerts/unsubscribe': typeof ApiAlertsUnsubscribeRoute
   '/api/cron/saved-searches': typeof ApiCronSavedSearchesRoute
+  '/api/live-intelligence/$id': typeof ApiLiveIntelligenceIdRoute
   '/api/properties/$id': typeof ApiPropertiesIdRoute
   '/api/properties/filters': typeof ApiPropertiesFiltersRoute
   '/api/property-intelligence/details': typeof ApiPropertyIntelligenceDetailsRoute
@@ -403,6 +412,7 @@ export interface FileRouteTypes {
     | '/api/agents/search'
     | '/api/alerts/unsubscribe'
     | '/api/cron/saved-searches'
+    | '/api/live-intelligence/$id'
     | '/api/properties/$id'
     | '/api/properties/filters'
     | '/api/property-intelligence/details'
@@ -443,6 +453,7 @@ export interface FileRouteTypes {
     | '/api/agents/search'
     | '/api/alerts/unsubscribe'
     | '/api/cron/saved-searches'
+    | '/api/live-intelligence/$id'
     | '/api/properties/$id'
     | '/api/properties/filters'
     | '/api/property-intelligence/details'
@@ -484,6 +495,7 @@ export interface FileRouteTypes {
     | '/api/agents/search'
     | '/api/alerts/unsubscribe'
     | '/api/cron/saved-searches'
+    | '/api/live-intelligence/$id'
     | '/api/properties/$id'
     | '/api/properties/filters'
     | '/api/property-intelligence/details'
@@ -511,7 +523,7 @@ export interface RootRouteChildren {
   SitemapRoute: typeof SitemapRoute
   UsPropertiesRoute: typeof UsPropertiesRoute
   ApiAgentsRoute: typeof ApiAgentsRouteWithChildren
-  ApiLiveIntelligenceRoute: typeof ApiLiveIntelligenceRoute
+  ApiLiveIntelligenceRoute: typeof ApiLiveIntelligenceRouteWithChildren
   ApiPropertiesRoute: typeof ApiPropertiesRouteWithChildren
   ApiPropertyIntelligenceRoute: typeof ApiPropertyIntelligenceRouteWithChildren
   CategorySlugRoute: typeof CategorySlugRoute
@@ -770,6 +782,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCronSavedSearchesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/live-intelligence/$id': {
+      id: '/api/live-intelligence/$id'
+      path: '/$id'
+      fullPath: '/api/live-intelligence/$id'
+      preLoaderRoute: typeof ApiLiveIntelligenceIdRouteImport
+      parentRoute: typeof ApiLiveIntelligenceRoute
+    }
     '/api/properties/$id': {
       id: '/api/properties/$id'
       path: '/$id'
@@ -853,6 +872,17 @@ const ApiAgentsRouteWithChildren = ApiAgentsRoute._addFileChildren(
   ApiAgentsRouteChildren,
 )
 
+interface ApiLiveIntelligenceRouteChildren {
+  ApiLiveIntelligenceIdRoute: typeof ApiLiveIntelligenceIdRoute
+}
+
+const ApiLiveIntelligenceRouteChildren: ApiLiveIntelligenceRouteChildren = {
+  ApiLiveIntelligenceIdRoute: ApiLiveIntelligenceIdRoute,
+}
+
+const ApiLiveIntelligenceRouteWithChildren =
+  ApiLiveIntelligenceRoute._addFileChildren(ApiLiveIntelligenceRouteChildren)
+
 interface ApiPropertiesRouteChildren {
   ApiPropertiesIdRoute: typeof ApiPropertiesIdRoute
   ApiPropertiesFiltersRoute: typeof ApiPropertiesFiltersRoute
@@ -901,7 +931,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapRoute: SitemapRoute,
   UsPropertiesRoute: UsPropertiesRoute,
   ApiAgentsRoute: ApiAgentsRouteWithChildren,
-  ApiLiveIntelligenceRoute: ApiLiveIntelligenceRoute,
+  ApiLiveIntelligenceRoute: ApiLiveIntelligenceRouteWithChildren,
   ApiPropertiesRoute: ApiPropertiesRouteWithChildren,
   ApiPropertyIntelligenceRoute: ApiPropertyIntelligenceRouteWithChildren,
   CategorySlugRoute: CategorySlugRoute,

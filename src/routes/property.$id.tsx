@@ -8,6 +8,7 @@ import { DiscountedPrice } from "@/components/property/DiscountedPrice";
 
 import { formatJpy, formatUsd, properties } from "@/data/properties";
 import { usListings } from "@/data/us-listings";
+import { apifyForeclosures } from "@/data/apify-foreclosures";
 import { tranchiProperties } from "@/data/tranchi-properties";
 import { canonicalLink, canonicalUrl } from "@/lib/seo";
 import { getMongoPropertyForPage } from "@/lib/mongo-property.functions";
@@ -19,12 +20,13 @@ export const Route = createFileRoute("/property/$id")({
 
     // If not found, search US listings
     const usProperty = usListings.find((p) => p.id === params.id);
+    const foreclosureProperty = apifyForeclosures.find((p) => p.id === params.id);
     const tranchiProperty = tranchiProperties.find(
       (p) => p.id === params.id || p.sourcePropertyId === params.id,
     );
 
     // Use whichever listing was found
-    let property = japanProperty ?? usProperty ?? tranchiProperty;
+    let property = japanProperty ?? usProperty ?? tranchiProperty ?? foreclosureProperty;
 
     if (!property) {
       const record = await getMongoPropertyForPage({ data: { id: params.id } });
