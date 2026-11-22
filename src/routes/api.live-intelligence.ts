@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getIntelligenceInventory } from "@/server/property-service";
 import { safeMongoError } from "@/server/mongo";
-import { usListings } from "@/data/us-listings";
+import { apifyForeclosures } from "@/data/apify-foreclosures";
 
 function getRecordedListingSnapshot() {
   const seen = new Set<string>();
-  const properties = usListings.flatMap((listing) => {
+  const properties = apifyForeclosures.flatMap((listing) => {
     const id = listing.id;
     if (
       !id ||

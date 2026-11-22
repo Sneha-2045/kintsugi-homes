@@ -461,30 +461,29 @@ function LiveIntelligencePage() {
             </div>
           </div>
           <div className="intel-map-frame">
+            <OsirisPropertyMap
+              properties={visible.map(asProperty)}
+              selectedId={selectedId}
+              mode={mode}
+              baseStyle={baseStyle}
+              onSelect={setSelectedId}
+              onMapReady={setMap}
+            />
             {loading && properties.length === 0 ? (
-              <div className="intel-map-message">
+              <div className="intel-map-message intel-map-status-overlay">
                 <LoaderCircle className="animate-spin" /> Loading verified inventory…
               </div>
             ) : error && properties.length === 0 ? (
-              <div className="intel-map-message intel-error">
+              <div className="intel-map-message intel-error intel-map-status-overlay">
                 <p>{error}</p>
                 <button onClick={() => void refresh()}>Retry</button>
               </div>
-            ) : visible.length ? (
-              <OsirisPropertyMap
-                properties={visible.map(asProperty)}
-                selectedId={selectedId}
-                mode={mode}
-                baseStyle={baseStyle}
-                onSelect={setSelectedId}
-                onMapReady={setMap}
-              />
-            ) : (
-              <div className="intel-map-message">
+            ) : !visible.length ? (
+              <div className="intel-map-message intel-map-status-overlay">
                 <MapPin />
                 No properties match the selected layers with recorded coordinates.
               </div>
-            )}
+            ) : null}
             <div className="intel-map-crosshair" aria-hidden="true">
               +
             </div>
