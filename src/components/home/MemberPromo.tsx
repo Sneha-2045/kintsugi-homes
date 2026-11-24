@@ -38,7 +38,7 @@ export function MemberPromo() {
                   Unlock with Free Trial
                 </Link>
               </Button>
-              <p className="text-sm text-muted-foreground">$49/month · cancel anytime</p>
+              <p className="text-sm text-muted-foreground">$9/month · cancel anytime</p>
             </div>
           </div>
 

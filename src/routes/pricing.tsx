@@ -14,13 +14,13 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "Browsing is free forever. Membership is $49 per month and unlocks early access, property insights, and buyer tools.",
+          "Browsing is free forever. Membership is $9 per month and unlocks early access, property insights, and buyer tools.",
       },
       { property: "og:title", content: "Pricing — Real Estate Membership" },
       {
         property: "og:description",
         content:
-          "Browsing is free forever. Membership is $49 per month and unlocks early access, property insights, and buyer tools.",
+          "Browsing is free forever. Membership is $9 per month and unlocks early access, property insights, and buyer tools.",
       },
     ],
   }),
@@ -44,7 +44,7 @@ const tiers = [
   },
   {
     name: "Member",
-    price: "$49",
+    price: "$9",
     period: "per month",
     badge: "Most popular",
     features: [

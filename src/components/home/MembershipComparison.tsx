@@ -117,7 +117,7 @@ export function MembershipComparison() {
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
-          <p className="text-sm text-muted-foreground">$49/month · cancel anytime</p>
+          <p className="text-sm text-muted-foreground">$9/month · cancel anytime</p>
         </div>
       </div>
     </section>
