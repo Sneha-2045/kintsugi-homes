@@ -1,5 +1,13 @@
 const API_BASE = "https://api.rentcast.io/v1";
 const PAGE_SIZE = 20;
+export const US_STATE_CODES =
+  "AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY".split(
+    " ",
+  );
+const RENTAL_DISPLAY_ORDER =
+  "CA TX FL NY WA IL GA AZ CO NV NC NJ MA TN OR VA PA MI OH AL AK AR CT DE HI ID IN IA KS KY LA ME MD MN MS MO MT NE NH NM ND OK RI SC SD UT VT WV WI WY".split(
+    " ",
+  );
 const STATE_CODES = new Set(
   "AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY DC".split(
     " ",
@@ -116,12 +124,8 @@ export function parseRentCastFilters(params: URLSearchParams): RentCastFilters {
   const city = boundedText(params.get("city"), "city", 80);
   const zipCode = boundedText(params.get("zipCode"), "ZIP code", 5);
   const state = boundedText(params.get("state"), "state", 2).toUpperCase();
-  if ((!city && !zipCode) || !state || !STATE_CODES.has(state)) {
-    throw new RentCastError(
-      400,
-      "INVALID_SEARCH",
-      "Enter a city or ZIP code and select a valid US state.",
-    );
+  if (!state || !STATE_CODES.has(state)) {
+    throw new RentCastError(400, "INVALID_SEARCH", "Select a valid US state.");
   }
   if (zipCode && !/^\d{5}$/.test(zipCode)) {
     throw new RentCastError(400, "INVALID_SEARCH", "Enter a 5-digit ZIP code.");
@@ -155,7 +159,7 @@ export function parseRentCastFilters(params: URLSearchParams): RentCastFilters {
   );
   const rawOffset = params.get("offset") ?? "0";
   const offset = Number(rawOffset);
-  if (!Number.isSafeInteger(offset) || offset < 0 || offset > 10_000 || offset % PAGE_SIZE !== 0) {
+  if (!Number.isSafeInteger(offset) || offset < 0 || offset % PAGE_SIZE !== 0) {
     throw new RentCastError(400, "INVALID_SEARCH", "Invalid results page. Please search again.");
   }
   return {
@@ -195,6 +199,7 @@ export function buildListingUrl(filters: RentCastFilters) {
   if (squareFootage) url.searchParams.set("squareFootage", squareFootage);
   url.searchParams.set("limit", String(PAGE_SIZE));
   url.searchParams.set("offset", String(filters.offset));
+  url.searchParams.set("includeTotalCount", "true");
   return url;
 }
 
@@ -353,6 +358,93 @@ export async function searchRentCast(params: URLSearchParams) {
         ? totalCount > filters.offset + listings.length
         : listings.length === PAGE_SIZE,
     totalCount,
+  };
+}
+
+export async function searchNationwideRentals(offset = 0) {
+  if (!Number.isSafeInteger(offset) || offset < 0 || offset % PAGE_SIZE !== 0) {
+    throw new RentCastError(400, "INVALID_SEARCH", "Invalid results page. Please search again.");
+  }
+
+  const responses = await Promise.all(
+    Array.from({ length: 8 }, async (_, worker) => {
+      const results: Array<{ state: string; listings: RentCastListing[]; totalCount?: number }> =
+        [];
+      for (let index = worker; index < US_STATE_CODES.length; index += 8) {
+        const state = US_STATE_CODES[index]!;
+        const params = new URLSearchParams({
+          state,
+          listingType: "rental",
+          offset: String(offset),
+        });
+        try {
+          const result = await searchRentCast(params);
+          results.push({
+            state,
+            listings: result.listings,
+            ...(result.totalCount != null ? { totalCount: result.totalCount } : {}),
+          });
+        } catch (error) {
+          console.error("[RentCast] Nationwide state search failed", {
+            state,
+            code: error instanceof RentCastError ? error.code : "UPSTREAM_FAILURE",
+          });
+        }
+      }
+      return results;
+    }),
+  );
+  const byState = responses
+    .flat()
+    .sort((a, b) => RENTAL_DISPLAY_ORDER.indexOf(a.state) - RENTAL_DISPLAY_ORDER.indexOf(b.state));
+  if (byState.length === 0) {
+    throw new RentCastError(
+      503,
+      "UPSTREAM_UNAVAILABLE",
+      "Nationwide rental listings are temporarily unavailable.",
+      true,
+    );
+  }
+
+  const queues = byState.map((entry) => ({ ...entry, index: 0 }));
+  const listings: RentCastListing[] = [];
+  const seen = new Set<string>();
+  const cityCounts = new Map<string, number>();
+  const cityCapSpillover: RentCastListing[] = [];
+  for (let round = 0; round < PAGE_SIZE; round += 1) {
+    for (const queue of queues) {
+      const item = queue.listings[round];
+      if (!item) continue;
+      const identity = item.id || `${item.formattedAddress ?? ""}|${item.state ?? queue.state}`;
+      if (seen.has(identity)) continue;
+      const cityKey = `${item.state ?? queue.state}:${(item.city ?? "").toLowerCase()}`;
+      if ((cityCounts.get(cityKey) ?? 0) >= 2) {
+        cityCapSpillover.push(item);
+        continue;
+      }
+      seen.add(identity);
+      cityCounts.set(cityKey, (cityCounts.get(cityKey) ?? 0) + 1);
+      listings.push(item);
+    }
+  }
+  // Keep the full provider page reachable; city balancing controls the featured order only.
+  for (const item of cityCapSpillover) {
+    const identity = item.id || `${item.formattedAddress ?? ""}|${item.state ?? ""}`;
+    if (seen.has(identity)) continue;
+    seen.add(identity);
+    listings.push(item);
+  }
+  return {
+    listings,
+    offset,
+    limit: listings.length,
+    hasMore: byState.some(
+      (entry) => entry.totalCount == null || entry.totalCount > offset + entry.listings.length,
+    ),
+    stateCounts: Object.fromEntries(
+      byState.map((entry) => [entry.state, entry.totalCount ?? null]),
+    ),
+    statesResponded: byState.map((entry) => entry.state),
   };
 }
 

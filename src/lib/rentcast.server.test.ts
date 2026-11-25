@@ -9,11 +9,18 @@ import {
 import { toRentCastComparison } from "./rentcast-property.ts";
 import { sanitizeComparisonProperties } from "./property-comparison.ts";
 
-test("requires a city or ZIP and a valid state", () => {
-  assert.throws(() => parseRentCastFilters(new URLSearchParams("state=TX")), /city or ZIP code/);
+test("supports statewide searches and validates the state", () => {
+  assert.equal(
+    parseRentCastFilters(new URLSearchParams("state=TX&listingType=rental")).state,
+    "TX",
+  );
   assert.throws(
     () => parseRentCastFilters(new URLSearchParams("city=Austin&state=XX")),
-    /city or ZIP code/,
+    /valid US state/,
+  );
+  assert.throws(
+    () => parseRentCastFilters(new URLSearchParams("listingType=rental")),
+    /valid US state/,
   );
 });
 

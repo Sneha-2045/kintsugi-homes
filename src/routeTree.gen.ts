@@ -31,6 +31,7 @@ import { Route as ApiAgentsRouteImport } from './routes/api.agents'
 import { Route as ApiLiveIntelligenceRouteImport } from './routes/api.live-intelligence'
 import { Route as ApiPropertiesRouteImport } from './routes/api.properties'
 import { Route as ApiPropertyIntelligenceRouteImport } from './routes/api.property-intelligence'
+import { Route as ApiRentalsRouteImport } from './routes/api.rentals'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as PrefectureSlugRouteImport } from './routes/prefecture.$slug'
 import { Route as PropertiesIdRouteImport } from './routes/properties.$id'
@@ -159,6 +160,11 @@ const ApiPropertyIntelligenceRoute = ApiPropertyIntelligenceRouteImport.update({
   path: '/api/property-intelligence',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRentalsRoute = ApiRentalsRouteImport.update({
+  id: '/api/rentals',
+  path: '/api/rentals',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CategorySlugRoute = CategorySlugRouteImport.update({
   id: '/category/$slug',
   path: '/category/$slug',
@@ -273,6 +279,7 @@ export interface FileRoutesByFullPath {
   '/api/live-intelligence': typeof ApiLiveIntelligenceRouteWithChildren
   '/api/properties': typeof ApiPropertiesRouteWithChildren
   '/api/property-intelligence': typeof ApiPropertyIntelligenceRouteWithChildren
+  '/api/rentals': typeof ApiRentalsRoute
   '/category/$slug': typeof CategorySlugRoute
   '/prefecture/$slug': typeof PrefectureSlugRoute
   '/properties/$id': typeof PropertiesIdRoute
@@ -314,6 +321,7 @@ export interface FileRoutesByTo {
   '/api/live-intelligence': typeof ApiLiveIntelligenceRouteWithChildren
   '/api/properties': typeof ApiPropertiesRouteWithChildren
   '/api/property-intelligence': typeof ApiPropertyIntelligenceRouteWithChildren
+  '/api/rentals': typeof ApiRentalsRoute
   '/category/$slug': typeof CategorySlugRoute
   '/prefecture/$slug': typeof PrefectureSlugRoute
   '/properties/$id': typeof PropertiesIdRoute
@@ -357,6 +365,7 @@ export interface FileRoutesById {
   '/api/live-intelligence': typeof ApiLiveIntelligenceRouteWithChildren
   '/api/properties': typeof ApiPropertiesRouteWithChildren
   '/api/property-intelligence': typeof ApiPropertyIntelligenceRouteWithChildren
+  '/api/rentals': typeof ApiRentalsRoute
   '/category/$slug': typeof CategorySlugRoute
   '/prefecture/$slug': typeof PrefectureSlugRoute
   '/properties/$id': typeof PropertiesIdRoute
@@ -400,6 +409,7 @@ export interface FileRouteTypes {
     | '/api/live-intelligence'
     | '/api/properties'
     | '/api/property-intelligence'
+    | '/api/rentals'
     | '/category/$slug'
     | '/prefecture/$slug'
     | '/properties/$id'
@@ -441,6 +451,7 @@ export interface FileRouteTypes {
     | '/api/live-intelligence'
     | '/api/properties'
     | '/api/property-intelligence'
+    | '/api/rentals'
     | '/category/$slug'
     | '/prefecture/$slug'
     | '/properties/$id'
@@ -483,6 +494,7 @@ export interface FileRouteTypes {
     | '/api/live-intelligence'
     | '/api/properties'
     | '/api/property-intelligence'
+    | '/api/rentals'
     | '/category/$slug'
     | '/prefecture/$slug'
     | '/properties/$id'
@@ -526,6 +538,7 @@ export interface RootRouteChildren {
   ApiLiveIntelligenceRoute: typeof ApiLiveIntelligenceRouteWithChildren
   ApiPropertiesRoute: typeof ApiPropertiesRouteWithChildren
   ApiPropertyIntelligenceRoute: typeof ApiPropertyIntelligenceRouteWithChildren
+  ApiRentalsRoute: typeof ApiRentalsRoute
   CategorySlugRoute: typeof CategorySlugRoute
   PrefectureSlugRoute: typeof PrefectureSlugRoute
   PropertyIdRoute: typeof PropertyIdRoute
@@ -689,6 +702,13 @@ declare module '@tanstack/react-router' {
       path: '/api/property-intelligence'
       fullPath: '/api/property-intelligence'
       preLoaderRoute: typeof ApiPropertyIntelligenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rentals': {
+      id: '/api/rentals'
+      path: '/api/rentals'
+      fullPath: '/api/rentals'
+      preLoaderRoute: typeof ApiRentalsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/category/$slug': {
@@ -934,6 +954,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiLiveIntelligenceRoute: ApiLiveIntelligenceRouteWithChildren,
   ApiPropertiesRoute: ApiPropertiesRouteWithChildren,
   ApiPropertyIntelligenceRoute: ApiPropertyIntelligenceRouteWithChildren,
+  ApiRentalsRoute: ApiRentalsRoute,
   CategorySlugRoute: CategorySlugRoute,
   PrefectureSlugRoute: PrefectureSlugRoute,
   PropertyIdRoute: PropertyIdRoute,
