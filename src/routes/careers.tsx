@@ -81,6 +81,16 @@ function CareersPage() {
     event.preventDefault();
     if (submitting) return;
     const formElement = event.currentTarget;
+    const resumeInput = formElement.elements.namedItem("resume");
+    const resumeFile = resumeInput instanceof HTMLInputElement ? resumeInput.files?.[0] : undefined;
+    if (!resumeFile) {
+      setMessage({ type: "error", text: "Choose a PDF resume to continue." });
+      return;
+    }
+    if (resumeFile.size > 5 * 1024 * 1024) {
+      setMessage({ type: "error", text: "Your PDF must be no larger than 5 MB." });
+      return;
+    }
     setSubmitting(true);
     setMessage(null);
     const formData = new FormData(formElement);

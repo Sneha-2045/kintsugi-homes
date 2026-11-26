@@ -1,6 +1,8 @@
 const DATASET_ID = "bZhSt4i1bdfnniiaV";
 const APIFY_API = "https://api.apify.com/v2";
 const PAGE_SIZE = 20;
+const DATASET_PAGE_SIZE = 1000;
+const APIFY_TIMEOUT_MS = 15_000;
 const CACHE_MS = 15 * 60 * 1000;
 const STATE_ORDER =
   "CA TX FL NY WA IL GA AZ CO NV NC NJ MA TN OR VA PA MI OH AL AK AR CT DE HI ID IN IA KS KY LA ME MD MN MS MO MT NE NH NM ND OK RI SC SD UT VT WV WI WY".split(
@@ -28,6 +30,21 @@ export type ApifyRentalListing = {
   minRent?: number;
   maxRent?: number;
   availableUnits?: number;
+};
+
+export type RentalFilters = {
+  q?: string;
+  type?: string;
+  minRent?: number;
+  maxRent?: number;
+  state?: string;
+  city?: string;
+  zipCode?: string;
+  neighborhood?: string;
+  beds?: number;
+  studio?: boolean;
+  bathrooms?: number;
+  sort?: "price-asc" | "price-desc" | "beds-desc";
 };
 
 export class ApifyRentalError extends Error {
@@ -120,17 +137,17 @@ function parseListings(value: unknown): ApifyRentalListing[] {
   return mixed;
 }
 
-async function fetchListings() {
+async function fetchDatasetPage(offset: number) {
   const token = process.env["APIFY_TOKEN"]?.trim();
   if (!token) throw new ApifyRentalError(503, "Apify rentals are not configured on this server.");
 
   let response: Response;
   try {
     response = await fetch(
-      `${APIFY_API}/datasets/${DATASET_ID}/items?clean=true&format=json&limit=1000`,
+      `${APIFY_API}/datasets/${DATASET_ID}/items?clean=true&format=json&limit=${DATASET_PAGE_SIZE}&offset=${offset}`,
       {
         headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-        signal: AbortSignal.timeout(15_000),
+        signal: AbortSignal.timeout(APIFY_TIMEOUT_MS),
       },
     );
   } catch {
@@ -145,7 +162,86 @@ async function fetchListings() {
   } catch {
     throw new ApifyRentalError(502, "Apify returned unreadable rental data.");
   }
-  return parseListings(value);
+  if (!Array.isArray(value)) throw new ApifyRentalError(502, "Apify returned an unexpected rentals dataset.");
+  const rawTotal = Number(response.headers.get("X-Apify-Pagination-Total"));
+  return { items: value, total: Number.isFinite(rawTotal) && rawTotal >= 0 ? rawTotal : null };
+}
+
+async function fetchListings() {
+  const first = await fetchDatasetPage(0);
+  const rawItems = [...first.items];
+  let offset = first.items.length;
+  const expectedTotal = first.total;
+  while (first.items.length === DATASET_PAGE_SIZE && (expectedTotal === null || offset < expectedTotal)) {
+    const page = await fetchDatasetPage(offset);
+    if (page.items.length === 0) break;
+    rawItems.push(...page.items);
+    offset += page.items.length;
+    if (page.items.length < DATASET_PAGE_SIZE) break;
+  }
+  return parseListings(rawItems);
+}
+
+function normalized(value: string | undefined) {
+  return value?.trim().toLowerCase() ?? "";
+}
+
+function rentAmount(listing: ApifyRentalListing) {
+  return listing.monthlyRent ?? listing.minRent ?? listing.price;
+}
+
+function propertyTypeMatches(listingType: string | undefined, filterType: string) {
+  const value = normalized(listingType);
+  const type = normalized(filterType);
+  if (!value || !type) return !type;
+  const aliases: Record<string, string[]> = {
+    apartment: ["apartment", "apt"],
+    house: ["house", "single family", "single-family", "home"],
+    condo: ["condo", "condominium"],
+    townhouse: ["townhouse", "townhome", "town home"],
+    studio: ["studio"],
+    duplex: ["duplex"],
+    "single-family home": ["single family", "single-family", "house"],
+    "shared accommodation": ["shared", "room", "roommate"],
+  };
+  return (aliases[type] ?? [type]).some((alias) => value.includes(alias));
+}
+
+function filterListings(listings: ApifyRentalListing[], filters: RentalFilters) {
+  const q = normalized(filters.q);
+  const city = normalized(filters.city);
+  const zipCode = normalized(filters.zipCode);
+  const neighborhood = normalized(filters.neighborhood);
+  const filtered = listings.filter((listing) => {
+    const amount = rentAmount(listing);
+    const address = normalized(`${listing.address ?? ""} ${listing.addressLine1 ?? ""} ${listing.buildingName ?? ""}`);
+    const fullLocation = normalized(`${listing.city} ${listing.state} ${listing.zipCode ?? ""} ${address}`);
+    if (q && !fullLocation.includes(q)) return false;
+    if (filters.state && listing.state !== filters.state) return false;
+    if (city && !normalized(listing.city).includes(city)) return false;
+    if (zipCode && !normalized(listing.zipCode).startsWith(zipCode)) return false;
+    if (neighborhood && !address.includes(neighborhood)) return false;
+    if (!propertyTypeMatches(listing.propertyType, filters.type ?? "")) return false;
+    if (filters.studio && !(normalized(listing.propertyType).includes("studio") || listing.beds === 0)) return false;
+    if (filters.beds !== undefined && (listing.beds === undefined || listing.beds < filters.beds)) return false;
+    if (filters.bathrooms !== undefined && (listing.bathrooms === undefined || listing.bathrooms < filters.bathrooms)) return false;
+    if (filters.minRent !== undefined && (amount === undefined || amount < filters.minRent)) return false;
+    if (filters.maxRent !== undefined && (amount === undefined || amount > filters.maxRent)) return false;
+    return true;
+  });
+
+  switch (filters.sort) {
+    case "price-asc":
+      filtered.sort((a, b) => (rentAmount(a) ?? Number.POSITIVE_INFINITY) - (rentAmount(b) ?? Number.POSITIVE_INFINITY));
+      break;
+    case "price-desc":
+      filtered.sort((a, b) => (rentAmount(b) ?? Number.NEGATIVE_INFINITY) - (rentAmount(a) ?? Number.NEGATIVE_INFINITY));
+      break;
+    case "beds-desc":
+      filtered.sort((a, b) => (b.beds ?? Number.NEGATIVE_INFINITY) - (a.beds ?? Number.NEGATIVE_INFINITY));
+      break;
+  }
+  return filtered;
 }
 
 async function getListings() {
@@ -164,12 +260,13 @@ async function getListings() {
   return pendingRequest;
 }
 
-export async function getApifyRentals(offset = 0) {
+export async function getApifyRentals(offset = 0, filters: RentalFilters = {}) {
   if (!Number.isSafeInteger(offset) || offset < 0 || offset % PAGE_SIZE !== 0) {
     throw new ApifyRentalError(400, "Invalid rental page.");
   }
   const listings = await getListings();
-  const page = listings.slice(offset, offset + PAGE_SIZE);
+  const matchingListings = filterListings(listings, filters);
+  const page = matchingListings.slice(offset, offset + PAGE_SIZE);
   const stateCounts: Record<string, number> = {};
   for (const listing of listings)
     stateCounts[listing.state] = (stateCounts[listing.state] ?? 0) + 1;
@@ -177,8 +274,8 @@ export async function getApifyRentals(offset = 0) {
     listings: page,
     offset,
     limit: PAGE_SIZE,
-    totalCount: listings.length,
-    hasMore: offset + page.length < listings.length,
+    totalCount: matchingListings.length,
+    hasMore: offset + page.length < matchingListings.length,
     stateCounts,
     statesResponded: Object.keys(stateCounts),
   };
