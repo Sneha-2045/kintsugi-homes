@@ -2,7 +2,13 @@ import { createHash } from "node:crypto";
 import { Types } from "mongoose";
 import { z } from "zod";
 import { connectMongo } from "./mongo.ts";
-import { Favorite, PropertyModel, SavedSearchEvent, SavedSearchMatch, SearchCache } from "./models.ts";
+import {
+  Favorite,
+  PropertyModel,
+  SavedSearchEvent,
+  SavedSearchMatch,
+  SearchCache,
+} from "./models.ts";
 
 export const PropertySearchArgs = z.object({
   city: z.string().trim().min(1).max(80).optional(),
@@ -146,14 +152,19 @@ const IntelligenceQuery = z
   })
   .refine(
     (value) =>
-      value.minPrice === undefined || value.maxPrice === undefined || value.minPrice <= value.maxPrice,
+      value.minPrice === undefined ||
+      value.maxPrice === undefined ||
+      value.minPrice <= value.maxPrice,
     { message: "Minimum price cannot exceed maximum price." },
   );
 
 export type IntelligenceQuery = z.input<typeof IntelligenceQuery>;
 
 const IntelligencePageArgs = z.object({
-  cursor: z.string().regex(/^[a-f\d]{24}$/i).optional(),
+  cursor: z
+    .string()
+    .regex(/^[a-f\d]{24}$/i)
+    .optional(),
   pageSize: z.number().int().min(1).max(1000).default(500),
 });
 
@@ -168,15 +179,47 @@ export async function getIntelligenceInventoryPage(input: unknown) {
   if (args.cursor) query["_id"] = { $gt: new Types.ObjectId(args.cursor) };
 
   const projection = [
-    "_id", "sourceListingId", "legacyId", "title", "price", "currency", "country",
-    "state", "city", "address", "postalCode", "location", "latitude", "longitude",
-    "geoPoint", "propertyType", "foreclosureStatus", "listingType", "bedrooms",
-    "bathrooms", "status", "auctionDate", "lastCheckedAt", "source", "sourceUrl",
-    "createdAt", "updatedAt", "metadata.previousPrice", "metadata.listedAt",
+    "_id",
+    "sourceListingId",
+    "legacyId",
+    "title",
+    "price",
+    "currency",
+    "country",
+    "state",
+    "city",
+    "address",
+    "postalCode",
+    "location",
+    "latitude",
+    "longitude",
+    "geoPoint",
+    "propertyType",
+    "foreclosureStatus",
+    "listingType",
+    "bedrooms",
+    "bathrooms",
+    "status",
+    "auctionDate",
+    "lastCheckedAt",
+    "source",
+    "sourceUrl",
+    "images",
+    "createdAt",
+    "updatedAt",
+    "metadata.previousPrice",
+    "metadata.listedAt",
+    "metadata.dealCategory",
+    "metadata.tags",
+    "metadata.isInvestment",
   ].join(" ");
   const [total, records] = await Promise.all([
     PropertyModel.countDocuments({ country: "United States", status: { $ne: "draft" } }),
-    PropertyModel.find(query).select(projection).sort({ _id: 1 }).limit(args.pageSize + 1).lean(),
+    PropertyModel.find(query)
+      .select(projection)
+      .sort({ _id: 1 })
+      .limit(args.pageSize + 1)
+      .lean(),
   ]);
   const hasMore = records.length > args.pageSize;
   if (hasMore) records.pop();
@@ -187,12 +230,25 @@ export async function getIntelligenceInventoryPage(input: unknown) {
       : [];
     const geoLongitude = geoCoordinates[0];
     const geoLatitude = geoCoordinates[1];
-    const storedLatValid = typeof record.latitude === "number" && record.latitude >= -90 && record.latitude <= 90;
-    const storedLngValid = typeof record.longitude === "number" && record.longitude >= -180 && record.longitude <= 180;
+    const storedLatValid =
+      typeof record.latitude === "number" && record.latitude >= -90 && record.latitude <= 90;
+    const storedLngValid =
+      typeof record.longitude === "number" && record.longitude >= -180 && record.longitude <= 180;
     const geoLatValid = typeof geoLatitude === "number" && geoLatitude >= -90 && geoLatitude <= 90;
-    const geoLngValid = typeof geoLongitude === "number" && geoLongitude >= -180 && geoLongitude <= 180;
-    const latitude = storedLatValid && storedLngValid ? record.latitude : geoLatValid && geoLngValid ? geoLatitude : null;
-    const longitude = storedLatValid && storedLngValid ? record.longitude : geoLatValid && geoLngValid ? geoLongitude : null;
+    const geoLngValid =
+      typeof geoLongitude === "number" && geoLongitude >= -180 && geoLongitude <= 180;
+    const latitude =
+      storedLatValid && storedLngValid
+        ? record.latitude
+        : geoLatValid && geoLngValid
+          ? geoLatitude
+          : null;
+    const longitude =
+      storedLatValid && storedLngValid
+        ? record.longitude
+        : geoLatValid && geoLngValid
+          ? geoLongitude
+          : null;
     return {
       id: String(record._id),
       sourceId: record.sourceListingId,
@@ -218,10 +274,17 @@ export async function getIntelligenceInventoryPage(input: unknown) {
       lastCheckedAt: record.lastCheckedAt ?? null,
       source: record.source ?? null,
       sourceUrl: record.sourceUrl ?? null,
+      images: (record.images ?? [])
+        .map((image: { url?: string; path?: string }) => image.url ?? image.path)
+        .filter(Boolean),
+      dealCategory: metadata["dealCategory"] ?? null,
+      tags: Array.isArray(metadata["tags"]) ? metadata["tags"] : [],
+      isInvestment: metadata["isInvestment"] === true,
       createdAt: metadata["listedAt"] ?? null,
       updatedAt: record.updatedAt ?? null,
       recordCreatedAt: record.createdAt ?? null,
-      previousPrice: typeof metadata["previousPrice"] === "number" ? metadata["previousPrice"] : null,
+      previousPrice:
+        typeof metadata["previousPrice"] === "number" ? metadata["previousPrice"] : null,
       geocodingStatus: record.geocoding?.status ?? null,
       geocodingPrecision: record.geocoding?.precision ?? null,
     };
@@ -244,10 +307,7 @@ export async function getIntelligencePropertyDetail(id: string) {
   if (typeof id !== "string" || id.length < 1 || id.length > 120)
     throw new Error("Enter a valid property ID.");
   await connectMongo();
-  const clauses: Record<string, unknown>[] = [
-    { legacyId: id },
-    { sourceListingId: id },
-  ];
+  const clauses: Record<string, unknown>[] = [{ legacyId: id }, { sourceListingId: id }];
   if (/^[a-f\d]{24}$/i.test(id)) clauses.push({ _id: new Types.ObjectId(id) });
   const property = await PropertyModel.findOne({
     $or: clauses,
@@ -256,7 +316,9 @@ export async function getIntelligencePropertyDetail(id: string) {
   }).lean();
   if (!property) return null;
   const metadata = (property.metadata ?? {}) as Record<string, unknown>;
-  const coordinates = Array.isArray(property.geoPoint?.coordinates) ? property.geoPoint.coordinates : [];
+  const coordinates = Array.isArray(property.geoPoint?.coordinates)
+    ? property.geoPoint.coordinates
+    : [];
   const [matches, events] = await Promise.all([
     SavedSearchMatch.find({ source: property.source, listingId: property.sourceListingId })
       .select("firstSeenAt lastSeenAt updatedAt")
@@ -296,19 +358,21 @@ export async function getIntelligencePropertyDetail(id: string) {
     parking: metadata["parking"] ?? null,
     condition: metadata["condition"] ?? metadata["propertyCondition"] ?? null,
     construction: metadata["construction"] ?? metadata["constructionType"] ?? null,
-    images: (property.images ?? []).map((image: {
-      url?: string;
-      altText?: string;
-      sortOrder?: number;
-      width?: number;
-      height?: number;
-    }) => ({
-      url: image.url,
-      altText: image.altText ?? null,
-      sortOrder: image.sortOrder ?? 0,
-      width: image.width ?? null,
-      height: image.height ?? null,
-    })),
+    images: (property.images ?? []).map(
+      (image: {
+        url?: string;
+        altText?: string;
+        sortOrder?: number;
+        width?: number;
+        height?: number;
+      }) => ({
+        url: image.url,
+        altText: image.altText ?? null,
+        sortOrder: image.sortOrder ?? 0,
+        width: image.width ?? null,
+        height: image.height ?? null,
+      }),
+    ),
     source: property.source,
     sourceUrl: property.sourceUrl ?? null,
     listingType: property.listingType ?? null,

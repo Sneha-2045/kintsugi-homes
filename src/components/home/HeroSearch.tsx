@@ -10,12 +10,12 @@ import {
   SlidersHorizontal,
   Sparkles,
 } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Button } from "@/components/common/Button";
 import { usListings } from "@/data/us-listings";
 import { cn } from "@/lib/utils";
 
-const tabs = ["Buy", "Foreclosure", "Auction", "Investment"] as const;
+const tabs = ["Buy", "Rent", "Foreclosure", "Auction", "Investment"] as const;
 const markets = [
   { name: "Florida", detail: "Sunshine state deals" },
   { name: "Georgia", detail: "Atlanta & beyond" },
@@ -28,17 +28,121 @@ export function HeroSearch() {
   const [tab, setTab] = useState<(typeof tabs)[number]>("Foreclosure");
   const [query, setQuery] = useState("");
   const [budget, setBudget] = useState(320000);
-  const matchingListings = usListings.filter(
-    (listing) => listing.priceUsd > 0 && listing.priceUsd <= budget,
-  ).length;
+  const [rentalMin, setRentalMin] = useState("");
+  const [rentalType, setRentalType] = useState("");
+  const [rentalBeds, setRentalBeds] = useState("");
+  const [rentalBaths, setRentalBaths] = useState("");
+  const [rentalAvailability, setRentalAvailability] = useState("");
+  const [rentalFurnished, setRentalFurnished] = useState("");
+  const [rentalLease, setRentalLease] = useState("");
+  const [rentalAmenities, setRentalAmenities] = useState<string[]>([]);
+  const [rentalMatches, setRentalMatches] = useState<number | null>(null);
+  const [rentalCountLoading, setRentalCountLoading] = useState(false);
+  const matchingListings = usListings.filter((listing) => {
+    if (!(listing.priceUsd > 0 && listing.priceUsd <= budget)) return false;
+    const term = query.trim().toLowerCase();
+    if (
+      term &&
+      ![listing.title, listing.location, ...listing.tags]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(term)
+    )
+      return false;
+    if (tab === "Foreclosure")
+      return listing.dealCategory === "Foreclosure Sale" || listing.tags.includes("Foreclosure");
+    if (tab === "Auction") return Boolean(listing.auctionDate) || listing.tags.includes("Auction");
+    if (tab === "Investment")
+      return listing.dealCategory === "Investment" || listing.tags.includes("Investment");
+    return true;
+  }).length;
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("rentMode") !== "1") return;
+    setTab("Rent");
+    setQuery(params.get("rentQ") ?? "");
+    setRentalMin(params.get("rentMin") ?? "");
+    setBudget(Number(params.get("rentMax")) || 3200);
+    setRentalType(params.get("rentType") ?? "");
+    setRentalBeds(params.get("rentStudio") === "true" ? "0" : (params.get("rentBeds") ?? ""));
+    setRentalBaths(params.get("rentBaths") ?? "");
+    setRentalAvailability(params.get("rentAvailability") ?? "");
+    setRentalFurnished(params.get("rentFurnished") ?? "");
+    setRentalLease(params.get("rentLease") ?? "");
+    setRentalAmenities(params.getAll("rentAmenity"));
+  }, []);
+
+  useEffect(() => {
+    if (tab !== "Rent") return;
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setRentalCountLoading(true);
+      try {
+        const params = new URLSearchParams({ offset: "0", maxRent: String(budget) });
+        if (query.trim()) params.set("q", query.trim());
+        if (rentalMin) params.set("minRent", rentalMin);
+        if (rentalType) params.set("type", rentalType);
+        if (rentalBeds === "0") params.set("studio", "true");
+        else if (rentalBeds) params.set("beds", rentalBeds);
+        if (rentalBaths) params.set("bathrooms", rentalBaths);
+        if (rentalAvailability) params.set("availability", rentalAvailability);
+        if (rentalFurnished) params.set("furnished", rentalFurnished);
+        if (rentalLease) params.set("leaseDuration", rentalLease);
+        rentalAmenities.forEach((amenity) => params.append("amenity", amenity));
+        const response = await fetch(`/api/rentals?${params.toString()}`, {
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error("Rental count unavailable");
+        const result = (await response.json()) as { totalCount?: number };
+        setRentalMatches(result.totalCount ?? 0);
+      } catch {
+        if (!controller.signal.aborted) setRentalMatches(null);
+      } finally {
+        if (!controller.signal.aborted) setRentalCountLoading(false);
+      }
+    }, 350);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [
+    tab,
+    budget,
+    query,
+    rentalMin,
+    rentalType,
+    rentalBeds,
+    rentalBaths,
+    rentalAvailability,
+    rentalFurnished,
+    rentalLease,
+    rentalAmenities,
+  ]);
+
+  const searchResultsUrl = () => {
+    const params = new URLSearchParams({
+      category: tab.toLowerCase(),
+      maxPrice: String(budget),
+    });
+    if (query.trim()) params.set("q", query.trim());
+    if (tab === "Rent") {
+      if (rentalMin) params.set("minPrice", rentalMin);
+      if (rentalType) params.set("propertyType", rentalType);
+      if (rentalBeds) params.set("bedrooms", rentalBeds);
+      if (rentalBaths) params.set("bathrooms", rentalBaths);
+      if (rentalAvailability) params.set("availability", rentalAvailability);
+      if (rentalFurnished) params.set("furnished", rentalFurnished);
+      if (rentalLease) params.set("leaseDuration", rentalLease);
+      rentalAmenities.forEach((amenity) => params.append("amenity", amenity));
+    }
+    return `/properties/search?${params.toString()}`;
+  };
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
-    const category = tab === "Foreclosure" ? "Foreclosure Sale" : tab === "Buy" ? undefined : tab;
-    navigate({
-      to: "/us-properties",
-      search: { q: query.trim() || undefined, maxPrice: String(budget), category },
-    });
+    window.location.assign(searchResultsUrl());
   };
 
   const searchFor = (market: string) => {
@@ -75,12 +179,19 @@ export function HeroSearch() {
               id="hero-title"
               className="max-w-3xl break-words text-[clamp(2rem,8.5vw,3rem)] font-bold leading-[1.04] tracking-tight text-white sm:text-5xl lg:text-[68px]"
             >
-              More than a property.{" "}
-              <span className="text-primary-light">Your next opportunity.</span>
+              {tab === "Rent" ? (
+                <span className="text-primary-light">Find Your Next Home to Rent.</span>
+              ) : (
+                <>
+                  More than a property.{" "}
+                  <span className="text-primary-light">Your next opportunity.</span>
+                </>
+              )}
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-slate-300 sm:text-lg">
-              Discover exceptional homes, explore foreclosure opportunities, and find smarter ways
-              to invest — all in one place.
+              {tab === "Rent"
+                ? "Explore rental properties across all 50 U.S. states. Find a home that fits your lifestyle and budget."
+                : "Discover exceptional homes, explore foreclosure opportunities, and find smarter ways to invest — all in one place."}
             </p>
 
             <div className="mt-8 max-w-2xl overflow-hidden rounded-2xl border border-white/15 bg-[#111e30] shadow-2xl shadow-black/30">
@@ -93,7 +204,10 @@ export function HeroSearch() {
                   <button
                     key={item}
                     type="button"
-                    onClick={() => setTab(item)}
+                    onClick={() => {
+                      setTab(item);
+                      setBudget(item === "Rent" ? 3200 : 320000);
+                    }}
                     aria-pressed={tab === item}
                     className={cn(
                       "relative px-4 py-3 text-sm font-semibold transition-colors",
@@ -107,7 +221,10 @@ export function HeroSearch() {
                   </button>
                 ))}
               </div>
-              <form onSubmit={onSubmit} className="flex flex-col gap-3 p-3 sm:flex-row sm:p-4">
+              <form
+                onSubmit={onSubmit}
+                className={`grid gap-3 p-3 sm:p-4 ${tab === "Rent" ? "sm:grid-cols-2" : "sm:grid-cols-[minmax(0,1fr)_auto]"}`}
+              >
                 <label htmlFor="hero-search" className="sr-only">
                   Search by city, state, or ZIP code
                 </label>
@@ -118,12 +235,18 @@ export function HeroSearch() {
                     type="search"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="City, state, or ZIP code"
+                    placeholder={
+                      tab === "Rent"
+                        ? "City, state, ZIP or neighborhood"
+                        : "City, state, or ZIP code"
+                    }
                     className="h-12 min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-400"
                   />
                   <button
                     type="button"
-                    aria-label="Adjust maximum home price"
+                    aria-label={
+                      tab === "Rent" ? "Adjust maximum monthly rent" : "Adjust maximum home price"
+                    }
                     aria-controls="hero-budget"
                     onClick={() => document.getElementById("hero-budget")?.focus()}
                     className="hidden rounded-md p-2 text-slate-300 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-light sm:block"
@@ -131,8 +254,147 @@ export function HeroSearch() {
                     <SlidersHorizontal className="h-4 w-4" />
                   </button>
                 </div>
+                {tab === "Rent" && (
+                  <>
+                    <label className="sr-only" htmlFor="rental-min">
+                      Minimum monthly rent
+                    </label>
+                    <input
+                      id="rental-min"
+                      type="number"
+                      min="0"
+                      value={rentalMin}
+                      onChange={(event) => setRentalMin(event.target.value)}
+                      placeholder="Min monthly rent"
+                      className="h-12 min-w-0 rounded-xl border border-white/15 bg-[#0b1422] px-4 text-sm text-white outline-none placeholder:text-slate-400 focus:border-primary-light/70"
+                    />
+                    <label className="sr-only" htmlFor="rental-type">
+                      Property type
+                    </label>
+                    <select
+                      id="rental-type"
+                      value={rentalType}
+                      onChange={(event) => setRentalType(event.target.value)}
+                      className="h-12 min-w-0 rounded-xl border border-white/15 bg-[#0b1422] px-4 text-sm text-white outline-none focus:border-primary-light/70"
+                    >
+                      <option value="">Any property type</option>
+                      {["Apartment", "House", "Condo", "Townhouse", "Studio", "Duplex"].map(
+                        (type) => (
+                          <option key={type}>{type}</option>
+                        ),
+                      )}
+                    </select>
+                    <label className="sr-only" htmlFor="rental-beds">
+                      Bedrooms
+                    </label>
+                    <select
+                      id="rental-beds"
+                      value={rentalBeds}
+                      onChange={(event) => setRentalBeds(event.target.value)}
+                      className="h-12 min-w-0 rounded-xl border border-white/15 bg-[#0b1422] px-4 text-sm text-white outline-none focus:border-primary-light/70"
+                    >
+                      <option value="">Any bedrooms</option>
+                      <option value="0">Studio</option>
+                      <option value="1">1+ bedrooms</option>
+                      <option value="2">2+ bedrooms</option>
+                      <option value="3">3+ bedrooms</option>
+                      <option value="4">4+ bedrooms</option>
+                    </select>
+                    <label className="sr-only" htmlFor="rental-baths">
+                      Bathrooms
+                    </label>
+                    <select
+                      id="rental-baths"
+                      value={rentalBaths}
+                      onChange={(event) => setRentalBaths(event.target.value)}
+                      className="h-12 min-w-0 rounded-xl border border-white/15 bg-[#0b1422] px-4 text-sm text-white outline-none focus:border-primary-light/70"
+                    >
+                      <option value="">Any bathrooms</option>
+                      {[1, 2, 3, 4].map((baths) => (
+                        <option key={baths} value={baths}>
+                          {baths}+ bathrooms
+                        </option>
+                      ))}
+                    </select>
+                    <label className="sr-only" htmlFor="rental-availability">
+                      Availability
+                    </label>
+                    <select
+                      id="rental-availability"
+                      value={rentalAvailability}
+                      onChange={(event) => setRentalAvailability(event.target.value)}
+                      className="h-12 min-w-0 rounded-xl border border-white/15 bg-[#0b1422] px-4 text-sm text-white outline-none focus:border-primary-light/70"
+                    >
+                      <option value="">Any availability</option>
+                      <option value="now">Available now</option>
+                      <option value="soon">Available soon</option>
+                    </select>
+                    <label className="sr-only" htmlFor="rental-furnished">
+                      Furnishing
+                    </label>
+                    <select
+                      id="rental-furnished"
+                      value={rentalFurnished}
+                      onChange={(event) => setRentalFurnished(event.target.value)}
+                      className="h-12 min-w-0 rounded-xl border border-white/15 bg-[#0b1422] px-4 text-sm text-white outline-none focus:border-primary-light/70"
+                    >
+                      <option value="">Any furnishing</option>
+                      <option value="true">Furnished</option>
+                      <option value="false">Unfurnished</option>
+                    </select>
+                    <label className="sr-only" htmlFor="rental-lease">
+                      Lease duration
+                    </label>
+                    <select
+                      id="rental-lease"
+                      value={rentalLease}
+                      onChange={(event) => setRentalLease(event.target.value)}
+                      className="h-12 min-w-0 rounded-xl border border-white/15 bg-[#0b1422] px-4 text-sm text-white outline-none focus:border-primary-light/70"
+                    >
+                      <option value="">Any lease duration</option>
+                      <option value="short">Short-term</option>
+                      <option value="long">Long-term</option>
+                    </select>
+                    <fieldset className="sm:col-span-2">
+                      <legend className="mb-2 text-xs font-semibold text-slate-300">
+                        Amenities
+                      </legend>
+                      <div className="flex flex-wrap gap-x-4 gap-y-2">
+                        {[
+                          "Pool",
+                          "Gym",
+                          "Parking",
+                          "Pet Friendly",
+                          "Laundry",
+                          "Dishwasher",
+                          "Balcony",
+                        ].map((amenity) => (
+                          <label
+                            key={amenity}
+                            className="flex items-center gap-2 text-xs text-slate-300"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={rentalAmenities.includes(amenity)}
+                              onChange={(event) =>
+                                setRentalAmenities((current) =>
+                                  event.target.checked
+                                    ? [...current, amenity]
+                                    : current.filter((item) => item !== amenity),
+                                )
+                              }
+                              className="accent-blue-400"
+                            />
+                            {amenity}
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                  </>
+                )}
                 <Button type="submit" size="lg" className="h-12 rounded-xl px-6">
-                  <Search className="h-4 w-4" /> Explore homes
+                  <Search className="h-4 w-4" />{" "}
+                  {tab === "Rent" ? "Search Rentals" : "Explore homes"}
                 </Button>
               </form>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 pb-4 text-xs text-slate-400">
@@ -153,9 +415,11 @@ export function HeroSearch() {
             <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-300">
               <span>
                 <strong className="font-mono text-white">
-                  {usListings.length.toLocaleString("en-US")}
+                  {tab === "Rent"
+                    ? (rentalMatches?.toLocaleString("en-US") ?? "—")
+                    : usListings.length.toLocaleString("en-US")}
                 </strong>{" "}
-                indexed US listings
+                {tab === "Rent" ? "matching rental listings" : "indexed US listings"}
               </span>
               <span className="flex items-center gap-1.5">
                 <CalendarDays className="h-4 w-4 text-primary-light" /> Auction dates shown when
@@ -186,34 +450,47 @@ export function HeroSearch() {
               <div className="mt-6 rounded-2xl border border-white/10 bg-[#0b1422] p-4">
                 <div className="flex items-end justify-between gap-3">
                   <div>
-                    <p className="text-xs text-slate-400">Target home price</p>
+                    <p className="text-xs text-slate-400">
+                      {tab === "Rent" ? "Monthly rental budget" : "Target home price"}
+                    </p>
                     <p className="mt-1 font-mono text-3xl font-bold tracking-tight text-white">
-                      ${budget.toLocaleString()}
+                      ${tab === "Rent" ? budget.toLocaleString() : budget.toLocaleString()}
+                      {tab === "Rent" ? (
+                        <span className="ml-1 text-sm font-medium text-slate-400">/mo</span>
+                      ) : null}
                     </p>
                   </div>
                   <BadgeDollarSign className="mb-1 h-7 w-7 text-primary-light" />
                 </div>
                 <input
                   id="hero-budget"
-                  aria-label="Maximum home price"
+                  aria-label={
+                    tab === "Rent" ? "Maximum monthly rental budget" : "Maximum home price"
+                  }
                   type="range"
-                  min="100000"
-                  max="800000"
-                  step="10000"
+                  min={tab === "Rent" ? "500" : "100000"}
+                  max={tab === "Rent" ? "10000" : "800000"}
+                  step={tab === "Rent" ? "100" : "10000"}
                   value={budget}
                   onChange={(event) => setBudget(Number(event.target.value))}
                   className="mt-5 h-2 w-full cursor-pointer accent-blue-400"
                 />
                 <div className="mt-2 flex justify-between text-[11px] text-slate-500">
-                  <span>$100k</span>
-                  <span>$800k</span>
+                  <span>{tab === "Rent" ? "$500/mo" : "$100k"}</span>
+                  <span>{tab === "Rent" ? "$10k/mo" : "$800k"}</span>
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-3">
                 <div className="rounded-xl border border-white/10 bg-[#0b1422] p-4">
-                  <p className="text-xs text-slate-300">Matching indexed listings</p>
+                  <p className="text-xs text-slate-300">
+                    {tab === "Rent" ? "Matching rental homes" : "Matching indexed listings"}
+                  </p>
                   <p className="mt-1 text-xl font-bold text-white">
-                    {matchingListings.toLocaleString()}
+                    {tab === "Rent"
+                      ? rentalCountLoading
+                        ? "…"
+                        : (rentalMatches?.toLocaleString() ?? "—")
+                      : matchingListings.toLocaleString()}
                     <span className="text-xs font-medium text-slate-300"> homes</span>
                   </p>
                 </div>
@@ -226,15 +503,18 @@ export function HeroSearch() {
               </div>
               <button
                 type="button"
-                onClick={() =>
-                  navigate({ to: "/us-properties", search: { maxPrice: String(budget) } })
-                }
+                onClick={() => {
+                  window.location.assign(searchResultsUrl());
+                }}
                 className="mt-5 flex w-full items-center justify-between rounded-xl bg-primary px-4 py-3.5 text-sm font-bold text-white transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#111e30]"
               >
-                Find homes in my range <ArrowRight className="h-4 w-4" />
+                {tab === "Rent" ? "Find rentals in my range" : "Find homes in my range"}{" "}
+                <ArrowRight className="h-4 w-4" />
               </button>
               <p className="mt-3 text-[11px] leading-4 text-slate-400">
-                Counts reflect priced homes in our current foreclosure index.
+                {tab === "Rent"
+                  ? "Rental matches are counted from the active nationwide rentals feed."
+                  : "Counts reflect priced listings in the selected property category."}
               </p>
             </div>
           </aside>

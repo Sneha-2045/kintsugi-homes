@@ -8,9 +8,63 @@ const STATE_ORDER =
   "CA TX FL NY WA IL GA AZ CO NV NC NJ MA TN OR VA PA MI OH AL AK AR CT DE HI ID IN IA KS KY LA ME MD MN MS MO MT NE NH NM ND OK RI SC SD UT VT WV WI WY".split(
     " ",
   );
+const US_STATE_CODES = new Set(STATE_ORDER);
+const STATE_NAME_TO_CODE: Record<string, string> = {
+  alabama: "AL",
+  alaska: "AK",
+  arizona: "AZ",
+  arkansas: "AR",
+  california: "CA",
+  colorado: "CO",
+  connecticut: "CT",
+  delaware: "DE",
+  florida: "FL",
+  georgia: "GA",
+  hawaii: "HI",
+  idaho: "ID",
+  illinois: "IL",
+  indiana: "IN",
+  iowa: "IA",
+  kansas: "KS",
+  kentucky: "KY",
+  louisiana: "LA",
+  maine: "ME",
+  maryland: "MD",
+  massachusetts: "MA",
+  michigan: "MI",
+  minnesota: "MN",
+  mississippi: "MS",
+  missouri: "MO",
+  montana: "MT",
+  nebraska: "NE",
+  nevada: "NV",
+  "new hampshire": "NH",
+  "new jersey": "NJ",
+  "new mexico": "NM",
+  "new york": "NY",
+  "north carolina": "NC",
+  "north dakota": "ND",
+  ohio: "OH",
+  oklahoma: "OK",
+  oregon: "OR",
+  pennsylvania: "PA",
+  "rhode island": "RI",
+  "south carolina": "SC",
+  "south dakota": "SD",
+  tennessee: "TN",
+  texas: "TX",
+  utah: "UT",
+  vermont: "VT",
+  virginia: "VA",
+  washington: "WA",
+  "west virginia": "WV",
+  wisconsin: "WI",
+  wyoming: "WY",
+};
 
 export type ApifyRentalListing = {
   zpid: string;
+  sourceId?: string;
   address?: string;
   addressLine1?: string;
   city: string;
@@ -23,8 +77,17 @@ export type ApifyRentalListing = {
   propertyType?: string;
   statusType?: string;
   statusText?: string;
+  availableDate?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  amenities?: string[];
+  furnished?: boolean;
+  leaseDuration?: string;
   buildingName?: string;
   detailUrl?: string;
+  description?: string;
+  source?: string;
+  sourceUrl?: string;
   imgSrc: string;
   monthlyRent?: number;
   minRent?: number;
@@ -45,6 +108,10 @@ export type RentalFilters = {
   studio?: boolean;
   bathrooms?: number;
   sort?: "price-asc" | "price-desc" | "beds-desc";
+  availability?: "now" | "soon";
+  furnished?: boolean;
+  amenities?: string[];
+  leaseDuration?: string;
 };
 
 export class ApifyRentalError extends Error {
@@ -104,6 +171,9 @@ function parseListings(value: unknown): ApifyRentalListing[] {
       ...(typeof item["statusText"] === "string" ? { statusText: item["statusText"] } : {}),
       ...(typeof item["buildingName"] === "string" ? { buildingName: item["buildingName"] } : {}),
       ...(typeof item["detailUrl"] === "string" ? { detailUrl: item["detailUrl"] } : {}),
+      ...(typeof item["description"] === "string" ? { description: item["description"] } : {}),
+      ...(typeof item["source"] === "string" ? { source: item["source"] } : {}),
+      ...(typeof item["sourceUrl"] === "string" ? { sourceUrl: item["sourceUrl"] } : {}),
       ...(typeof item["monthlyRent"] === "number" ? { monthlyRent: item["monthlyRent"] } : {}),
       ...(typeof item["minRent"] === "number" ? { minRent: item["minRent"] } : {}),
       ...(typeof item["maxRent"] === "number" ? { maxRent: item["maxRent"] } : {}),
@@ -162,7 +232,8 @@ async function fetchDatasetPage(offset: number) {
   } catch {
     throw new ApifyRentalError(502, "Apify returned unreadable rental data.");
   }
-  if (!Array.isArray(value)) throw new ApifyRentalError(502, "Apify returned an unexpected rentals dataset.");
+  if (!Array.isArray(value))
+    throw new ApifyRentalError(502, "Apify returned an unexpected rentals dataset.");
   const rawTotal = Number(response.headers.get("X-Apify-Pagination-Total"));
   return { items: value, total: Number.isFinite(rawTotal) && rawTotal >= 0 ? rawTotal : null };
 }
@@ -172,7 +243,10 @@ async function fetchListings() {
   const rawItems = [...first.items];
   let offset = first.items.length;
   const expectedTotal = first.total;
-  while (first.items.length === DATASET_PAGE_SIZE && (expectedTotal === null || offset < expectedTotal)) {
+  while (
+    first.items.length === DATASET_PAGE_SIZE &&
+    (expectedTotal === null || offset < expectedTotal)
+  ) {
     const page = await fetchDatasetPage(offset);
     if (page.items.length === 0) break;
     rawItems.push(...page.items);
@@ -214,31 +288,69 @@ function filterListings(listings: ApifyRentalListing[], filters: RentalFilters) 
   const neighborhood = normalized(filters.neighborhood);
   const filtered = listings.filter((listing) => {
     const amount = rentAmount(listing);
-    const address = normalized(`${listing.address ?? ""} ${listing.addressLine1 ?? ""} ${listing.buildingName ?? ""}`);
-    const fullLocation = normalized(`${listing.city} ${listing.state} ${listing.zipCode ?? ""} ${address}`);
-    if (q && !fullLocation.includes(q)) return false;
+    const address = normalized(
+      `${listing.address ?? ""} ${listing.addressLine1 ?? ""} ${listing.buildingName ?? ""}`,
+    );
+    const fullLocation = normalized(
+      `${listing.city} ${listing.state} ${listing.zipCode ?? ""} ${address}`,
+    );
+    if (q && STATE_NAME_TO_CODE[q] && listing.state !== STATE_NAME_TO_CODE[q]) return false;
+    if (q && !STATE_NAME_TO_CODE[q]) {
+      const tokens = q.split(/[\s,]+/).filter(Boolean);
+      if (
+        !tokens.every((token) => {
+          const tokenLower = token.toLowerCase();
+          const stateCode =
+            STATE_NAME_TO_CODE[tokenLower] ??
+            (US_STATE_CODES.has(token.toUpperCase()) ? token.toUpperCase() : undefined);
+          return (
+            fullLocation.includes(tokenLower) || (stateCode != null && listing.state === stateCode)
+          );
+        })
+      )
+        return false;
+    }
     if (filters.state && listing.state !== filters.state) return false;
     if (city && !normalized(listing.city).includes(city)) return false;
     if (zipCode && !normalized(listing.zipCode).startsWith(zipCode)) return false;
     if (neighborhood && !address.includes(neighborhood)) return false;
     if (!propertyTypeMatches(listing.propertyType, filters.type ?? "")) return false;
-    if (filters.studio && !(normalized(listing.propertyType).includes("studio") || listing.beds === 0)) return false;
-    if (filters.beds !== undefined && (listing.beds === undefined || listing.beds < filters.beds)) return false;
-    if (filters.bathrooms !== undefined && (listing.bathrooms === undefined || listing.bathrooms < filters.bathrooms)) return false;
-    if (filters.minRent !== undefined && (amount === undefined || amount < filters.minRent)) return false;
-    if (filters.maxRent !== undefined && (amount === undefined || amount > filters.maxRent)) return false;
+    if (
+      filters.studio &&
+      !(normalized(listing.propertyType).includes("studio") || listing.beds === 0)
+    )
+      return false;
+    if (filters.beds !== undefined && (listing.beds === undefined || listing.beds < filters.beds))
+      return false;
+    if (
+      filters.bathrooms !== undefined &&
+      (listing.bathrooms === undefined || listing.bathrooms < filters.bathrooms)
+    )
+      return false;
+    if (filters.minRent !== undefined && (amount === undefined || amount < filters.minRent))
+      return false;
+    if (filters.maxRent !== undefined && (amount === undefined || amount > filters.maxRent))
+      return false;
     return true;
   });
 
   switch (filters.sort) {
     case "price-asc":
-      filtered.sort((a, b) => (rentAmount(a) ?? Number.POSITIVE_INFINITY) - (rentAmount(b) ?? Number.POSITIVE_INFINITY));
+      filtered.sort(
+        (a, b) =>
+          (rentAmount(a) ?? Number.POSITIVE_INFINITY) - (rentAmount(b) ?? Number.POSITIVE_INFINITY),
+      );
       break;
     case "price-desc":
-      filtered.sort((a, b) => (rentAmount(b) ?? Number.NEGATIVE_INFINITY) - (rentAmount(a) ?? Number.NEGATIVE_INFINITY));
+      filtered.sort(
+        (a, b) =>
+          (rentAmount(b) ?? Number.NEGATIVE_INFINITY) - (rentAmount(a) ?? Number.NEGATIVE_INFINITY),
+      );
       break;
     case "beds-desc":
-      filtered.sort((a, b) => (b.beds ?? Number.NEGATIVE_INFINITY) - (a.beds ?? Number.NEGATIVE_INFINITY));
+      filtered.sort(
+        (a, b) => (b.beds ?? Number.NEGATIVE_INFINITY) - (a.beds ?? Number.NEGATIVE_INFINITY),
+      );
       break;
   }
   return filtered;
@@ -279,4 +391,10 @@ export async function getApifyRentals(offset = 0, filters: RentalFilters = {}) {
     stateCounts,
     statesResponded: Object.keys(stateCounts),
   };
+}
+
+export async function getApifyRentalById(id: string) {
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(id)) return null;
+  const listings = await getListings();
+  return listings.find((listing) => listing.zpid === id) ?? null;
 }

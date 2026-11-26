@@ -9,7 +9,6 @@ import { AgentSpotlight } from "@/components/home/AgentSpotlight";
 import { MemberPromo } from "@/components/home/MemberPromo";
 import { RentRewardsPromo } from "@/components/home/RentRewardsPromo";
 import { PricingSection } from "@/components/home/PricingSection";
-import { PartnersSection } from "@/components/home/PartnersSection";
 import { MembershipComparison } from "@/components/home/MembershipComparison";
 import { AudioArticles } from "@/components/home/AudioArticles";
 import { AkiyaInfo } from "@/components/home/AkiyaInfo";
@@ -63,7 +62,6 @@ function Home() {
       <MemberPromo />
       <RentRewardsPromo />
       <PricingSection />
-      <PartnersSection />
       <MembershipComparison />
       <AudioArticles />
       <AkiyaInfo />
