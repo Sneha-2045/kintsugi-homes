@@ -22,11 +22,13 @@ import { Route as MapRouteImport } from './routes/map'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PropertiesRouteImport } from './routes/properties'
 import { Route as PropertyIntelligenceRouteImport } from './routes/property-intelligence'
+import { Route as RentRewardsRouteImport } from './routes/rent-rewards'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as SavedPropertiesRouteImport } from './routes/saved-properties'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SitemapRouteImport } from './routes/sitemap'
 import { Route as UsPropertiesRouteImport } from './routes/us-properties'
+import { Route as AuthenticatedRewardsRouteImport } from './routes/_authenticated/rewards'
 import { Route as ApiAgentsRouteImport } from './routes/api.agents'
 import { Route as ApiLiveIntelligenceRouteImport } from './routes/api.live-intelligence'
 import { Route as ApiPropertiesRouteImport } from './routes/api.properties'
@@ -115,6 +117,11 @@ const PropertyIntelligenceRoute = PropertyIntelligenceRouteImport.update({
   path: '/property-intelligence',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RentRewardsRoute = RentRewardsRouteImport.update({
+  id: '/rent-rewards',
+  path: '/rent-rewards',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SavedRoute = SavedRouteImport.update({
   id: '/saved',
   path: '/saved',
@@ -139,6 +146,11 @@ const UsPropertiesRoute = UsPropertiesRouteImport.update({
   id: '/us-properties',
   path: '/us-properties',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRewardsRoute = AuthenticatedRewardsRouteImport.update({
+  id: '/rewards',
+  path: '/rewards',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const ApiAgentsRoute = ApiAgentsRouteImport.update({
   id: '/api/agents',
@@ -270,11 +282,13 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/properties': typeof PropertiesRouteWithChildren
   '/property-intelligence': typeof PropertyIntelligenceRouteWithChildren
+  '/rent-rewards': typeof RentRewardsRoute
   '/saved': typeof SavedRoute
   '/saved-properties': typeof SavedPropertiesRoute
   '/search': typeof SearchRoute
   '/sitemap': typeof SitemapRoute
   '/us-properties': typeof UsPropertiesRoute
+  '/rewards': typeof AuthenticatedRewardsRoute
   '/api/agents': typeof ApiAgentsRouteWithChildren
   '/api/live-intelligence': typeof ApiLiveIntelligenceRouteWithChildren
   '/api/properties': typeof ApiPropertiesRouteWithChildren
@@ -312,11 +326,13 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/properties': typeof PropertiesRouteWithChildren
   '/property-intelligence': typeof PropertyIntelligenceRouteWithChildren
+  '/rent-rewards': typeof RentRewardsRoute
   '/saved': typeof SavedRoute
   '/saved-properties': typeof SavedPropertiesRoute
   '/search': typeof SearchRoute
   '/sitemap': typeof SitemapRoute
   '/us-properties': typeof UsPropertiesRoute
+  '/rewards': typeof AuthenticatedRewardsRoute
   '/api/agents': typeof ApiAgentsRouteWithChildren
   '/api/live-intelligence': typeof ApiLiveIntelligenceRouteWithChildren
   '/api/properties': typeof ApiPropertiesRouteWithChildren
@@ -356,11 +372,13 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/properties': typeof PropertiesRouteWithChildren
   '/property-intelligence': typeof PropertyIntelligenceRouteWithChildren
+  '/rent-rewards': typeof RentRewardsRoute
   '/saved': typeof SavedRoute
   '/saved-properties': typeof SavedPropertiesRoute
   '/search': typeof SearchRoute
   '/sitemap': typeof SitemapRoute
   '/us-properties': typeof UsPropertiesRoute
+  '/_authenticated/rewards': typeof AuthenticatedRewardsRoute
   '/api/agents': typeof ApiAgentsRouteWithChildren
   '/api/live-intelligence': typeof ApiLiveIntelligenceRouteWithChildren
   '/api/properties': typeof ApiPropertiesRouteWithChildren
@@ -400,11 +418,13 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/properties'
     | '/property-intelligence'
+    | '/rent-rewards'
     | '/saved'
     | '/saved-properties'
     | '/search'
     | '/sitemap'
     | '/us-properties'
+    | '/rewards'
     | '/api/agents'
     | '/api/live-intelligence'
     | '/api/properties'
@@ -442,11 +462,13 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/properties'
     | '/property-intelligence'
+    | '/rent-rewards'
     | '/saved'
     | '/saved-properties'
     | '/search'
     | '/sitemap'
     | '/us-properties'
+    | '/rewards'
     | '/api/agents'
     | '/api/live-intelligence'
     | '/api/properties'
@@ -485,11 +507,13 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/properties'
     | '/property-intelligence'
+    | '/rent-rewards'
     | '/saved'
     | '/saved-properties'
     | '/search'
     | '/sitemap'
     | '/us-properties'
+    | '/_authenticated/rewards'
     | '/api/agents'
     | '/api/live-intelligence'
     | '/api/properties'
@@ -529,6 +553,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   PropertiesRoute: typeof PropertiesRouteWithChildren
   PropertyIntelligenceRoute: typeof PropertyIntelligenceRouteWithChildren
+  RentRewardsRoute: typeof RentRewardsRoute
   SavedRoute: typeof SavedRoute
   SavedPropertiesRoute: typeof SavedPropertiesRoute
   SearchRoute: typeof SearchRoute
@@ -641,6 +666,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PropertyIntelligenceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rent-rewards': {
+      id: '/rent-rewards'
+      path: '/rent-rewards'
+      fullPath: '/rent-rewards'
+      preLoaderRoute: typeof RentRewardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/saved': {
       id: '/saved'
       path: '/saved'
@@ -675,6 +707,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/us-properties'
       preLoaderRoute: typeof UsPropertiesRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/rewards': {
+      id: '/_authenticated/rewards'
+      path: '/rewards'
+      fullPath: '/rewards'
+      preLoaderRoute: typeof AuthenticatedRewardsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/agents': {
       id: '/api/agents'
@@ -841,12 +880,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedRewardsRoute: typeof AuthenticatedRewardsRoute
   AuthenticatedAdminIdRoute: typeof AuthenticatedAdminIdRoute
   AuthenticatedAdminNewRoute: typeof AuthenticatedAdminNewRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedRewardsRoute: AuthenticatedRewardsRoute,
   AuthenticatedAdminIdRoute: AuthenticatedAdminIdRoute,
   AuthenticatedAdminNewRoute: AuthenticatedAdminNewRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
@@ -945,6 +986,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   PropertiesRoute: PropertiesRouteWithChildren,
   PropertyIntelligenceRoute: PropertyIntelligenceRouteWithChildren,
+  RentRewardsRoute: RentRewardsRoute,
   SavedRoute: SavedRoute,
   SavedPropertiesRoute: SavedPropertiesRoute,
   SearchRoute: SearchRoute,

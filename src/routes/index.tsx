@@ -7,6 +7,7 @@ import { FreshListings } from "@/components/home/FreshListings";
 import { RentalListings } from "@/components/home/RentalListings";
 import { AgentSpotlight } from "@/components/home/AgentSpotlight";
 import { MemberPromo } from "@/components/home/MemberPromo";
+import { RentRewardsPromo } from "@/components/home/RentRewardsPromo";
 import { PricingSection } from "@/components/home/PricingSection";
 import { PartnersSection } from "@/components/home/PartnersSection";
 import { MembershipComparison } from "@/components/home/MembershipComparison";
@@ -60,6 +61,7 @@ function Home() {
       <PropertyTypes />
       <HomeDiscovery />
       <MemberPromo />
+      <RentRewardsPromo />
       <PricingSection />
       <PartnersSection />
       <MembershipComparison />

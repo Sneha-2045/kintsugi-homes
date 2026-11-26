@@ -122,7 +122,6 @@ export function RentalListings() {
             </Badge>
           }
           title="Rentals Across the U.S."
-          subtitle="Current Zillow rental listings collected through Apify from all 50 states. Availability and prices can change."
           className="mb-10"
         />
         <h2 id="rental-listings-title" className="sr-only">

@@ -19,6 +19,7 @@ const navItems = [
   { label: "Saved Properties", to: "/saved-properties" },
   { label: "Compare", to: "/compare" },
   { label: "Pricing", to: "/pricing" },
+  { label: "Rent Rewards", to: "/rent-rewards" },
   { label: "Consult", to: "/consult" },
 ] as const;
 
