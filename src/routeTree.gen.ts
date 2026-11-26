@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as ArticlesRouteImport } from './routes/articles'
+import { Route as CareersRouteImport } from './routes/careers'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as ConsultRouteImport } from './routes/consult'
 import { Route as FindAnAgentRouteImport } from './routes/find-an-agent'
@@ -46,6 +47,7 @@ import { Route as AuthenticatedAdminNewRouteImport } from './routes/_authenticat
 import { Route as ApiAgentsIdRouteImport } from './routes/api.agents.$id'
 import { Route as ApiAgentsSearchRouteImport } from './routes/api.agents.search'
 import { Route as ApiAlertsUnsubscribeRouteImport } from './routes/api.alerts.unsubscribe'
+import { Route as ApiCareersApplicationsRouteImport } from './routes/api.careers.applications'
 import { Route as ApiCronSavedSearchesRouteImport } from './routes/api.cron.saved-searches'
 import { Route as ApiLiveIntelligenceIdRouteImport } from './routes/api.live-intelligence.$id'
 import { Route as ApiPropertiesIdRouteImport } from './routes/api.properties.$id'
@@ -65,6 +67,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const ArticlesRoute = ArticlesRouteImport.update({
   id: '/articles',
   path: '/articles',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CareersRoute = CareersRouteImport.update({
+  id: '/careers',
+  path: '/careers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompareRoute = CompareRouteImport.update({
@@ -237,6 +244,11 @@ const ApiAlertsUnsubscribeRoute = ApiAlertsUnsubscribeRouteImport.update({
   path: '/api/alerts/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCareersApplicationsRoute = ApiCareersApplicationsRouteImport.update({
+  id: '/api/careers/applications',
+  path: '/api/careers/applications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCronSavedSearchesRoute = ApiCronSavedSearchesRouteImport.update({
   id: '/api/cron/saved-searches',
   path: '/api/cron/saved-searches',
@@ -272,6 +284,7 @@ const ApiAdminAgentsSyncRoute = ApiAdminAgentsSyncRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/articles': typeof ArticlesRoute
+  '/careers': typeof CareersRoute
   '/compare': typeof CompareRoute
   '/consult': typeof ConsultRoute
   '/find-an-agent': typeof FindAnAgentRoute
@@ -305,6 +318,7 @@ export interface FileRoutesByFullPath {
   '/api/agents/$id': typeof ApiAgentsIdRoute
   '/api/agents/search': typeof ApiAgentsSearchRoute
   '/api/alerts/unsubscribe': typeof ApiAlertsUnsubscribeRoute
+  '/api/careers/applications': typeof ApiCareersApplicationsRoute
   '/api/cron/saved-searches': typeof ApiCronSavedSearchesRoute
   '/api/live-intelligence/$id': typeof ApiLiveIntelligenceIdRoute
   '/api/properties/$id': typeof ApiPropertiesIdRoute
@@ -316,6 +330,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/articles': typeof ArticlesRoute
+  '/careers': typeof CareersRoute
   '/compare': typeof CompareRoute
   '/consult': typeof ConsultRoute
   '/find-an-agent': typeof FindAnAgentRoute
@@ -349,6 +364,7 @@ export interface FileRoutesByTo {
   '/api/agents/$id': typeof ApiAgentsIdRoute
   '/api/agents/search': typeof ApiAgentsSearchRoute
   '/api/alerts/unsubscribe': typeof ApiAlertsUnsubscribeRoute
+  '/api/careers/applications': typeof ApiCareersApplicationsRoute
   '/api/cron/saved-searches': typeof ApiCronSavedSearchesRoute
   '/api/live-intelligence/$id': typeof ApiLiveIntelligenceIdRoute
   '/api/properties/$id': typeof ApiPropertiesIdRoute
@@ -362,6 +378,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/articles': typeof ArticlesRoute
+  '/careers': typeof CareersRoute
   '/compare': typeof CompareRoute
   '/consult': typeof ConsultRoute
   '/find-an-agent': typeof FindAnAgentRoute
@@ -395,6 +412,7 @@ export interface FileRoutesById {
   '/api/agents/$id': typeof ApiAgentsIdRoute
   '/api/agents/search': typeof ApiAgentsSearchRoute
   '/api/alerts/unsubscribe': typeof ApiAlertsUnsubscribeRoute
+  '/api/careers/applications': typeof ApiCareersApplicationsRoute
   '/api/cron/saved-searches': typeof ApiCronSavedSearchesRoute
   '/api/live-intelligence/$id': typeof ApiLiveIntelligenceIdRoute
   '/api/properties/$id': typeof ApiPropertiesIdRoute
@@ -408,6 +426,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/articles'
+    | '/careers'
     | '/compare'
     | '/consult'
     | '/find-an-agent'
@@ -441,6 +460,7 @@ export interface FileRouteTypes {
     | '/api/agents/$id'
     | '/api/agents/search'
     | '/api/alerts/unsubscribe'
+    | '/api/careers/applications'
     | '/api/cron/saved-searches'
     | '/api/live-intelligence/$id'
     | '/api/properties/$id'
@@ -452,6 +472,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/articles'
+    | '/careers'
     | '/compare'
     | '/consult'
     | '/find-an-agent'
@@ -485,6 +506,7 @@ export interface FileRouteTypes {
     | '/api/agents/$id'
     | '/api/agents/search'
     | '/api/alerts/unsubscribe'
+    | '/api/careers/applications'
     | '/api/cron/saved-searches'
     | '/api/live-intelligence/$id'
     | '/api/properties/$id'
@@ -497,6 +519,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/articles'
+    | '/careers'
     | '/compare'
     | '/consult'
     | '/find-an-agent'
@@ -530,6 +553,7 @@ export interface FileRouteTypes {
     | '/api/agents/$id'
     | '/api/agents/search'
     | '/api/alerts/unsubscribe'
+    | '/api/careers/applications'
     | '/api/cron/saved-searches'
     | '/api/live-intelligence/$id'
     | '/api/properties/$id'
@@ -543,6 +567,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   ArticlesRoute: typeof ArticlesRoute
+  CareersRoute: typeof CareersRoute
   CompareRoute: typeof CompareRoute
   ConsultRoute: typeof ConsultRoute
   FindAnAgentRoute: typeof FindAnAgentRoute
@@ -569,6 +594,7 @@ export interface RootRouteChildren {
   PropertyIdRoute: typeof PropertyIdRoute
   RegionSlugRoute: typeof RegionSlugRoute
   ApiAlertsUnsubscribeRoute: typeof ApiAlertsUnsubscribeRoute
+  ApiCareersApplicationsRoute: typeof ApiCareersApplicationsRoute
   ApiCronSavedSearchesRoute: typeof ApiCronSavedSearchesRoute
   ApiAdminAgentsSyncRoute: typeof ApiAdminAgentsSyncRoute
 }
@@ -594,6 +620,13 @@ declare module '@tanstack/react-router' {
       path: '/articles'
       fullPath: '/articles'
       preLoaderRoute: typeof ArticlesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/careers': {
+      id: '/careers'
+      path: '/careers'
+      fullPath: '/careers'
+      preLoaderRoute: typeof CareersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/compare': {
@@ -834,6 +867,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAlertsUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/careers/applications': {
+      id: '/api/careers/applications'
+      path: '/api/careers/applications'
+      fullPath: '/api/careers/applications'
+      preLoaderRoute: typeof ApiCareersApplicationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/cron/saved-searches': {
       id: '/api/cron/saved-searches'
       path: '/api/cron/saved-searches'
@@ -976,6 +1016,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   ArticlesRoute: ArticlesRoute,
+  CareersRoute: CareersRoute,
   CompareRoute: CompareRoute,
   ConsultRoute: ConsultRoute,
   FindAnAgentRoute: FindAnAgentRoute,
@@ -1002,6 +1043,7 @@ const rootRouteChildren: RootRouteChildren = {
   PropertyIdRoute: PropertyIdRoute,
   RegionSlugRoute: RegionSlugRoute,
   ApiAlertsUnsubscribeRoute: ApiAlertsUnsubscribeRoute,
+  ApiCareersApplicationsRoute: ApiCareersApplicationsRoute,
   ApiCronSavedSearchesRoute: ApiCronSavedSearchesRoute,
   ApiAdminAgentsSyncRoute: ApiAdminAgentsSyncRoute,
 }

@@ -20,6 +20,7 @@ const navItems = [
   { label: "Compare", to: "/compare" },
   { label: "Pricing", to: "/pricing" },
   { label: "Rent Rewards", to: "/rent-rewards" },
+  { label: "Careers", to: "/careers" },
   { label: "Consult", to: "/consult" },
 ] as const;
 
@@ -30,6 +31,7 @@ const primaryNavItems = [
   { label: "Investment", href: "/us-properties?category=Investment" },
   { label: "Explore markets", href: "/map" },
   { label: "Live Intelligence", href: "/live-intelligence" },
+  { label: "Careers", href: "/careers" },
 ] as const;
 
 function Brand() {
@@ -74,6 +76,14 @@ export function Navbar() {
           activeProps={{ className: "!bg-elevated !text-foreground" }}
         >
           Live Intelligence
+        </Link>
+
+        <Link
+          to="/careers"
+          className="hidden rounded-lg px-3 py-2 text-sm font-semibold text-muted-foreground transition-all hover:bg-elevated hover:text-foreground xl:inline-flex 2xl:hidden"
+          activeProps={{ className: "!bg-elevated !text-foreground" }}
+        >
+          Careers
         </Link>
 
         <div className="ml-auto hidden items-center gap-3 2xl:flex">

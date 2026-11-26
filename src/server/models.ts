@@ -228,6 +228,23 @@ const issueReportSchema = new Schema(
 );
 issueReportSchema.index({ createdAt: -1 });
 
+const careerApplicationSchema = new Schema(
+  {
+    fullName: { type: String, required: true, trim: true, minlength: 2, maxlength: 120 },
+    email: { type: String, required: true, trim: true, lowercase: true, maxlength: 254 },
+    phone: { type: String, required: true, trim: true, minlength: 7, maxlength: 40 },
+    position: { type: String, required: true, trim: true, maxlength: 120 },
+    resume: { type: Schema.Types.Buffer, required: true, select: false },
+    resumeContentType: { type: String, required: true, enum: ["application/pdf"] },
+    resumeFilename: { type: String, required: true, maxlength: 180 },
+    linkedinUrl: { type: String, trim: true, maxlength: 500 },
+    introduction: { type: String, required: true, trim: true, minlength: 20, maxlength: 2000 },
+    status: { type: String, enum: ["new", "reviewed", "archived"], default: "new", index: true },
+  },
+  { timestamps: true, collection: "careerApplications", strict: true },
+);
+careerApplicationSchema.index({ createdAt: -1 });
+
 const favoriteSchema = new Schema(
   {
     userId: { type: ObjectId, ref: "User", required: true },
@@ -461,6 +478,7 @@ export const SavedSearch = model("SavedSearch", savedSearchSchema);
 export const SavedSearchMatch = model("SavedSearchMatch", savedSearchMatchSchema);
 export const SavedSearchEvent = model("SavedSearchEvent", savedSearchEventSchema);
 export const ListingIssueReport = model("ListingIssueReport", issueReportSchema);
+export const CareerApplication = model("CareerApplication", careerApplicationSchema);
 export const Favorite = model("Favorite", favoriteSchema);
 export const UserPreference = model("UserPreference", preferenceSchema);
 export const PropertyComparison = model("PropertyComparison", comparisonSchema);
@@ -488,6 +506,7 @@ export const mongoModels: mongoose.Model<unknown>[] = [
   SavedSearchMatch,
   SavedSearchEvent,
   ListingIssueReport,
+  CareerApplication,
   Favorite,
   UserPreference,
   PropertyComparison,

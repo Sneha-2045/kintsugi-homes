@@ -22,6 +22,7 @@ const companyLinks = [
   { label: "Live Intelligence", to: "/live-intelligence" },
   { label: "Auction Listing FAQs", to: "/" },
   { label: "About Us", to: "/consult" },
+  { label: "Careers", to: "/careers" },
   { label: "FAQ", to: "/" },
   { label: "Contact", to: "/consult" },
   { label: "Consult an Expert", to: "/consult" },
