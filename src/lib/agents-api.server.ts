@@ -69,10 +69,16 @@ export async function listAgents(request: Request, forceQuery?: string) {
     } catch (error) {
       if (request.signal.aborted) return new Response(null, { status: 499 });
       mongoDirectoryUnavailableUntil = Date.now() + 60_000;
-      console.error(
-        "[agents] MongoDB directory unavailable; using the latest Apify dataset",
-        safeMongoError(error),
-      );
+      if (error instanceof Error && error.message === "MongoDB directory lookup timed out.") {
+        console.warn(
+          `[agents] MongoDB directory lookup exceeded ${MONGO_DIRECTORY_TIMEOUT_MS}ms; using Apify fallback.`,
+        );
+      } else {
+        console.error(
+          "[agents] MongoDB directory unavailable; using the latest Apify dataset",
+          safeMongoError(error),
+        );
+      }
     }
     const fallback = await searchApifyAgentDirectory(args);
     if (request.signal.aborted) return new Response(null, { status: 499 });

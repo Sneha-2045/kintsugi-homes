@@ -78,6 +78,7 @@ type RentalRow = {
   beds?: number;
   bathrooms?: number;
   propertyType?: string;
+  sqft?: number;
   statusText?: string;
   source?: string;
   imgSrc?: string;
@@ -88,6 +89,11 @@ type RentalResponse = {
   listings?: RentalRow[];
   totalCount?: number;
   error?: { message?: string };
+  apifySearch?: {
+    status?: "ready" | "running" | "unavailable";
+    returnedListings?: number;
+    totalAvailableUnits?: number;
+  };
 };
 type BuyResponse = {
   listings?: RepliersRow[];
@@ -191,6 +197,9 @@ function PropertySearchPage() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [total, setTotal] = useState(0);
   const [pageCount, setPageCount] = useState(1);
+  const [liveRentalCount, setLiveRentalCount] = useState(0);
+  const [liveRentalUnits, setLiveRentalUnits] = useState<number | undefined>();
+  const [liveRentalLoading, setLiveRentalLoading] = useState(false);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
   useEffect(() => {
@@ -202,6 +211,9 @@ function PropertySearchPage() {
     const load = async () => {
       setBusy(true);
       setError("");
+      setLiveRentalCount(0);
+      setLiveRentalUnits(undefined);
+      setLiveRentalLoading(false);
       try {
         if (search.category === "rent") {
           const params = new URLSearchParams({ offset: String((page - 1) * rentalPageSize) });
@@ -216,38 +228,63 @@ function PropertySearchPage() {
           if (search.furnished) params.set("furnished", search.furnished);
           if (search.leaseDuration) params.set("leaseDuration", search.leaseDuration);
           search.amenity?.forEach((value) => params.append("amenity", value));
-          const response = await fetch(`/api/rentals?${params}`, { signal: controller.signal });
-          const body = (await response.json()) as RentalResponse;
-          if (!response.ok)
-            throw new Error(body.error?.message ?? "Rental listings could not be loaded.");
-          const rows = Array.isArray(body.listings) ? body.listings : [];
-          setListings(
-            rows.map((item) => ({
-              id: String(item.zpid),
-              title: item.buildingName || item.addressLine1 || `Rental home in ${item.city}`,
-              image: item.imgSrc || undefined,
-              address: item.addressLine1 || item.address,
-              city: item.city,
-              state: item.state,
-              zipCode: item.zipCode,
-              price: item.monthlyRent ?? item.minRent ?? item.price,
-              bedrooms: item.beds,
-              bathrooms: item.bathrooms,
-              type: item.propertyType,
-              status: item.statusText || "For Rent",
-              source:
-                item.source ||
-                (item.sourceId ? "Rylestate property database" : "Apify rental feed"),
-              sourceId: item.sourceId || item.zpid,
-              availableDate: item.availableDate,
-              amenities: item.amenities,
-              detailHref: `/rentals/${encodeURIComponent(item.sourceId || item.zpid)}`,
-            })),
-          );
-          setTotal(Number(body.totalCount ?? rows.length));
-          setPageCount(
-            Math.max(1, Math.ceil(Number(body.totalCount ?? rows.length) / rentalPageSize)),
-          );
+          const applyRentalResponse = (body: RentalResponse) => {
+            const rows = Array.isArray(body.listings) ? body.listings : [];
+            setLiveRentalCount(Number(body.apifySearch?.returnedListings ?? 0));
+            setLiveRentalUnits(body.apifySearch?.totalAvailableUnits);
+            setListings(
+              rows.map((item) => ({
+                id: String(item.zpid),
+                title: item.buildingName || item.addressLine1 || `Rental home in ${item.city}`,
+                image: item.imgSrc || undefined,
+                address: item.addressLine1 || item.address,
+                city: item.city,
+                state: item.state,
+                zipCode: item.zipCode,
+                price: item.monthlyRent ?? item.minRent ?? item.price,
+                bedrooms: item.beds,
+                bathrooms: item.bathrooms,
+                type: item.propertyType,
+                sqft: item.sqft,
+                status: item.statusText || "For Rent",
+                source:
+                  item.source ||
+                  (item.sourceId ? "Rylestate property database" : "Apify rental feed"),
+                sourceId: item.sourceId || item.zpid,
+                availableDate: item.availableDate,
+                amenities: item.amenities,
+                detailHref: `/rentals/${encodeURIComponent(item.sourceId || item.zpid)}`,
+              })),
+            );
+            setTotal(Number(body.totalCount ?? rows.length));
+            setPageCount(
+              Math.max(1, Math.ceil(Number(body.totalCount ?? rows.length) / rentalPageSize)),
+            );
+            setLiveRentalLoading(body.apifySearch?.status === "running");
+          };
+          const fetchRentalResponse = async () => {
+            const response = await fetch(`/api/rentals?${params}`, {
+              signal: controller.signal,
+              cache: "no-store",
+            });
+            const body = (await response.json()) as RentalResponse;
+            if (!response.ok)
+              throw new Error(body.error?.message ?? "Rental listings could not be loaded.");
+            applyRentalResponse(body);
+            return body;
+          };
+          let body = await fetchRentalResponse();
+          // Show Mongo results immediately, then refresh the page as the live scrape completes.
+          setBusy(false);
+          for (
+            let attempt = 0;
+            body.apifySearch?.status === "running" && attempt < 36;
+            attempt += 1
+          ) {
+            await new Promise((resolve) => window.setTimeout(resolve, 2500));
+            if (controller.signal.aborted) break;
+            body = await fetchRentalResponse();
+          }
           return;
         }
 
@@ -438,6 +475,19 @@ function PropertySearchPage() {
         <p className="mt-3 text-sm text-muted-foreground" aria-live="polite">
           {busy ? "Loading actual listings…" : countLabel}
         </p>
+        {!busy && search.category === "rent" && liveRentalCount > 0 ? (
+          <p className="mt-1 text-xs text-muted-foreground" aria-live="polite">
+            {liveRentalCount.toLocaleString()} live Zillow rentals loaded
+            {liveRentalUnits != null
+              ? ` · Zillow reports ${liveRentalUnits.toLocaleString()} available units in this search`
+              : ""}
+          </p>
+        ) : null}
+        {!busy && search.category === "rent" && liveRentalLoading ? (
+          <p className="mt-2 text-sm text-slate-400" role="status">
+            Loading more live rentals for this location…
+          </p>
+        ) : null}
         {search.q || search.minPrice || search.maxPrice || search.bedrooms || search.bathrooms ? (
           <div className="mt-4 flex flex-wrap gap-2 text-xs">
             {search.q ? (
@@ -479,6 +529,16 @@ function PropertySearchPage() {
             className="mt-8 rounded-2xl border border-border bg-card p-8 text-center text-sm text-muted-foreground"
           >
             {error}
+          </div>
+        ) : listings.length === 0 && liveRentalLoading ? (
+          <div
+            className="mt-8 rounded-2xl border border-border bg-card p-10 text-center"
+            role="status"
+          >
+            <h2 className="text-xl font-bold">Searching rentals in {search.q || "your area"}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Showing matching saved listings as they load. Checking live rental inventory…
+            </p>
           </div>
         ) : listings.length === 0 ? (
           <div className="mt-8 rounded-2xl border border-border bg-card p-10 text-center">

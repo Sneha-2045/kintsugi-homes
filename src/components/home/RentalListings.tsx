@@ -23,6 +23,7 @@ type RentalResponse = {
   stateCounts: Record<string, number | null>;
   statesResponded: string[];
   totalCount: number;
+  apifySearch?: { status?: "ready" | "running" | "unavailable" };
   error?: { message?: string };
 };
 
@@ -239,44 +240,84 @@ export function RentalListings() {
   const [matchingCount, setMatchingCount] = useState(0);
   const [stateCounts, setStateCounts] = useState<Record<string, number | null>>({});
   const [statesResponded, setStatesResponded] = useState<string[]>([]);
+  const [rentalCities, setRentalCities] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [liveSearchLoading, setLiveSearchLoading] = useState(false);
+  const [liveSearchUnavailable, setLiveSearchUnavailable] = useState(false);
   const [draftFilters, setDraftFilters] = useState<RentalFilters>(filtersFromUrl);
   const [appliedFilters, setAppliedFilters] = useState<RentalFilters>(filtersFromUrl);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const requestSequence = useRef(0);
+  const activeRequestController = useRef<AbortController | null>(null);
 
   const loadPage = useCallback(
     async (nextOffset: number, filters: RentalFilters, append: boolean) => {
       const requestId = ++requestSequence.current;
+      activeRequestController.current?.abort();
+      const controller = new AbortController();
+      activeRequestController.current = controller;
       setLoading(true);
+      setLiveSearchLoading(false);
+      setLiveSearchUnavailable(false);
       setError("");
       try {
         const params = apiFilterParams(filters, nextOffset);
-        const response = await fetch(`/api/rentals?${params.toString()}`);
-        const body = (await response.json()) as RentalResponse;
-        if (requestId !== requestSequence.current) return;
-        if (!response.ok)
-          throw new Error(body.error?.message || "Rental listings could not be loaded.");
-        const incoming = Array.isArray(body.listings) ? body.listings : [];
-        if (append)
-          setRentals((current) => {
-            const ids = new Set(current.map((item) => item.zpid));
-            return [...current, ...incoming.filter((item) => !ids.has(item.zpid))];
+        const fetchResults = async () => {
+          const response = await fetch(`/api/rentals?${params.toString()}`, {
+            signal: controller.signal,
+            cache: "no-store",
           });
-        else setRentals(incoming);
-        setOffset(nextOffset);
-        setHasMore(Boolean(body.hasMore));
-        setMatchingCount(body.totalCount ?? 0);
-        setStateCounts(body.stateCounts || {});
-        setStatesResponded(body.statesResponded || []);
+          const body = (await response.json()) as RentalResponse;
+          if (requestId !== requestSequence.current || controller.signal.aborted) return null;
+          if (!response.ok)
+            throw new Error(body.error?.message || "Rental listings could not be loaded.");
+          const incoming = Array.isArray(body.listings) ? body.listings : [];
+          if (append)
+            setRentals((current) => {
+              const ids = new Set(current.map((item) => item.zpid));
+              return [...current, ...incoming.filter((item) => !ids.has(item.zpid))];
+            });
+          else setRentals(incoming);
+          setOffset(nextOffset);
+          setHasMore(Boolean(body.hasMore));
+          setMatchingCount(body.totalCount ?? 0);
+          setStateCounts(body.stateCounts || {});
+          setStatesResponded(body.statesResponded || []);
+          setLiveSearchUnavailable(body.apifySearch?.status === "unavailable");
+          return body;
+        };
+
+        let body = await fetchResults();
+        if (!body) return;
+        // Location-specific Apify searches run asynchronously. Keep checking the same
+        // filters and refresh the visible results when the Actor finishes.
+        if (body.apifySearch?.status === "running") {
+          setLoading(false);
+          setLiveSearchLoading(true);
+          for (let attempt = 0; body.apifySearch?.status === "running" && attempt < 75; attempt++) {
+            await new Promise((resolve) => window.setTimeout(resolve, 2500));
+            if (requestId !== requestSequence.current || controller.signal.aborted) return;
+            body = await fetchResults();
+            if (!body) return;
+          }
+          setLiveSearchLoading(false);
+          if (body.apifySearch?.status === "running") {
+            setError("The live rental search is taking longer than expected. Please try again.");
+          }
+        } else if (body.apifySearch?.status === "unavailable" && body.totalCount === 0) {
+          setError("Live rental listings are temporarily unavailable. Please try again shortly.");
+        }
       } catch (loadError) {
-        if (requestId !== requestSequence.current) return;
+        if (requestId !== requestSequence.current || controller.signal.aborted) return;
         setError(
           loadError instanceof Error ? loadError.message : "Rental listings could not be loaded.",
         );
       } finally {
-        if (requestId === requestSequence.current) setLoading(false);
+        if (requestId === requestSequence.current) {
+          setLoading(false);
+          setLiveSearchLoading(false);
+        }
       }
     },
     [],
@@ -288,6 +329,30 @@ export function RentalListings() {
     setAppliedFilters(urlFilters);
     void loadPage(0, urlFilters, false);
   }, [loadPage]);
+
+  useEffect(
+    () => () => {
+      requestSequence.current += 1;
+      activeRequestController.current?.abort();
+    },
+    [],
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch("/api/rentals?cities=1", { signal: controller.signal, cache: "force-cache" })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const body = (await response.json()) as { cities?: unknown };
+        if (!controller.signal.aborted && Array.isArray(body.cities)) {
+          setRentalCities(body.cities.filter((city): city is string => typeof city === "string"));
+        }
+      })
+      .catch(() => {
+        // Keep location search usable as free text if city suggestions are unavailable.
+      });
+    return () => controller.abort();
+  }, []);
 
   const availableStateCount = Object.values(stateCounts).filter(
     (count) => count != null && count > 0,
@@ -426,11 +491,17 @@ export function RentalListings() {
             <label className="block text-xs font-semibold text-muted-foreground">
               Location
               <input
+                list="rental-city-options"
                 value={draftFilters.q}
                 onChange={(event) => updateDraft("q", event.target.value)}
                 placeholder="City, state, ZIP or neighborhood"
                 className="mt-1.5 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
               />
+              <datalist id="rental-city-options">
+                {rentalCities.map((city) => (
+                  <option key={city} value={city} />
+                ))}
+              </datalist>
             </label>
             <label className="block text-xs font-semibold text-muted-foreground">
               Property type
@@ -527,6 +598,16 @@ export function RentalListings() {
                 ? "Updating matches…"
                 : `${matchingCount.toLocaleString()} matching properties`}
             </p>
+            {liveSearchLoading ? (
+              <p className="w-full text-right text-xs text-muted-foreground" role="status">
+                Loading live rentals for this location…
+              </p>
+            ) : null}
+            {liveSearchUnavailable && rentals.length > 0 ? (
+              <p className="w-full text-right text-xs text-amber-300" role="status">
+                Showing matching saved rentals; live results are temporarily unavailable.
+              </p>
+            ) : null}
           </div>
           {filtersOpen && (
             <div className="mt-5 space-y-4 border-t border-border pt-5">
@@ -1034,11 +1115,12 @@ export function RentalListings() {
             </Button>
           </div>
         ) : null}
-        <p className="mt-4 text-sm text-muted-foreground">
-          {statesResponded.length
-            ? `${matchingCount.toLocaleString()} matching rentals · ${availableStateCount} states with listings · Updated from Apify`
-            : "Rental listings are collected through Apify."}
-        </p>
+        {statesResponded.length > 0 ? (
+          <p className="mt-4 text-sm text-muted-foreground">
+            {matchingCount.toLocaleString()} matching rentals · {availableStateCount} states with
+            listings
+          </p>
+        ) : null}
       </div>
     </section>
   );

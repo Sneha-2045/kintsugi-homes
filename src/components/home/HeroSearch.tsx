@@ -81,6 +81,7 @@ export function HeroSearch() {
       setRentalCountLoading(true);
       try {
         const params = new URLSearchParams({ offset: "0", maxRent: String(budget) });
+        params.set("preview", "1");
         if (query.trim()) params.set("q", query.trim());
         if (rentalMin) params.set("minRent", rentalMin);
         if (rentalType) params.set("type", rentalType);
@@ -413,14 +414,14 @@ export function HeroSearch() {
             </div>
 
             <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-300">
-              <span>
-                <strong className="font-mono text-white">
-                  {tab === "Rent"
-                    ? (rentalMatches?.toLocaleString("en-US") ?? "—")
-                    : usListings.length.toLocaleString("en-US")}
-                </strong>{" "}
-                {tab === "Rent" ? "matching rental listings" : "indexed US listings"}
-              </span>
+              {tab === "Rent" ? (
+                <span>
+                  <strong className="font-mono text-white">
+                    {rentalMatches?.toLocaleString("en-US") ?? "—"}
+                  </strong>{" "}
+                  matching rental listings
+                </span>
+              ) : null}
               <span className="flex items-center gap-1.5">
                 <CalendarDays className="h-4 w-4 text-primary-light" /> Auction dates shown when
                 available

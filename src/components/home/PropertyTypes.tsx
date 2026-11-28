@@ -3,7 +3,6 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, ChevronRight } from "lucide-react";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import { properties, propertyCategories } from "@/data/properties";
-import { usListings } from "@/data/us-listings";
 import { tranchiProperties } from "@/data/tranchi-properties";
 
 const categoryPhoto = (photoId: string) =>
@@ -144,10 +143,7 @@ export function PropertyTypes() {
                   Foreclosure listings
                 </span>
                 <span className="mt-2 block text-sm text-muted-foreground">
-                  <span className="font-bold text-primary-light">
-                    {usListings.length.toLocaleString("en-US")}
-                  </span>{" "}
-                  listings
+                  Browse current opportunities across the United States.
                 </span>
                 <span className="mt-4 inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-primary/40 px-3 py-2 text-sm font-semibold text-primary-light transition-colors hover:border-primary/70 hover:bg-primary/10">
                   See listings
@@ -201,7 +197,7 @@ export function PropertyTypes() {
                         </span>{" "}
                         listings
                       </span>
-                        <span className="mt-4 inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-white/35 bg-slate-950/30 px-3 py-2 text-sm font-semibold text-white transition-colors group-hover:border-white/60 group-hover:bg-slate-950/50">
+                      <span className="mt-4 inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-white/35 bg-slate-950/30 px-3 py-2 text-sm font-semibold text-white transition-colors group-hover:border-white/60 group-hover:bg-slate-950/50">
                         See listings
                         <ArrowRight className="h-4 w-4" />
                       </span>

@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
+  getApifyRentalCities,
   getApifyRentals,
+  requestApifyRentalsByLocation,
   type ApifyRentalListing,
+  type LocationRentalSearch,
   type RentalFilters as ApifyRentalFilters,
 } from "@/lib/apify-rentals.server";
 import { connectMongo } from "@/server/mongo";
@@ -17,12 +20,43 @@ const stateCodeFor = (value: string) =>
       code.toLowerCase() === value.trim().toLowerCase(),
   )?.[1];
 
+function rentalSearchLocation(params: URLSearchParams) {
+  const q = params.get("q")?.trim().slice(0, 120);
+  const city = params.get("city")?.trim().slice(0, 100);
+  const state = params.get("state")?.trim().slice(0, 100);
+  const zipCode = params.get("zipCode")?.trim().slice(0, 10);
+  const neighborhood = params.get("neighborhood")?.trim().slice(0, 100);
+  const rawLocation =
+    q || (city && state ? `${city}, ${state}` : city || state || zipCode || neighborhood || "");
+  if (!rawLocation) return "";
+  if (/^\d{5}-?\d{4}$/.test(rawLocation)) return rawLocation.slice(0, 5);
+  if (/^(?:new york|new york city|nyc)$/i.test(rawLocation)) return "New York, NY";
+  const parts = rawLocation.split(",").map((part) => part.trim());
+  if (parts.length > 1) {
+    const stateCode = stateCodeFor(parts.at(-1)!);
+    if (stateCode) return `${parts.slice(0, -1).join(", ")}, ${stateCode}`;
+  }
+  const trailingState = rawLocation.match(/^(.+?)\s+([A-Za-z]{2}|[A-Za-z]+)$/);
+  if (trailingState) {
+    const stateCode = stateCodeFor(trailingState[2] ?? "");
+    if (stateCode) return `${trailingState[1]}, ${stateCode}`;
+  }
+  return rawLocation;
+}
+
 export const Route = createFileRoute("/api/rentals")({
   server: {
     handlers: {
       GET: async ({ request }) => {
         try {
           const params = new URL(request.url).searchParams;
+          if (params.get("cities") === "1") {
+            const cities = await getApifyRentalCities();
+            return Response.json(
+              { cities },
+              { headers: { "Cache-Control": "public, max-age=900, stale-while-revalidate=3600" } },
+            );
+          }
           const numberParam = (key: string, max: number) => {
             const raw = params.get(key);
             if (!raw) return undefined;
@@ -171,12 +205,18 @@ export const Route = createFileRoute("/api/rentals")({
                       : { updatedAt: -1 as const, _id: -1 as const };
           const useApifyFeed =
             amenities.length === 0 && !availability && !params.has("furnished") && !leaseDuration;
+          const location = rentalSearchLocation(params);
           const apifyFilters: ApifyRentalFilters = {
-            ...(q ? { q } : {}),
+            // The Actor already searches the requested location. Rechecking every word in
+            // the query against a listing's city/address incorrectly drops NYC boroughs
+            // (for example, Manhattan or Queens) returned by a New York search.
+            ...(q && !location ? { q } : {}),
             ...(type ? { type } : {}),
             ...(minRent !== undefined ? { minRent } : {}),
             ...(maxRent !== undefined ? { maxRent } : {}),
-            ...(params.get("state") ? { state: params.get("state")!.toUpperCase() } : {}),
+            ...(params.get("state")
+              ? { state: stateCodeFor(params.get("state")!) ?? params.get("state")!.toUpperCase() }
+              : {}),
             ...(params.get("city") ? { city: params.get("city")! } : {}),
             ...(params.get("zipCode") ? { zipCode: params.get("zipCode")! } : {}),
             ...(params.get("neighborhood") ? { neighborhood: params.get("neighborhood")! } : {}),
@@ -189,15 +229,34 @@ export const Route = createFileRoute("/api/rentals")({
           };
           const apifyListings = [] as Awaited<ReturnType<typeof getApifyRentals>>["listings"];
           let apifyUnavailable = false;
+          // Use the cached, verified rental feed as the immediate result set. The live
+          // location Actor supplements it asynchronously, so a failed Actor run cannot turn
+          // a city that already has known rentals into a zero-result search.
           if (useApifyFeed) {
             try {
+              const feedFilters: ApifyRentalFilters = {
+                ...apifyFilters,
+                ...(location && q ? { q } : {}),
+              };
               for (let apifyOffset = 0; apifyOffset < 50_000; apifyOffset += PAGE_SIZE) {
-                const page = await getApifyRentals(apifyOffset, apifyFilters);
+                const page = await getApifyRentals(apifyOffset, feedFilters);
                 apifyListings.push(...page.listings);
                 if (!page.hasMore) break;
               }
             } catch {
               apifyUnavailable = true;
+            }
+          }
+          let liveApifySearch: LocationRentalSearch | undefined;
+          let liveApifySearchStatus: "ready" | "running" | "unavailable" | undefined;
+          const liveActorCanMatchFilters =
+            amenities.length === 0 && !availability && !params.has("furnished") && !leaseDuration;
+          if (location && liveActorCanMatchFilters && params.get("preview") !== "1") {
+            const searchState = requestApifyRentalsByLocation(location, apifyFilters);
+            liveApifySearchStatus = searchState.status;
+            if (searchState.status === "ready") {
+              liveApifySearch = searchState.result;
+              apifyListings.push(...liveApifySearch.listings);
             }
           }
           const records = await connectMongo()
@@ -255,7 +314,12 @@ export const Route = createFileRoute("/api/rentals")({
               imgSrc: image ?? "",
             };
           });
-          if (apifyUnavailable && mongoListings.length === 0)
+          if (
+            apifyUnavailable &&
+            liveApifySearchStatus !== "running" &&
+            mongoListings.length === 0 &&
+            apifyListings.length === 0
+          )
             throw new Error("Rental data sources are unavailable.");
           const listingBySourceId = new Map<string, (typeof mongoListings)[number]>();
           for (const listing of mongoListings)
@@ -306,11 +370,30 @@ export const Route = createFileRoute("/api/rentals")({
             limit: PAGE_SIZE,
             totalCount: total,
             hasMore: offset + listings.length < total,
+            apifySearch: liveApifySearch
+              ? {
+                  status: "ready",
+                  returnedListings: liveApifySearch.listings.length,
+                  ...(liveApifySearch.totalAvailable != null
+                    ? { totalAvailableUnits: liveApifySearch.totalAvailable }
+                    : {}),
+                  ...(liveApifySearch.pagesFetched != null
+                    ? { pagesFetched: liveApifySearch.pagesFetched }
+                    : {}),
+                  ...(liveApifySearch.stopReason ? { stopReason: liveApifySearch.stopReason } : {}),
+                }
+              : liveApifySearchStatus
+                ? { status: liveApifySearchStatus }
+                : undefined,
             stateCounts,
             statesResponded: Object.keys(stateCounts),
           };
           return Response.json(data, {
-            headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=300" },
+            headers: {
+              "Cache-Control": location
+                ? "private, no-store"
+                : "public, max-age=60, stale-while-revalidate=300",
+            },
           });
         } catch (error) {
           return Response.json(

@@ -1,28 +1,12 @@
 import { ArrowUpRight, Building2, Gavel, House, LandPlot, Lightbulb, Sparkles } from "lucide-react";
-import { properties } from "@/data/properties";
-import { usListings } from "@/data/us-listings";
-import { tranchiProperties } from "@/data/tranchi-properties";
 
 const categoryPhoto = (photoId: string) =>
   `https://images.unsplash.com/${photoId}?auto=format&fit=crop&w=1200&q=80`;
-
-const foreclosureListings = usListings.filter((listing) =>
-  listing.tags.some((tag) => /foreclosure/i.test(tag)),
-);
-const auctionListings = usListings.filter(
-  (listing) => Boolean(listing.auctionDate) || listing.tags.some((tag) => /auction/i.test(tag)),
-);
-const investmentListings = [...usListings, ...tranchiProperties].filter(
-  (listing) => listing.tags.some((tag) => /investment/i.test(tag)) || listing.isTranchi,
-);
-const japanApartments = properties.filter((property) => property.categorySlug === "apartment");
-const japanLand = properties.filter((property) => property.categorySlug === "land");
 
 const opportunities = [
   {
     title: "Foreclosure homes",
     description: "Find homes with a different path to ownership.",
-    count: foreclosureListings.length,
     image: categoryPhoto("photo-1568605114967-8130f3a36994"),
     icon: House,
     href: "/us-properties?category=Foreclosure%20Sale",
@@ -30,7 +14,6 @@ const opportunities = [
   {
     title: "Auction properties",
     description: "Explore listings with auction dates when provided.",
-    count: auctionListings.length,
     image: categoryPhoto("photo-1600585154340-be6161a56a0c"),
     icon: Gavel,
     href: "/us-properties?category=Auction",
@@ -38,7 +21,6 @@ const opportunities = [
   {
     title: "Investment opportunities",
     description: "Research properties and opportunities from multiple sources.",
-    count: investmentListings.length,
     image: categoryPhoto("photo-1486406146926-c627a92ad1ab"),
     icon: Lightbulb,
     href: "/us-properties?category=Investment",
@@ -46,7 +28,6 @@ const opportunities = [
   {
     title: "Apartments in Japan",
     description: "Explore compact city homes and apartment listings.",
-    count: japanApartments.length,
     image: categoryPhoto("photo-1600607687939-ce8a6c25118c"),
     icon: Building2,
     href: "/category/apartment",
@@ -54,7 +35,6 @@ const opportunities = [
   {
     title: "Land & plots",
     description: "Find a place to build, restore, or make your own.",
-    count: japanLand.length,
     image: categoryPhoto("photo-1516156008625-3a9d6067fab5"),
     icon: LandPlot,
     href: "/category/land",
@@ -62,7 +42,6 @@ const opportunities = [
   {
     title: "Distinctive homes",
     description: "Browse homes across the U.S. and regions of Japan.",
-    count: usListings.length + properties.length,
     image: categoryPhoto("photo-1613490493576-7fde63acd811"),
     icon: Sparkles,
     href: "/search",
@@ -113,9 +92,6 @@ export function OpportunityCategories() {
                       <span className="grid h-10 w-10 place-items-center rounded-xl border border-white/25 bg-slate-950/40 text-blue-200 backdrop-blur-sm">
                         <Icon className="h-5 w-5" />
                       </span>
-                      <span className="rounded-full border border-white/20 bg-slate-950/40 px-3 py-1 text-xs font-semibold text-white/90 backdrop-blur-sm">
-                        {item.count.toLocaleString("en-US")} indexed
-                      </span>
                     </span>
                     <h3 className="mt-5 text-xl font-bold text-white sm:text-2xl">{item.title}</h3>
                     <p className="mt-2 max-w-sm text-sm leading-6 text-slate-200">
@@ -131,10 +107,6 @@ export function OpportunityCategories() {
             );
           })}
         </ul>
-        <p className="mt-5 text-center text-xs text-muted-foreground">
-          Counts reflect indexed listings and may include homes from multiple sources. Confirm
-          current details with each listing publisher.
-        </p>
       </div>
     </section>
   );

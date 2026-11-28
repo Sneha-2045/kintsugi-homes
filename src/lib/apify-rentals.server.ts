@@ -1,9 +1,16 @@
+import { ApifyClient } from "apify-client";
+
 const DATASET_ID = "bZhSt4i1bdfnniiaV";
 const APIFY_API = "https://api.apify.com/v2";
 const PAGE_SIZE = 20;
 const DATASET_PAGE_SIZE = 1000;
 const APIFY_TIMEOUT_MS = 15_000;
 const CACHE_MS = 15 * 60 * 1000;
+const RENTAL_ACTOR_ID =
+  process.env["APIFY_RENTAL_ACTOR_ID"]?.trim() || "themineworks/zillow-rental-listings";
+const RENTAL_SEARCH_TIMEOUT_MS = 180_000;
+const RENTAL_SEARCH_CACHE_MS = 15 * 60 * 1000;
+const RENTAL_SEARCH_MAX_CACHE_ENTRIES = 50;
 const STATE_ORDER =
   "CA TX FL NY WA IL GA AZ CO NV NC NJ MA TN OR VA PA MI OH AL AK AR CT DE HI ID IN IA KS KY LA ME MD MN MS MO MT NE NH NM ND OK RI SC SD UT VT WV WI WY".split(
     " ",
@@ -93,6 +100,11 @@ export type ApifyRentalListing = {
   minRent?: number;
   maxRent?: number;
   availableUnits?: number;
+  sqft?: number;
+  latitude?: number;
+  longitude?: number;
+  isBuilding?: boolean;
+  sourceName?: string;
 };
 
 export type RentalFilters = {
@@ -113,6 +125,20 @@ export type RentalFilters = {
   amenities?: string[];
   leaseDuration?: string;
 };
+
+export type LocationRentalSearch = {
+  totalAvailable?: number;
+  totalScraped?: number;
+  chargedFor?: number;
+  pagesFetched?: number;
+  stopReason?: string;
+  listings: ApifyRentalListing[];
+};
+
+export type LocationRentalSearchState =
+  | { status: "ready"; result: LocationRentalSearch }
+  | { status: "running" }
+  | { status: "unavailable" };
 
 export class ApifyRentalError extends Error {
   constructor(
@@ -137,24 +163,31 @@ function parseListings(value: unknown): ApifyRentalListing[] {
   for (const valueItem of value) {
     if (!valueItem || typeof valueItem !== "object") continue;
     const item = valueItem as Record<string, unknown>;
-    const zpid = typeof item["zpid"] === "string" ? item["zpid"] : "";
+    const zpid =
+      typeof item["zpid"] === "string"
+        ? item["zpid"].trim()
+        : typeof item["id"] === "string"
+          ? item["id"].trim()
+          : "";
     const state = typeof item["state"] === "string" ? item["state"] : "";
     const city = typeof item["city"] === "string" ? item["city"] : "";
     const imgSrc = typeof item["imgSrc"] === "string" ? item["imgSrc"] : "";
-    if (!zpid || !city || !/^[A-Z]{2}$/.test(state) || item["statusType"] !== "FOR_RENT") continue;
-    let photoUrl: URL;
-    try {
-      photoUrl = new URL(imgSrc);
-    } catch {
-      continue;
+    if (!zpid || !city || !/^[A-Z]{2}$/i.test(state) || item["statusType"] !== "FOR_RENT") continue;
+    let safeImage = "";
+    if (imgSrc) {
+      try {
+        const photoUrl = new URL(imgSrc);
+        if (photoUrl.protocol === "https:") safeImage = photoUrl.toString();
+      } catch {
+        safeImage = "";
+      }
     }
-    if (photoUrl.protocol !== "https:") continue;
 
     unique.set(zpid, {
       zpid,
       city,
-      state,
-      imgSrc: photoUrl.toString(),
+      state: state.toUpperCase(),
+      imgSrc: safeImage,
       ...(typeof item["address"] === "string" ? { address: item["address"] } : {}),
       ...(typeof item["addressLine1"] === "string" ? { addressLine1: item["addressLine1"] } : {}),
       ...(typeof item["zipCode"] === "string" ? { zipCode: item["zipCode"] } : {}),
@@ -172,7 +205,10 @@ function parseListings(value: unknown): ApifyRentalListing[] {
       ...(typeof item["buildingName"] === "string" ? { buildingName: item["buildingName"] } : {}),
       ...(typeof item["detailUrl"] === "string" ? { detailUrl: item["detailUrl"] } : {}),
       ...(typeof item["description"] === "string" ? { description: item["description"] } : {}),
-      ...(typeof item["source"] === "string" ? { source: item["source"] } : {}),
+      source:
+        typeof item["source"] === "string" && item["source"].trim()
+          ? item["source"]
+          : "Zillow via Apify",
       ...(typeof item["sourceUrl"] === "string" ? { sourceUrl: item["sourceUrl"] } : {}),
       ...(typeof item["monthlyRent"] === "number" ? { monthlyRent: item["monthlyRent"] } : {}),
       ...(typeof item["minRent"] === "number" ? { minRent: item["minRent"] } : {}),
@@ -180,6 +216,16 @@ function parseListings(value: unknown): ApifyRentalListing[] {
       ...(typeof item["availableUnits"] === "number"
         ? { availableUnits: item["availableUnits"] }
         : {}),
+      ...(typeof item["sqft"] === "number" ? { sqft: item["sqft"] } : {}),
+      ...(typeof item["latitude"] === "number" ? { latitude: item["latitude"] } : {}),
+      ...(typeof item["longitude"] === "number" ? { longitude: item["longitude"] } : {}),
+      ...(typeof item["availableFrom"] === "string"
+        ? { availableDate: item["availableFrom"] }
+        : typeof item["availableDate"] === "string"
+          ? { availableDate: item["availableDate"] }
+          : {}),
+      ...(typeof item["isBuilding"] === "boolean" ? { isBuilding: item["isBuilding"] } : {}),
+      sourceName: "Zillow via Apify",
     });
   }
 
@@ -393,8 +439,218 @@ export async function getApifyRentals(offset = 0, filters: RentalFilters = {}) {
   };
 }
 
+/** Return only city/state pairs present in the verified rental feed or completed searches. */
+export async function getApifyRentalCities() {
+  const datasetListings = await getListings();
+  const knownListings = [
+    ...datasetListings,
+    ...[...locationSearchCache.values()]
+      .filter((entry) => entry.expiresAt > Date.now())
+      .flatMap((entry) => entry.result.listings),
+  ];
+  const locations = new Map<string, string>();
+  for (const listing of knownListings) {
+    const city = listing.city.trim().replace(/\s+/g, " ");
+    const state = listing.state.trim().toUpperCase();
+    if (!city || !/^[A-Z]{2}$/.test(state)) continue;
+    const label = `${city}, ${state}`;
+    locations.set(label.toLocaleLowerCase("en-US"), label);
+  }
+  return [...locations.values()].sort((a, b) =>
+    a.localeCompare(b, "en-US", { sensitivity: "base" }),
+  );
+}
+
+const locationSearchCache = new Map<string, { expiresAt: number; result: LocationRentalSearch }>();
+const locationSearchPending = new Map<string, Promise<LocationRentalSearch>>();
+const locationSearchFailures = new Map<string, number>();
+
+function actorRentalType(type: string | undefined) {
+  switch (normalized(type)) {
+    case "apartment":
+    case "apt":
+      return "APARTMENT";
+    case "house":
+    case "single family":
+    case "single-family home":
+      return "HOUSE";
+    case "townhouse":
+    case "townhome":
+      return "TOWNHOUSE";
+    case "condo":
+    case "condominium":
+      return "CONDO";
+    default:
+      return undefined;
+  }
+}
+
+function configuredMaxItems() {
+  const raw = Number(process.env["APIFY_RENTAL_MAX_ITEMS"] ?? 1000);
+  return Number.isInteger(raw) && raw >= 1 && raw <= 2000 ? raw : 1000;
+}
+
+function rentalSearchCacheKey(location: string, filters: RentalFilters, maxItems: number) {
+  return JSON.stringify({
+    location: normalized(location).replace(/\s+/g, " "),
+    minRent: filters.minRent ?? null,
+    maxRent: filters.maxRent ?? null,
+    beds: filters.beds ?? null,
+    bathrooms: filters.bathrooms ?? null,
+    type: actorRentalType(filters.type) ?? null,
+    q: normalized(filters.q),
+    state: normalized(filters.state),
+    city: normalized(filters.city),
+    zipCode: normalized(filters.zipCode),
+    neighborhood: normalized(filters.neighborhood),
+    studio: Boolean(filters.studio),
+    availability: normalized(filters.availability),
+    furnished: filters.furnished ?? null,
+    amenities: [...(filters.amenities ?? [])].map(normalized).sort(),
+    leaseDuration: normalized(filters.leaseDuration),
+    maxItems,
+  });
+}
+
+async function runLocationRentalSearch(
+  location: string,
+  filters: RentalFilters,
+  maxItems: number,
+): Promise<LocationRentalSearch> {
+  const token = process.env["APIFY_TOKEN"]?.trim();
+  if (!token) throw new ApifyRentalError(503, "Apify rentals are not configured on this server.");
+
+  const client = new ApifyClient({ token, maxRetries: 3, timeoutSecs: 45 });
+  const input: Record<string, unknown> = {
+    location,
+    maxItems,
+    monitorMode: false,
+    ...(filters.minRent !== undefined ? { minRent: filters.minRent } : {}),
+    ...(filters.maxRent !== undefined ? { maxRent: filters.maxRent } : {}),
+    ...(filters.beds !== undefined ? { minBeds: filters.beds } : {}),
+    ...(filters.bathrooms !== undefined ? { minBaths: filters.bathrooms } : {}),
+    ...(actorRentalType(filters.type) ? { rentalType: actorRentalType(filters.type) } : {}),
+  };
+
+  const run = await client.actor(RENTAL_ACTOR_ID).start(input, {
+    timeout: Math.ceil(RENTAL_SEARCH_TIMEOUT_MS / 1000),
+    maxTotalChargeUsd: 10,
+    waitForFinish: 20,
+  });
+  const deadline = Date.now() + RENTAL_SEARCH_TIMEOUT_MS;
+  let completed = run;
+  while (["READY", "RUNNING"].includes(completed.status) && Date.now() < deadline) {
+    // Keep the long-poll below the SDK's 45s HTTP timeout. A longer wait causes Axios
+    // to abort and retry the same status request even though the Actor is still healthy.
+    completed = await client.run(run.id).waitForFinish({ waitSecs: 30 });
+  }
+  if (completed.status !== "SUCCEEDED") {
+    throw new ApifyRentalError(503, "Apify could not complete this rental search.");
+  }
+  const finalRun = await client.run(run.id).get();
+  const datasetId =
+    finalRun?.defaultDatasetId ?? completed.defaultDatasetId ?? run.defaultDatasetId;
+  if (!datasetId) throw new ApifyRentalError(502, "Apify did not return a rentals dataset.");
+
+  const dataset = client.dataset(datasetId);
+  let info = await dataset.get();
+  for (let attempt = 0; attempt < 4 && (info?.itemCount ?? 0) === 0; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+    info = await dataset.get();
+  }
+  const maximumDatasetItems = maxItems + 20;
+  const totalItems = Math.min(info?.itemCount ?? 0, maximumDatasetItems);
+  const rawItems: Record<string, unknown>[] = [];
+  for (let offset = 0; offset < totalItems; offset += 500) {
+    const page = await dataset.listItems({
+      offset,
+      limit: Math.min(500, totalItems - offset),
+      clean: true,
+    });
+    rawItems.push(...page.items);
+    if (!page.items.length) break;
+  }
+
+  const summary = rawItems.find((item) => item["_type"] === "summary");
+  const filteredListings = filterListings(parseListings(rawItems), filters);
+  return {
+    listings: filteredListings,
+    ...(typeof summary?.["total_available"] === "number"
+      ? { totalAvailable: summary["total_available"] }
+      : {}),
+    ...(typeof summary?.["total_scraped"] === "number"
+      ? { totalScraped: summary["total_scraped"] }
+      : {}),
+    ...(typeof summary?.["charged_for"] === "number" ? { chargedFor: summary["charged_for"] } : {}),
+    ...(typeof summary?.["pages_fetched"] === "number"
+      ? { pagesFetched: summary["pages_fetched"] }
+      : {}),
+    ...(typeof summary?.["stop_reason"] === "string" ? { stopReason: summary["stop_reason"] } : {}),
+  };
+}
+
+export async function searchApifyRentalsByLocation(
+  location: string,
+  filters: RentalFilters = {},
+): Promise<LocationRentalSearch> {
+  const cleanLocation = location.trim().slice(0, 120);
+  if (!cleanLocation) return { listings: [] };
+
+  const maxItems = configuredMaxItems();
+  const key = rentalSearchCacheKey(cleanLocation, filters, maxItems);
+  const cached = locationSearchCache.get(key);
+  if (cached && cached.expiresAt > Date.now()) return cached.result;
+  let pending = locationSearchPending.get(key);
+  if (!pending) {
+    pending = runLocationRentalSearch(cleanLocation, filters, maxItems)
+      .then((result) => {
+        if (locationSearchCache.size >= RENTAL_SEARCH_MAX_CACHE_ENTRIES) {
+          const oldest = locationSearchCache.keys().next().value;
+          if (oldest) locationSearchCache.delete(oldest);
+        }
+        locationSearchCache.set(key, {
+          expiresAt: Date.now() + RENTAL_SEARCH_CACHE_MS,
+          result,
+        });
+        return result;
+      })
+      .finally(() => locationSearchPending.delete(key));
+    locationSearchPending.set(key, pending);
+  }
+  return pending;
+}
+
+/** Start a paid location search without holding the listings request open. */
+export function requestApifyRentalsByLocation(
+  location: string,
+  filters: RentalFilters = {},
+): LocationRentalSearchState {
+  const cleanLocation = location.trim().slice(0, 120);
+  if (!cleanLocation) return { status: "unavailable" };
+  const key = rentalSearchCacheKey(cleanLocation, filters, configuredMaxItems());
+  const cached = locationSearchCache.get(key);
+  if (cached && cached.expiresAt > Date.now()) return { status: "ready", result: cached.result };
+  if (locationSearchFailures.get(key)! > Date.now()) return { status: "unavailable" };
+  if (!locationSearchPending.has(key)) {
+    void searchApifyRentalsByLocation(cleanLocation, filters).catch((error: unknown) => {
+      locationSearchFailures.set(key, Date.now() + 30_000);
+      const token = process.env["APIFY_TOKEN"]?.trim();
+      const message = error instanceof Error ? error.message : "Unknown Apify error";
+      console.error("[rentals] Apify location search failed; retaining matching stored rentals.", {
+        name: error instanceof Error ? error.name : "UnknownError",
+        message: (token ? message.replaceAll(token, "[redacted]") : message).slice(0, 240),
+      });
+    });
+  }
+  return { status: "running" };
+}
+
 export async function getApifyRentalById(id: string) {
   if (!/^[A-Za-z0-9_-]{1,100}$/.test(id)) return null;
+  for (const cached of locationSearchCache.values()) {
+    const listing = cached.result.listings.find((item) => item.zpid === id);
+    if (listing && cached.expiresAt > Date.now()) return listing;
+  }
   const listings = await getListings();
   return listings.find((listing) => listing.zpid === id) ?? null;
 }
